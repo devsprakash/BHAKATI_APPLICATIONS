@@ -7,14 +7,13 @@ const {
   getAllUser,
   deleteProfile
 } = require('../controllers/admin.controller');
-   
 const  { verifyAccessToken } = require('../../middleware/admin.middleware');
 
 
 
 router.post('/login' , admin_login_validator , ValidatorResult , login)
 router.get('/logout' , verifyAccessToken , logout)
-router.get('/getAllUsers'  , getAllUser )
+router.get('/getAllUsers' , verifyAccessToken , getAllUser )
 router.delete('/deleteUserAccount' , verifyAccessToken , deleteProfile);
 
 module.exports = router
