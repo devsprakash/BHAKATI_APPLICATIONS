@@ -231,7 +231,7 @@ exports.updateProfile = async (req, res) => {
         if (!req.file)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.no_image_upload', {}, req.headers.lang);
 
-        let files = req?.file;
+        let files = req.file;
         const imageUrl = `${BASEURL}/${files.destination}/${files.filename}`;
 
         const user = await User.findOneAndUpdate({ _id: userId },
