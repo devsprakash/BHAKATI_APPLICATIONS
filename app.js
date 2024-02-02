@@ -44,9 +44,9 @@ app.use(express.urlencoded({
 }));
 app.use(cookieParser());
 
-app.use('/', indexRouter);
+app.use('/v1/', indexRouter);
 app.use('/v1/users', usersRouter);
-app.use('/v1/', indexAdminRouter);
+app.use('/', indexAdminRouter);
 app.use('/admin', adminRouter);
 app.use('/v1/booking' , bookingRouter)
 
@@ -61,7 +61,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:6001/",
+        url: "http://13.51.106.139:6001/",
       },
     ],
   },
