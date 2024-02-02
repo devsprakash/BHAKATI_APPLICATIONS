@@ -66,7 +66,7 @@ const userSchema = new Schema({
     },
     status: {
         type: Number,
-        default: constants.STATUS.DE_ACTIVE
+        default: constants.STATUS.ACTIVE
     },
     signup_status: {
         type: Number,

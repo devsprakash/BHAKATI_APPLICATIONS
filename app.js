@@ -6,7 +6,8 @@ const cors = require('cors');
 
 const cookie = require('cookie-session');
 const flash = require('connect-flash');
-
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
 const indexRouter = require('./v1/routes/index');
 const usersRouter = require('./v1/routes/users');
 const indexAdminRouter = require('./admin/routes/index');
@@ -49,6 +50,26 @@ app.use('/v1/', indexAdminRouter);
 app.use('/admin', adminRouter);
 app.use('/v1/booking' , bookingRouter)
 
+
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Library API",
+      version: "1.0.0",
+      description: "A simple Express Library API",
+    },
+    servers: [
+      {
+        url: "http://localhost:6001/",
+      },
+    ],
+  },
+  apis: ["./v1/routes/*.js"], // Check this path
+};
+
+const specs = swaggerJsDoc(options);
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs));
 
 
 

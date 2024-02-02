@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "nodemon ./bin/www",
-    "dev":"pm2 start ./bin/www",
+    "dev": "pm2 start ./bin/www",
     "stop": "pm2 stop ./bin/www"
   },
   "dependencies": {
@@ -17,6 +17,8 @@
     "ejs": "^3.1.5",
     "express": "~4.16.1",
     "express-validator": "^6.6.0",
+    "firebase": "^10.7.2",
+    "firebase-admin": "^12.0.0",
     "http-errors": "~1.6.3",
     "jade": "~1.11.0",
     "jsonwebtoken": "^8.5.1",
@@ -30,7 +32,9 @@
     "path": "^0.12.7",
     "pm2": "^5.3.1",
     "retry": "^0.13.1",
-    "socket.io": "^4.7.4"
+    "socket.io": "^4.7.4",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
   },
   "nodemonConfig": {
     "ignore": [

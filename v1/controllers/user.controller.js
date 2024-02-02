@@ -88,14 +88,11 @@ exports.login = async (req, res, next) => {
 
         const reqBody = req.body
         console.log("reqBody...", reqBody)
-
         let user = await User.findOne({ mobile_number: reqBody.mobile_number })
-
         console.log("user...", user)
 
         if (user == 1) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.email_not_found', {}, req.headers.lang);
         if (user == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
-
 
         if (user.status == 0) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
         if (user.status == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
@@ -122,44 +119,6 @@ exports.login = async (req, res, next) => {
     } catch (err) {
         console.log('err(login).....', err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
-
-exports.loginWithPassword = async (req, res, next) => {
-
-    try {
-
-        const reqBody = req.body
-        console.log("reqBody...", reqBody)
-        let user = await User.findByCredentials(reqBody.email, reqBody.password, reqBody.user_type || '2');
-        console.log("user...", user)
-
-        if (user == 1) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.email_not_found', {}, req.headers.lang);
-        if (user == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
-        if (user.status == 0) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
-        if (user.status == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
-        if (user.deleted_at != null) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
-
-        let newToken = await user.generateAuthToken();
-        let refreshToken = await user.generateRefreshToken()
-
-        user.device_type = (reqBody.device_type) ? reqBody.device_type : null
-        user.device_token = (reqBody.device_token) ? reqBody.device_token : null
-
-        await user.save()
-
-        let resData = user
-        resData.tokens = '';
-        delete resData.reset_password_token;
-        delete resData.reset_password_expires;
-        delete resData.password;
-        resData.tokens = newToken
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', resData, req.headers.lang);
-
-    } catch (err) {
-        console.log('err(loginwithpassword).....', err)
-       return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
 
