@@ -104,9 +104,9 @@ exports.verifyOtp = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.otp_not_matched', {}, req.headers.lang);
 
         let newToken = await user.generateAuthToken();
-        await User.findOneAndUpdate({ _id: userId }, { $set: { otp: null, tokens: newToken } }, { new: true })
+        let users =  await User.findOneAndUpdate({ _id: userId }, { $set: { otp: null, tokens: newToken } }, { new: true })
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.opt_verify', {}, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.opt_verify', users , req.headers.lang);
 
     } catch (err) {
 
