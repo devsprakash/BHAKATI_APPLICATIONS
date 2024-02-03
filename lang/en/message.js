@@ -53,7 +53,9 @@ module.exports = {
         no_image_upload:'no such image uploaded to the server',
         opt_verify:'Your otp is verified successfully',
         otp_not_matched:'Your otp does not match',
-        delete_account:'successfully delete this account'
+        delete_account:'successfully delete this account',
+        already_updated:'Your account already updated',
+        not_verify:'Your not verified Please verify your account'
 
     },
 

@@ -58,6 +58,9 @@ exports.login = async (req, res, next) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', users, req.headers.lang);
         }
 
+        if(user.verify === false)
+        return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.not_verify', {}, req.headers.lang);
+
         if (user == 1) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.email_not_found', {}, req.headers.lang);
         if (user == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
 
@@ -82,10 +85,12 @@ exports.login = async (req, res, next) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', resData, req.headers.lang);
 
     } catch (err) {
+
         console.log('err(login).....', err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
 
 
 exports.verifyOtp = async (req, res) => {
@@ -104,7 +109,9 @@ exports.verifyOtp = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.otp_not_matched', {}, req.headers.lang);
 
         let newToken = await user.generateAuthToken();
-        let users =  await User.findOneAndUpdate({ _id: userId }, { $set: { otp: null, tokens: newToken } }, { new: true })
+        let refreshToken = await user.generateRefreshToken();
+
+        let users =  await User.findOneAndUpdate({ _id: userId }, { $set: { otp: null, tokens: newToken , refresh_tokens:refreshToken ,  verify:true } }, { new: true })
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.opt_verify', users , req.headers.lang);
 
@@ -154,6 +161,10 @@ exports.updateProfile = async (req, res) => {
 
         const { userId } = req.params;
         const reqBody = req.body;
+        const userData = await User.findOne({_id: userId });
+
+        if(userData.isUpdated === true)
+          return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.already_updated', {}, req.headers.lang);
 
         // if (!req.file)
         //     return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.no_image_upload', {}, req.headers.lang);
@@ -176,6 +187,7 @@ exports.updateProfile = async (req, res) => {
                     'address.pincode': reqBody.pincode,
                     dob: reqBody.dob,
                     // profileImg: imageUrl,
+                    isUpdated:true,
                     status: constants.STATUS.ACTIVE
                 }
             },

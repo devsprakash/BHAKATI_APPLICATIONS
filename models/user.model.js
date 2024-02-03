@@ -62,9 +62,17 @@ const userSchema = new Schema({
         type: Number, //1-admin 2-user
         default: 2
     },
+    verify:{
+        type:Boolean,
+        default:false
+    },
     status: {
         type: Number,
         default: constants.STATUS.ACTIVE
+    },
+    isUpdated:{
+        type:Boolean,
+        default:false
     },
     signup_status: {
         type: Number,
