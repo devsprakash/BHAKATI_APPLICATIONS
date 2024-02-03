@@ -23,19 +23,17 @@ const userSchema = new Schema({
         type: String,
         default: null
     },
-    password: {
-        type: String,
-        minlength: 8,
-    },
     mobile_number: {
         type: String,
         default: null
     },
     dob: {
-        type: String
+        type: String,
+        default:null
     },
     gender: {
         type: String,
+        default:null
     },
     address: {
         street: {
@@ -85,9 +83,6 @@ const userSchema = new Schema({
         default: null
     },
     otp:{type:String , default:null},
-    tempTokens: {
-        type: String
-    },
     created_at: {
         type: String,
     },

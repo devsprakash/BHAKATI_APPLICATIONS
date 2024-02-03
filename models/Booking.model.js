@@ -7,14 +7,6 @@ const Schema = mongoose.Schema;
 //Define user schema
 const bookingSchema = new Schema({
 
-    templeName: {
-        type: String,
-        default:null
-    },
-    templeImg: {
-        type: String,
-        default:null
-    },
     date: {
         type: String
     },
@@ -24,21 +16,9 @@ const bookingSchema = new Schema({
     time: {
         type: String
     },
-    place: {
-        type: String
-    },
-    state: {
-        type: String
-    },
-    district: {
-        type: String
-    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
-    },
-    pujaType: {
-        type: String
     },
     ref_no:{
         type:String

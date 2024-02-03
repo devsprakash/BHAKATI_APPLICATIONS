@@ -1,7 +1,7 @@
 
 const { sendResponse } = require("../../services/common.service");
 const dateFormat = require("../../helper/dateformat.helper");
-const Booking = require("../../models/bookingSlot.model");
+const Booking = require("../../models/Booking.model");
 const constants = require("../../config/constants");
 const { newBooking} = require("../services/booking.service")
 
@@ -75,43 +75,4 @@ exports.getAllBookingSlot = async (req, res, next) => {
 
 
 
-exports.getAllTemples = async (req, res, next) => {
 
-    try {
-
-        const { page = 1, per_page = 10, sort, state, district } = req.query;
-
-        const filterOptions = { };
-        if (state) {
-            filterOptions.state = state;
-        }
-        if (district) {
-            filterOptions.district = district;
-        }
-        
-        const sortOptions = {};
-
-        if (sort) {
-
-            const [field, order] = sort.split(':');
-
-            sortOptions[field] = order === 'desc' ? -1 : 1;
-        }
-        
-        const bookings = await Booking.find(filterOptions).select('templeName templeImg _id state district')
-            .sort(sortOptions)
-            .skip((page - 1) * per_page)
-            .limit(Number(per_page));
-        
-        if (!bookings || bookings.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang);
-        
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.get_all_temples', bookings , req.headers.lang);
-
-    } catch (err) {
-
-        console.log("err(getAllTemples)....", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}

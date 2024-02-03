@@ -55,7 +55,6 @@ module.exports = {
         otp_not_matched:'Your otp does not match',
         delete_account:'successfully delete this account'
 
-
     },
 
     'GENERAL': {
@@ -71,7 +70,12 @@ module.exports = {
         not_found:'all the booking slot data is not found',
         get_all_booking:'successfully get all booking slots',
         get_all_temples:'successfully get all booking temples'
-    }
+    },
+    'TEMPLE':{
+        addTemple:'successfully add a new temple',
+        not_found:'temples are not found',
+        get_all_temples:'successfully get all temples',
+   }
 
    
 }

@@ -9,55 +9,10 @@ const {
     getUser
 } = require("../services/user.service");
 const constants = require("../../config/constants");
-const { JWT_SECRET, BASEURL } = require("../../keys/keys");
+const { BASEURL } = require("../../keys/keys");
 const { sendMail } = require('../../services/email.services')
 
 
-
-
-exports.signUp = async (req, res, next) => {
-
-    try {
-
-        const reqBody = req.body
-        console.log("reqBody", reqBody)
-
-        const checkMail = await isValid(reqBody.email)
-
-        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
-
-        const existingMobileNumber = await User.findOne({ mobile_number: reqBody.mobile_number })
-
-        if (existingMobileNumber)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.existing_mobile_number', {}, req.headers.lang);
-
-        reqBody.password = await bcrypt.hash(reqBody.password, 10);
-        reqBody.created_at = await dateFormat.set_current_timestamp();
-        reqBody.updated_at = await dateFormat.set_current_timestamp();
-
-        reqBody.tempTokens = await jwt.sign({
-            data: reqBody.email
-        }, JWT_SECRET, {
-            expiresIn: constants.URL_EXPIRE_TIME
-        });
-
-        const user = await Usersave(reqBody);
-        let resData = user
-        delete resData.reset_password_token;
-        delete resData.password;
-        delete resData.tokens;
-        delete resData.user_type;
-        delete resData.status;
-        delete resData.signup_status
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'USER.signUp_success', resData, req.headers.lang);
-
-    } catch (err) {
-
-        console.log("err(Signup)....", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
 
 
 
@@ -87,9 +42,21 @@ exports.login = async (req, res, next) => {
     try {
 
         const reqBody = req.body
-        console.log("reqBody...", reqBody)
-        let user = await User.findOne({ mobile_number: reqBody.mobile_number })
-        console.log("user...", user)
+        console.log("reqBody", reqBody)
+
+        const checkMail = await isValid(reqBody.email)
+        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
+
+        let user = await User.findOne({ email: reqBody.email })
+        let otp = Math.floor(100000 + Math.random() * 900000);
+        let text = `${otp}`
+
+        if (!user) {
+            sendMail(reqBody.email, text)
+            reqBody.otp = text;
+            let users = await User.create(reqBody);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', users, req.headers.lang);
+        }
 
         if (user == 1) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.email_not_found', {}, req.headers.lang);
         if (user == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
@@ -101,10 +68,8 @@ exports.login = async (req, res, next) => {
         let newToken = await user.generateAuthToken();
         let refreshToken = await user.generateRefreshToken()
 
-        let otp = Math.floor(100000 + Math.random() * 900000);
-        let text = `${otp}`
-        sendMail(user.email, text)
-        user.otp = text;
+        sendMail(reqBody.email, text)
+        user.otp = text
         await user.save()
 
         let resData = user
@@ -127,8 +92,10 @@ exports.verifyOtp = async (req, res) => {
 
     try {
 
-        const userId = req.user._id;
-        const user = await getUser(userId);
+        const { userId } = req.params;
+
+        const user = await User.findOne({_id: userId})
+        console.log(user)
 
         if (!user)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
@@ -136,7 +103,8 @@ exports.verifyOtp = async (req, res) => {
         if (user.otp !== req.body.otp)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.otp_not_matched', {}, req.headers.lang);
 
-        await User.findOneAndUpdate({ _id: userId }, { $set: { otp: null } }, { new: true })
+        let newToken = await user.generateAuthToken();
+        await User.findOneAndUpdate({ _id: userId }, { $set: { otp: null, tokens: newToken } }, { new: true })
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.opt_verify', {}, req.headers.lang);
 
@@ -184,14 +152,14 @@ exports.updateProfile = async (req, res) => {
 
     try {
 
-        const userId = req.user._id;
+        const { userId } = req.params;
         const reqBody = req.body;
 
-        if (!req.file)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.no_image_upload', {}, req.headers.lang);
+        // if (!req.file)
+        //     return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.no_image_upload', {}, req.headers.lang);
 
-        let files = req.file;
-        const imageUrl = `${BASEURL}/${files.destination}/${files.filename}`;
+        // let files = req.file;
+        // const imageUrl = `${BASEURL}/${files.destination}/${files.filename}`;
 
         const user = await User.findOneAndUpdate({ _id: userId },
             {
@@ -200,13 +168,14 @@ exports.updateProfile = async (req, res) => {
                     full_name: reqBody.full_name,
                     email: reqBody.email,
                     gender: reqBody.gender,
+                    mobile_number: reqBody.mobile_number,
                     'address.street': reqBody.street,
                     'address.city': reqBody.city,
                     'address.state': reqBody.state,
                     'address.country': reqBody.country,
                     'address.pincode': reqBody.pincode,
                     dob: reqBody.dob,
-                    profileImg: imageUrl,
+                    // profileImg: imageUrl,
                     status: constants.STATUS.ACTIVE
                 }
             },

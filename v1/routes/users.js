@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticate = require('../../middleware/authenticate');
-const { user_validator,
+const { update_profile_validator,
   login_validator,ValidatorResult , admin_login_validator
  } = require('../../validation/user.validator')
  const { upload } = require('../../middleware/multer')
@@ -12,35 +12,8 @@ const {
   getUser , verifyOtp , updateProfile,  loginWithPassword
 } = require('../controllers/user.controller');
 
-/**
- * @swagger
- * /v1/users/signUp:
- *   post:
- *     summary: Customer Signup
- *     description: Endpoint for user registration.
- *     tags: [USER]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           example:
- *             email: "example@example.com"
- *             full_name: "John Doe"
- *             mobile_number: "+1234567890"
- *             password: "examplePassword"
- *             dob: "12-07-1998"
- *             gender: "male"
- *     responses:
- *       '201':
- *         description: User created successfully
- *         content:
- *           application/json:
- *             example:
- *               message: User created successfully
- */
 
 
-router.post('/signUp',   signUp)
 
 /**
  * @swagger
@@ -107,19 +80,17 @@ router.get('/logout', authenticate, logout);
 
 /**
  * @swagger
- * /v1/users/otpverify:
- *   post:
+ * /v1/users/otpverify/{userId}:
+ *   get:
  *     summary: Verify OTP
  *     description: Endpoint for OTP verification.
  *     tags: [USER]
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           example:
- *             otp: "123456"
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         description: The ID of the user for OTP verification
+ *         required: true
+ *         type: string
  *     responses:
  *       '200':
  *         description: OTP verified successfully
@@ -131,23 +102,11 @@ router.get('/logout', authenticate, logout);
  *       - application/json
  *     produces:
  *       - application/json
- *     parameters:
- *       - name: Authorization
- *         in: header
- *         description: Bearer token to authenticate the user
- *         required: true
- *         type: string
- *         example: Bearer YOUR_JWT_TOKEN
  * 
- * securityDefinitions:
- *   BearerAuth:
- *     type: apiKey
- *     name: Authorization
- *     in: header
  */
 
+router.get('/otpverify/:userId',  verifyOtp);
 
-router.post('/otpverify' , authenticate , verifyOtp)
 
 /**
  * @swagger
@@ -186,79 +145,55 @@ router.post('/otpverify' , authenticate , verifyOtp)
 
 router.get('/getProfile' , authenticate , getUser);
 
+
 /**
  * @swagger
- * /v1/users/updateProfile:
+ * v1/users/updateProfile/{userId}:
  *   put:
  *     summary: Update User Profile
- *     description: Endpoint to update user profile.
+ *     description: Endpoint to update user profile information.
  *     tags: [USER]
- *     security:
- *       - BearerAuth: []
+ *     parameters:
+ *       - name: userId
+ *         in: path
+ *         description: The ID of the user whose profile needs to be updated.
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *               full_name:
- *                 type: string
- *               email:
- *                 type: string
- *               gender:
- *                 type: string
- *               street:
- *                 type: string
- *               city:
- *                 type: string
- *               state:
- *                 type: string
- *               country:
- *                 type: string
- *               pincode:
- *                 type: string
- *               dob:
- *                 type: string
+ *         application/json:
  *           example:
- *             file: binary-data   # Your file data here
- *             full_name: John Doe
- *             email: example@example.com
- *             gender: male
- *             street: Example Street
- *             city: Example City
- *             state: Example State
- *             country: Example Country
- *             pincode: 12345
- *             dob: 1990-01-01
+ *             full_name: "John Doe"
+ *             email: "psamantaray77@gmail.com"
+ *             gender: "Male"
+ *             street: "123 Main St"
+ *             city: "Cityville"
+ *             state: "Stateville"
+ *             country: "Countryland"
+ *             pincode: "12345"
+ *             dob: "1990-01-01"
+ *             mobile_number: "6371704662"
  *     responses:
  *       '200':
- *         description: User profile updated successfully
+ *         description: Profile updated successfully
  *         content:
  *           application/json:
  *             example:
- *               message: User profile updated successfully
+ *               message: Profile updated successfully
+ *       '404':
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: User not found
  *     consumes:
- *       - multipart/form-data
- *     parameters:
- *       - name: Authorization
- *         in: header
- *         description: Bearer token to authenticate the user
- *         required: true
- *         type: string
- *         example: Bearer YOUR_JWT_TOKEN
+ *       - application/json
+ *     produces:
+ *       - application/json
  * 
- * securityDefinitions:
- *   BearerAuth:
- *     type: apiKey
- *     name: Authorization
- *     in: header
  */
 
-router.put('/updateProfile' , upload.single('file') ,  authenticate , updateProfile);
+
+router.put('/updateProfile/:userId' ,   updateProfile);
 
 
 module.exports = router;

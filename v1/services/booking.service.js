@@ -1,4 +1,4 @@
-const Booking = require("../../models/bookingSlot.model");
+const Booking = require("../../models/Booking.model");
 
 
 exports.newBooking = data => Booking(data).save();

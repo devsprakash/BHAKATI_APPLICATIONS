@@ -1,5 +1,5 @@
 
-const { body, validationResult } = require('express-validator');
+const { body, validationResult , param } = require('express-validator');
 
 const validGender = ['male', 'female', 'other']
 
@@ -61,13 +61,24 @@ exports.user_validator = [
 
 exports.login_validator = [
 
-  body('mobile_number')
-  .not()
-  .isEmpty()
-  .withMessage('mobile_number is required')
-  .isString().withMessage('mobile_number should be a string')
-  .isMobilePhone().withMessage('please enter a valid mobile_number address')
-  .trim(),
+  body('email')
+    .not()
+    .isEmpty()
+    .withMessage('email is required')
+    .isString().withMessage('email should be a string')
+    .isEmail().withMessage('please enter a valid email address')
+    .trim(),
+
+]
+
+exports.update_profile_validator = [
+
+      param('userId')
+      .not()
+      .isEmpty()
+      .withMessage('userId is required')
+      .isString().withMessage('userId should be a string')
+      .isMongoId().withMessage('please enter a valid userId')
 
 ]
 

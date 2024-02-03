@@ -13,7 +13,7 @@ const usersRouter = require('./v1/routes/users');
 const indexAdminRouter = require('./admin/routes/index');
 const adminRouter = require('./admin/routes/admin');
 const bookingRouter = require('./v1/routes/booking')
-
+const TempleRouter = require('./admin/routes/temple')
 const app = express();
 
 
@@ -49,6 +49,7 @@ app.use('/v1/users', usersRouter);
 app.use('/', indexAdminRouter);
 app.use('/admin', adminRouter);
 app.use('/v1/booking' , bookingRouter)
+app.use('/admin/temple' , TempleRouter)
 
 
 const options = {
@@ -61,7 +62,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://13.51.106.139:6001/",
+        url: "http://13.51.106.139:8001/",
       },
     ],
   },
