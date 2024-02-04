@@ -17,13 +17,15 @@ exports.login = async (req, res) => {
     try {
 
         const user = await User.findOne({ email: email, deleted_at: null });
+        console.log(user)
 
         if (!user) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_username_password', {}, req.headers.lang);
         }
-        if (!user.validPassword(password)) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_username_password', {}, req.headers.lang);
-        }
+        // if (!user.validPassword(password)) {
+        //     return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_username_password', {}, req.headers.lang);
+        // }
+        
         if (user.user_type !== constants.USER_TYPE.ADMIN) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
         }

@@ -3,16 +3,17 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 
+
 //Define user schema
 const templeSchema = new Schema({
 
     TempleName: {
         type: String,
-        default:null
+        default: null
     },
     TempleImg: {
         type: String,
-        default:null
+        default: null
     },
     Location: {
         type: String
@@ -23,8 +24,14 @@ const templeSchema = new Schema({
     District: {
         type: String
     },
-    Desc:{
-       type:String
+    trust_mobile_number: {
+        type: String
+    },
+    templeId: {
+        type: String
+    },
+    Desc: {
+        type: String
     },
     created_at: {
         type: String,

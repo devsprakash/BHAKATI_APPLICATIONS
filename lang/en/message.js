@@ -77,6 +77,9 @@ module.exports = {
         addTemple:'successfully add a new temple',
         not_found:'temples are not found',
         get_all_temples:'successfully get all temples',
+        delete_temples:'successfully delete this temple',
+        already_delete_temples:'this temple is already deleted',
+        booking_downlod:'successfully downloading this booking slot'
    }
 
    

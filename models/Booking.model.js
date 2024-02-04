@@ -13,12 +13,28 @@ const bookingSchema = new Schema({
     Slot: {
         type: Number
     },
-    time: {
+    StartTime: {
         type: String
+    },
+    EndTime: {
+        type: String
+    },
+    templeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'temples'
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
+    },
+    Name:{
+        type:String
+    },
+    email:{
+        type:String
+    },
+    mobile_number:{
+        type:String
     },
     ref_no:{
         type:String
