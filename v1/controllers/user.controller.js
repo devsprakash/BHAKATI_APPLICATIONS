@@ -73,14 +73,18 @@ exports.login = async (req, res, next) => {
 
         sendMail(reqBody.email, text)
         user.otp = text
+        user.refresh_tokens = refreshToken
+        user.tokens = newToken;
         await user.save()
 
         let resData = user
         resData.tokens = '';
+        resData.refresh_tokens = ''
         delete resData.reset_password_token;
         delete resData.reset_password_expires;
         delete resData.password;
-        resData.tokens = newToken
+        delete resData.refresh_tokens;
+        delete resData.tokens; 
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', resData, req.headers.lang);
 
