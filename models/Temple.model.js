@@ -33,6 +33,10 @@ const templeSchema = new Schema({
     Desc: {
         type: String
     },
+    status:{
+        type:String,
+        default:null
+    },
     created_at: {
         type: String,
     },

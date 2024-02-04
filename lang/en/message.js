@@ -80,6 +80,14 @@ module.exports = {
         delete_temples:'successfully delete this temple',
         already_delete_temples:'this temple is already deleted',
         booking_downlod:'successfully downloading this booking slot'
+   },
+   'LIVE':{
+     
+       channel_name_is_required: 'channel is required',
+       uid_is_required : 'uid is required',
+       in_correct : 'role is incorrect',
+       in_valid_token : 'token type is invalid',
+       generate_token :'successfully generated a new token'
    }
 
    

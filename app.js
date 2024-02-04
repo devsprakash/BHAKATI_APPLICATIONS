@@ -14,8 +14,16 @@ const indexAdminRouter = require('./admin/routes/index');
 const adminRouter = require('./admin/routes/admin');
 const bookingRouter = require('./v1/routes/booking')
 const TempleRouter = require('./admin/routes/temple')
+const liveRouter = require('./v1/routes/Live')
 const app = express();
 
+
+const nocache = (_, resp, next) => {
+  resp.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+  resp.header('Expires', '-1');
+  resp.header('Pragma', 'no-cache');
+  next();
+};
 
 
 app.use(flash());
@@ -50,7 +58,7 @@ app.use('/', indexAdminRouter);
 app.use('/admin', adminRouter);
 app.use('/v1/booking' , bookingRouter)
 app.use('/admin/temple' , TempleRouter)
-
+app.use('/live' , nocache , liveRouter)
 
 const options = {
   definition: {
