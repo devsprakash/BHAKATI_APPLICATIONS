@@ -159,6 +159,9 @@ exports.getUser = async (req, res) => {
 }
 
 
+
+
+
 exports.updateProfile = async (req, res) => {
 
     try {
@@ -190,14 +193,12 @@ exports.updateProfile = async (req, res) => {
                     'address.country': reqBody.country,
                     'address.pincode': reqBody.pincode,
                     dob: reqBody.dob,
-                    // profileImg: imageUrl,
                     isUpdated:true,
                     status: constants.STATUS.ACTIVE
                 }
             },
 
-            { new: true }
-        )
+            { new: true } )
 
         if (!user)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);

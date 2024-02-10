@@ -71,7 +71,8 @@ module.exports = {
         new_slot_booking:'slot booking successfully',
         not_found:'all the booking slot data is not found',
         get_all_booking:'successfully get all booking slots',
-        get_all_temples:'successfully get all booking temples'
+        get_all_temples:'successfully get all booking temples',
+        booking_downlod:'successfully downloading this booking slot'
     },
     'TEMPLE':{
         addTemple:'successfully add a new temple',
@@ -79,15 +80,16 @@ module.exports = {
         get_all_temples:'successfully get all temples',
         delete_temples:'successfully delete this temple',
         already_delete_temples:'this temple is already deleted',
-        booking_downlod:'successfully downloading this booking slot'
+        temple_login : 'temple login sucessfully',
+        email_already_exist:'email already exists',
+        logout_success:'temple logout succesfully'
    },
-   'LIVE':{
+
+   'LIVESTREAM':{
      
-       channel_name_is_required: 'channel is required',
-       uid_is_required : 'uid is required',
-       in_correct : 'role is incorrect',
-       in_valid_token : 'token type is invalid',
-       generate_token :'successfully generated a new token'
+       create_new_live_stream_video: 'successfully created a new live streaming cideo',
+       get_all_live_streams: 'successfully get all live streaming',
+       update_live_streams: 'successfully update live streaming'
    }
 
    

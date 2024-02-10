@@ -14,16 +14,10 @@ const indexAdminRouter = require('./admin/routes/index');
 const adminRouter = require('./admin/routes/admin');
 const bookingRouter = require('./v1/routes/booking')
 const TempleRouter = require('./admin/routes/temple')
-const liveRouter = require('./v1/routes/Live')
+const liveRouter = require('./v1/routes/Live');
+const templeGuruRouter = require('./Guru/routes/Temples')
 const app = express();
 
-
-const nocache = (_, resp, next) => {
-  resp.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-  resp.header('Expires', '-1');
-  resp.header('Pragma', 'no-cache');
-  next();
-};
 
 
 app.use(flash());
@@ -58,7 +52,8 @@ app.use('/', indexAdminRouter);
 app.use('/admin', adminRouter);
 app.use('/v1/booking' , bookingRouter)
 app.use('/admin/temple' , TempleRouter)
-app.use('/live' , nocache , liveRouter)
+app.use('/LiveStream' , liveRouter);
+app.use('/guru/temple' , templeGuruRouter)
 
 const options = {
   definition: {
@@ -74,7 +69,11 @@ const options = {
       },
     ],
   },
-  apis: ["./v1/routes/*.js"], // Check this path
+  apis: [
+    "./v1/routes/*.js",
+    "./GURU/routes/*.js",
+    "./admin/routes/*.js"
+  ]// Check this path
 };
 
 const specs = swaggerJsDoc(options);

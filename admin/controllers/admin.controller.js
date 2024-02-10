@@ -125,7 +125,9 @@ exports.deleteProfile = async (req, res) => {
     try {
 
         const { userId } =  req.query
-        const findAdmin = await checkAdmin(userId)
+        const userIds = req.user._id;
+
+        const findAdmin = await checkAdmin(userIds);
 
         if (findAdmin.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);

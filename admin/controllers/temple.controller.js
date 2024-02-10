@@ -5,11 +5,12 @@ const Temple = require('../../models/Temple.model');
 const {
     checkAdmin
 } = require("../../v1/services/user.service");
-const { BASEURL } = require('../../keys/development.keys')
+const { BASEURL , JWT_SECRET } = require('../../keys/development.keys')
 const { templeSave } = require('../services/temple.service')
 const dateFormat = require("../../helper/dateformat.helper");
 const { v4: uuidv4 } = require('uuid');
-
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs')
 
 
 
@@ -21,23 +22,35 @@ exports.addTemple = async (req, res) => {
 
     try {
 
-        const user = await checkAdmin(userId)
+        const user = await checkAdmin(userId);
+        
         if (user.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         if (!req.file)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.no_image_upload', {}, req.headers.lang);
 
+        const templesEmailExist = await Temple.findOne({email: reqBody.email});
+
+        if(templesEmailExist)
+        return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.email_already_exist', {}, req.headers.lang);
+
         let files = req.file;
         const TempleImageUrl = `${BASEURL}/${files.destination}/${files.filename}`;
         reqBody.TempleImg = TempleImageUrl;
         reqBody.templeId = uuidv4()
+        reqBody.password = await bcrypt.hash(reqBody.password , 10)
+
+        reqBody.tempTokens = await jwt.sign({
+            email: reqBody.email.toString()
+        }, JWT_SECRET, { expiresIn: '24h' })
+
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
 
         const templeData = await templeSave(reqBody)
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.addTemple', templeData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'TEMPLE.addTemple', templeData, req.headers.lang);
 
     } catch (err) {
 
@@ -45,6 +58,7 @@ exports.addTemple = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
 
 
 exports.getAllTemples = async (req, res, next) => {
@@ -61,7 +75,7 @@ exports.getAllTemples = async (req, res, next) => {
             sortOptions[field] = order === 'desc' ? -1 : 1;
         }
 
-        const temples = await Temple.find().select('TempleName TempleImg _id State District Location Desc')
+        const temples = await Temple.find().select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time  Closing_time')
             .sort(sortOptions)
             .skip((page - 1) * per_page)
             .limit(Number(per_page));
@@ -84,6 +98,7 @@ exports.getAllTemples = async (req, res, next) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
 
 exports.SearchAllTemples = async (req, res, next) => {
 
@@ -117,13 +132,14 @@ exports.SearchAllTemples = async (req, res, next) => {
         }
 
         const sortOptions = {};
+
         if (sort) {
             const [field, order] = sort.split(':');
             sortOptions[field] = order === 'desc' ? -1 : 1;
         }
 
         const temples = await Temple.find(query)
-            .select('TempleName TempleImg _id State District Location Desc')
+            .select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time  Closing_time')
             .sort(sortOptions)
             .skip((page - 1) * per_page)
             .limit(Number(per_page));
@@ -140,13 +156,20 @@ exports.SearchAllTemples = async (req, res, next) => {
     }
 }
 
-exports.templeDelete = async (req, res) => {
 
+exports.templeDelete = async (req, res) => {
 
     try {
 
         const { templeId } = req.query;
 
+        const userId = req.user._id;
+        console.log(userId)
+
+        const user = await checkAdmin(userId);
+        
+        if (user.user_type !== constants.USER_TYPE.ADMIN)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const templeData = await Temple.findOneAndDelete({ _id: templeId });
 
