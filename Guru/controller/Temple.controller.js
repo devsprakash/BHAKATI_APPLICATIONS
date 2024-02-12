@@ -8,7 +8,6 @@ const bcrypt = require('bcryptjs')
 
 
 
-
 exports.templeLogin = async (req, res) => {
 
     try {
@@ -38,17 +37,11 @@ exports.templeLogin = async (req, res) => {
         let newToken = await temple.generateAuthToken();
         let refreshToken = await temple.generateRefreshToken()
 
-
         temple.refresh_tokens = refreshToken
         temple.tokens = newToken;
         await temple.save()
 
         let resData = temple
-        resData.tokens = '';
-        resData.refresh_tokens = ''
-        resData.password = undefined
-        resData.refresh_tokens = undefined
-        resData.tokens = undefined
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_login', resData, req.headers.lang);
 
