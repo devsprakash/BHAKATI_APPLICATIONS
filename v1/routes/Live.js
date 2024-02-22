@@ -1,7 +1,6 @@
 const express = require('express');
-const { createNewLiveStream, getAllLiveStream, getLiveStream, updateLiveStream } = require('../controllers/livestream.controller');
+const { createNewLiveStream, getAllLiveStream,deleteLiveStream, LiveStreamingEnd } = require('../controllers/livestream.controller');
 const router = express.Router();
-
 
 
 /**
@@ -10,7 +9,7 @@ const router = express.Router();
  *   post:
  *     summary: Create a new live stream
  *     description: Endpoint to create a new live stream.
- *     tags: [USER]
+ *     tags: [LIVESTREAM]
  *     requestBody:
  *       required: true
  *       content:
@@ -18,15 +17,22 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               description:
+ *               templeId:
  *                 type: string
- *                 description: Description of the live stream.
+ *                 description: ID of the temple associated with the live stream.
+ *               pujaId:
+ *                 type: string
+ *                 description: ID of the puja associated with the live stream.
+ *               ritualId:
+ *                 type: string
+ *                 description: ID of the ritual associated with the live stream.
  *     responses:
  *       '201':
  *         description: Successfully created a new live stream
  *       '400':
  *         description: Bad request, missing required fields
  */
+
 
 router.post('/createNewLiveStream',  createNewLiveStream);
 
@@ -36,7 +42,7 @@ router.post('/createNewLiveStream',  createNewLiveStream);
  *   get:
  *     summary: Get all live streams
  *     description: Endpoint to fetch all live streams.
- *     tags: [USER]
+ *     tags: [LIVESTREAM]
  *     responses:
  *       '200':
  *         description: A list of live streams
@@ -61,77 +67,65 @@ router.get('/getAllLiveStreams' , getAllLiveStream);
 
 /**
  * @swagger
- * /LiveStream/getLiveStreams/{LIVE_STREAM_ID}:
- *   get:
- *     summary: Get a live stream by ID
- *     description: Endpoint to fetch a live stream by its ID.
- *     tags: [USER]
+ * /LiveStream/LiveStreamEnd/{LIVE_STREAM_ID}/{id}:
+ *   put:
+ *     summary: End a live stream
+ *     description: Endpoint to mark the end of a live stream.
+ *     tags: [LIVESTREAM]
  *     parameters:
  *       - in: path
  *         name: LIVE_STREAM_ID
- *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the live stream to retrieve.
+ *         required: true
+ *         description: The ID of the live stream to end.
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Placeholder for any additional identifier if needed.
  *     responses:
  *       '200':
- *         description: Successfully retrieved the live stream
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 streamName:
- *                   type: string
- *                   description: The name of the live stream.
- *                 description:
- *                   type: string
- *                   description: Description of the live stream.
+ *         description: Successfully marked the end of the live stream
  *       '404':
  *         description: Live stream not found
+ *       '500':
+ *         description: Internal server error
  */
 
-
-router.get('/getLiveStreams/:LIVE_STREAM_ID' , getLiveStream)
+router.put('/LiveStreamEnd/:LIVE_STREAM_ID/:id' , LiveStreamingEnd);
 
 /**
  * @swagger
- * /LiveStream/updateLiveStreams/{LIVE_STREAM_ID}:
- *   patch:
- *     summary: Update a live stream by ID
- *     description: Endpoint to update a live stream by its ID.
- *     tags: [USER]
+ * /LiveStream/deleteLiveStreams/{LIVE_STREAM_ID}/{id}:
+ *   delete:
+ *     summary: Delete a live stream
+ *     description: Endpoint to delete a live stream.
+ *     tags: [LIVESTREAM]
  *     parameters:
  *       - in: path
  *         name: LIVE_STREAM_ID
- *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the live stream to update.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               latency_mode:
- *                 type: string
- *                 description: Latency mode of the live stream.
- *               reconnect_window:
- *                 type: number
- *                 description: Reconnect window in seconds.
- *               max_continuous_duration:
- *                 type: number
- *                 description: Maximum continuous duration in seconds.
+ *         required: true
+ *         description: The ID of the live stream to delete.
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Placeholder for any additional identifier if needed.
  *     responses:
  *       '200':
- *         description: Successfully updated the live stream
+ *         description: Successfully deleted the live stream
  *       '404':
  *         description: Live stream not found
+ *       '500':
+ *         description: Internal server error
  */
 
-router.patch('/updateLiveStreams/:LIVE_STREAM_ID' , updateLiveStream)
+router.delete('/deleteLiveStreams/:LIVE_STREAM_ID/:id' , deleteLiveStream)
 
 
 

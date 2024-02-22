@@ -5,8 +5,10 @@ const Booking = require("../../models/Booking.model");
 const constants = require("../../config/constants");
 const { newBooking } = require("../services/booking.service")
 const { isValid } = require("../../services/blackListMail");
+const PDFDocument = require('pdfkit');
 const fs = require('fs')
-const path = require('path')
+const blobStream = require('blob-stream');
+
 
 
 exports.NewBookingSlot = async (req, res, next) => {
@@ -52,7 +54,7 @@ exports.getAllBookingSlot = async (req, res, next) => {
             sortOptions[field] = order === 'desc' ? -1 : 1;
         }
 
-        const bookings = await Booking.find({ userId: userId }, { date: 1, StartTime: 1, EndTime: 1, _id: 1, Slot: 1 , Name:1 })
+        const bookings = await Booking.find({ userId: userId }, { date: 1, StartTime: 1, EndTime: 1, _id: 1, Slot: 1, Name: 1 })
             .populate('templeId')
             .sort(sortOptions)
             .skip((page - 1) * per_page)
@@ -81,59 +83,53 @@ exports.getAllBookingSlot = async (req, res, next) => {
 
 
 
-exports.bookingSlotDownloaded = async (req , res) => {
+exports.bookingSlotDownloaded = async (req, res) => {
 
-   try {
+    try {
 
-    const { bookingId } = req.params;
-    console.log(bookingId)
+        const { bookingId } = req.params;
 
-        const booking = {
-            "_id": {
-              "$oid": "65bef6022c7024536c50553c"
-            },
-            "deleted_at": null,
-            "date": "2024-02-14",
-            "Slot": 1,
-            "StartTime": "09:00 AM",
-            "EndTime": "10:30 AM",
-            "templeId": {
-              "$oid": "65bc50bfcc899f2df475a95b"
-            },
-            "Name": "prakash",
-            "email": "prakash123@gmail.com",
-            "mobile_number": "6371704662",
-            "userId": {
-              "$oid": "65bef5095349231d28d97e81"
-            },
-            "ref_no": "31551687",
-            "created_at": "02/04/2024 07:02:72",
-            "updated_at": "02/04/2024 07:02:72",
-            "__v": 0
-          }
+        const booking = await Booking.findOne({ _id: bookingId }).populate('templeId')
 
         if (!booking)
-        return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang)
 
-        const jsonData = JSON.stringify(booking);
-        console.log(jsonData)
 
-        const filePath = path.join(__dirname, 'download', `booking_${bookingId}.json`);
+        const doc = new PDFDocument();
+        doc.pipe(fs.createWriteStream('booking.pdf'));
 
-        fs.writeFileSync(filePath, jsonData);
+        doc.font('Helvetica-Bold')
+            .fontSize(14)
+            .text('Booking Details', { align: 'center' })
+            .moveDown();
 
-        // Set the response headers for downloading the file
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Content-Disposition', `attachment; filename=booking_${bookingId}.json`);
+        doc.image('OIP.jpeg', {
+            fit: [70, 70],
+            align: 'center',
+            valign: 'top'
+        })
+            .moveDown();
 
-        const fileStream = fs.createReadStream(filePath);
-        fileStream.pipe(res);
+        doc.font('Helvetica')
+            .fontSize(12)
+            .text(`Full Name: ${booking.Name}`, { bold: true })
+            .text(`Email: ${booking.email}`, { bold: true })
+            .text(`Mobile Number: ${booking.mobile_number}`, { bold: true })
+            .text(`Temple Name: ${booking.templeId.TempleName}`, { bold: true })
+            .text(`Temple Location: ${booking.templeId.Location}`, { bold: true })
+            .text(`Temple District: ${booking.templeId.District}`, { bold: true })
+            .text(`Temple State: ${booking.templeId.State}`, { bold: true })
+            .text(`Date: ${booking.date}`, { bold: true })
+            .text(`Slot: ${booking.Slot}`, { bold: true })
+            .text(`Start Time: ${booking.StartTime}`, { bold: true })
+            .text(`End Time: ${booking.EndTime}`, { bold: true })
+            .text(`Reference Number: ${booking.ref_no}`, { bold: true })
+            .text(`Created At: ${booking.created_at}`, { bold: true })
+            .moveDown();
 
-        fileStream.on('end', () => {
-            fs.unlinkSync(filePath);
-        });
+        doc.end();
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_downlod', {} , req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_downlod', {}, req.headers.lang);
 
     } catch (err) {
 

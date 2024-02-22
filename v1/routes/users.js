@@ -6,10 +6,9 @@ const { update_profile_validator,
  } = require('../../validation/user.validator')
  const { upload } = require('../../middleware/multer')
 const {
-  signUp,
   login,
   logout,
-  getUser , verifyOtp , updateProfile,  loginWithPassword
+  getUser , verifyOtp , updateProfile, updateDeviceToken
 } = require('../controllers/user.controller');
 
 
@@ -29,6 +28,8 @@ const {
  *           example:
  *             mobile_number: "+1234567890"
  *             email: "examplePassword@gmail.com"
+ *             device_token: "1234567"
+ *             device_type: 1 andorid for 1 and ios for 2
  *     responses:
  *       '200':
  *         description: User logged in successfully
@@ -192,8 +193,32 @@ router.get('/getProfile' , authenticate , getUser);
  * 
  */
 
-
 router.put('/updateProfile/:userId' ,   updateProfile);
+
+/**
+ * @swagger
+ * /v1/users/updateDeviceToken:
+ *   post:
+ *     summary: User updated device token
+ *     description: Endpoint for user updated device token
+ *     tags: [USER]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           example:
+ *             device_token: "1234567"
+ *             device_type: 1 andorid for 1 and ios for 2
+ *     responses:
+ *       '200':
+ *         description: User updated device token successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: User updated device token successfully
+ */
+
+router.post('/updateDeviceToken' , authenticate , updateDeviceToken)
 
 
 module.exports = router;

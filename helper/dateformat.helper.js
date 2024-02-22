@@ -12,8 +12,8 @@ exports.getDateFormatFromTimeStamp = function(dt){
 }
 
 //add time to current timestamp
-exports.add_time_to_current_timestamp = function(number,timeformat){
-    return moment().add(number,timeformat).format("X");
+exports.add_current_time= function(number,timeformat){
+    return moment().format("HH:MM:SS");
 }
 
 //convert YYYYMMDD date format to timestamp

@@ -17,7 +17,7 @@ module.exports = {
 
             const decoded = await jwt.verify(token, JWT_SECRET);
 
-            const user = await User.findOne({ _id: decoded._id, 'tokens': token, user_type: 1 });
+            const user = await User.findOne({ _id: decoded._id, 'tokens': token});
 
             if (!user) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang)
 
@@ -25,6 +25,7 @@ module.exports = {
             req.user = user;
 
             next();
+            
         } catch (err) {
             console.log('err....', err)
             sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)

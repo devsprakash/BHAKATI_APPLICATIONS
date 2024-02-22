@@ -55,7 +55,8 @@ module.exports = {
         otp_not_matched:'Your otp does not match',
         delete_account:'successfully delete this account',
         already_updated:'Your account already updated',
-        not_verify:'Your not verified Please verify your account'
+        not_verify:'Your not verified Please verify your account',
+        update_device_token : 'successfully updated device token'
 
     },
 
@@ -87,9 +88,15 @@ module.exports = {
 
    'LIVESTREAM':{
      
-       create_new_live_stream_video: 'successfully created a new live streaming cideo',
+       create_new_live_stream_video: 'successfully created a new live streaming video',
        get_all_live_streams: 'successfully get all live streaming',
-       update_live_streams: 'successfully update live streaming'
+       delete_live_streams: 'successfully delete live streaming'
+   },
+   'PUJA':{
+      add_new_puja : 'successfully added a new puja',
+      not_found: 'currently no puja found',
+      get_all_puja : 'successfully get all puja',
+      update_puja : 'successfully update puja'
    }
 
    

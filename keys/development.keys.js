@@ -9,8 +9,8 @@ module.exports = {
     'BASEURL': 'http://16.170.253.177:8001',
     'APPID':'064f804292cf437d8d949e9e1ed01d3e',
     'APPCERTIFICATE':'e6b6368d981c47b3bb99ad3a5ae1e4cd',
-    'MUX_TOKEN_ID':'108b7df9-6871-4585-91a1-1e567afb3930',
-    'MUX_TOKEN_SECRET':'Odca0xHjR9jdlNtL5qM4c4REL6bV5zRZn7eaF7cTzPh2H4CT0IfZrTp6HvdA0Nh90HLijJsQMmC',
+    'MUX_TOKEN_ID':'d2681bb6-48ad-4eae-81eb-2796b232f17f',
+    'MUX_TOKEN_SECRET':'N0AxtIqmY/quZ5Tlm2lP8U/ktn2H4YjPRWzibqa0TFB3n4ci6i4+8jLfnL74X4Ihgukc69RnFJ+',
     'MUXURL': 'https://api.mux.com'
 }
 

@@ -29,50 +29,30 @@ const userSchema = new Schema({
     },
     dob: {
         type: String,
-        default:null
+        default: null
     },
     gender: {
         type: String,
-        default:null
+        default: null
     },
-    address: {
-        street: {
-            type: String,
-            default: null
-        },
-        city: {
-            type: String,
-            default: null
-        },
-        state: {
-            type: String,
-            default: null
-        },
-        country: {
-            type: String,
-            default: null
-        },
-        pincode: {
-            type: String,
-            default: null
-        },
-    },
-    profileImg: { type: String , default:null },
+
+    profileImg: { type: String, default: null },
+
     user_type: {
         type: Number, //1-admin 2-user
         default: 2
     },
-    verify:{
-        type:Boolean,
-        default:false
+    verify: {
+        type: Boolean,
+        default: false
     },
     status: {
         type: Number,
         default: constants.STATUS.ACTIVE
     },
-    isUpdated:{
-        type:Boolean,
-        default:false
+    isUpdated: {
+        type: Boolean,
+        default: false
     },
     signup_status: {
         type: Number,
@@ -90,7 +70,18 @@ const userSchema = new Schema({
         type: String,
         default: null
     },
-    otp:{type:String , default:null},
+    otp: {
+        type: String,
+        default: null
+    },
+    device_token: {
+        type: String,
+        default: null
+    },
+    device_type: {
+        type: Number,
+        default: null
+    },
     created_at: {
         type: String,
     },

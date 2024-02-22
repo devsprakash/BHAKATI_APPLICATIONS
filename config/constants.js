@@ -2,7 +2,7 @@
 module.exports = {
 	
 	'STATUS': {'INACTIVE': 0 , 'ACTIVE': 1, 'DE_ACTIVE': 2},
-	'WORKOUT_STATUS': {'INACTIVE': 0 , 'PUBLISHED': 1, 'DRAFT': 2}, 
+	'WORKOUT_STATUS': {'INACTIVE': 0 , 'PUBLISHED': 1, 'DRAFT': 2},
 	'PAGE_DATA_LIMIT': 10,
 	'DATA_LIMIT': 6,
 	'PAGE': 1,
@@ -12,7 +12,8 @@ module.exports = {
 	'URL_EXPIRE_TIME': '2h',
 	'USER_TYPE': {
 		'ADMIN': 1,
-		'USER': 2
+		'USER': 2,
+		'GURU': 3
 	},
 
 	'PROGRAM_TYPE': {

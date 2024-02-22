@@ -6,7 +6,6 @@ const dateFormat = require('../helper/dateformat.helper');
 const {
     JWT_SECRET
 } = require('../keys/keys')
-
 const Schema = mongoose.Schema;
 
 
@@ -52,9 +51,6 @@ const templeSchema = new Schema({
     trust_mobile_number: {
         type: String
     },
-    guru_name: {
-        type: String
-    },
     templeId: {
         type: String
     },
@@ -67,12 +63,24 @@ const templeSchema = new Schema({
     Closing_time: {
         type: String
     },
+    user_type: {
+        type: Number,
+        default: constants.USER_TYPE.GURU
+    },
+    pujaTypes: [
+        { type: String }
+    ], 
+    isLiveStreaming: {
+        type: Boolean, default: false
+    },
+    livePujaId: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'pujas'
+    },
     created_at: {
         type: String,
     },
-    status:{
-        type:Number,
-        default: constants.STATUS.ACTIVE
+    status: { 
+        type: String, enum: ['Upcoming', 'Live', 'Completed'], default: 'Upcoming' 
     },
     updated_at: {
         type: String,
@@ -82,6 +90,7 @@ const templeSchema = new Schema({
         default: null,
     },
 });
+
 
 
 //Output data to JSON
@@ -116,7 +125,7 @@ templeSchema.methods.generateAuthToken = async function () {
     const token = await jwt.sign({
         _id: temple._id.toString()
     }, JWT_SECRET, { expiresIn: '24h' })
-  
+
     temple.tokens = token
     temple.updated_at = await dateFormat.set_current_timestamp();
     temple.refresh_tokens_expires = await dateFormat.add_time_current_date(1, 'days')

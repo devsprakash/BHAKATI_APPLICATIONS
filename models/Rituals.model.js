@@ -1,13 +1,11 @@
 
+
 const mongoose = require('mongoose');
 
 
 const pujaSchema = new mongoose.Schema({
 
-    pujaName: {
-        type: String
-    },
-    pujaImage: {
+    ritualName: {
         type: String
     },
     description: {
@@ -20,9 +18,6 @@ const pujaSchema = new mongoose.Schema({
         type: String
     },
     EndTime: {
-        type: String
-    },
-    tag: {
         type: String
     },
     status: {
@@ -38,5 +33,5 @@ const pujaSchema = new mongoose.Schema({
 })
 
 
-const Puja = mongoose.model('pujas', pujaSchema);
-module.exports = Puja;
+const Rituals = mongoose.model('rituals', pujaSchema);
+module.exports = Rituals;
