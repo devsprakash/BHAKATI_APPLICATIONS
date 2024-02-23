@@ -1,5 +1,5 @@
 const express = require('express');
-const { createNewLiveStream, getAllLiveStream,deleteLiveStream, LiveStreamingEnd } = require('../controllers/livestream.controller');
+const { createNewLiveStream, getAllLiveStreamByPuja,deleteLiveStream, LiveStreamingEnd, getAllLiveStreamByRithuals } = require('../controllers/livestream.controller');
 const router = express.Router();
 
 
@@ -38,14 +38,14 @@ router.post('/createNewLiveStream',  createNewLiveStream);
 
 /**
  * @swagger
- * /LiveStream/getAllLiveStreams:
+ * /LiveStream/getAllLiveStreamByPuja:
  *   get:
- *     summary: Get all live streams
+ *     summary: Get all live streams Puja
  *     description: Endpoint to fetch all live streams.
  *     tags: [LIVESTREAM]
  *     responses:
  *       '200':
- *         description: A list of live streams
+ *         description: A list of live streams by puja
  *         content:
  *           application/json:
  *             schema:
@@ -63,7 +63,36 @@ router.post('/createNewLiveStream',  createNewLiveStream);
  *         description: No live streams found
  */
 
-router.get('/getAllLiveStreams' , getAllLiveStream);
+router.get('/getAllLiveStreamByPuja' , getAllLiveStreamByPuja);
+
+/**
+ * @swagger
+ * /LiveStream/getAllLiveStreamByRithuals:
+ *   get:
+ *     summary: Get all live streams Rihuals
+ *     description: Endpoint to fetch all live streams.
+ *     tags: [LIVESTREAM]
+ *     responses:
+ *       '200':
+ *         description: A list of live streams by Rihuals
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   streamName:
+ *                     type: string
+ *                     description: The name of the live stream.
+ *                   description:
+ *                     type: string
+ *                     description: Description of the live stream.
+ *       '404':
+ *         description: No live streams found
+ */
+
+router.get('/getAllLiveStreamByRithuals' , getAllLiveStreamByRithuals);
 
 /**
  * @swagger

@@ -66,21 +66,9 @@ const templeSchema = new Schema({
     user_type: {
         type: Number,
         default: constants.USER_TYPE.GURU
-    },
-    pujaTypes: [
-        { type: String }
-    ], 
-    isLiveStreaming: {
-        type: Boolean, default: false
-    },
-    livePujaId: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'pujas'
-    },
+    }, 
     created_at: {
         type: String,
-    },
-    status: { 
-        type: String, enum: ['Upcoming', 'Live', 'Completed'], default: 'Upcoming' 
     },
     updated_at: {
         type: String,

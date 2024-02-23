@@ -18,6 +18,7 @@ exports.createNewLiveStream = async (req, res) => {
         "playback_policy": [
             "public"
         ],
+
         "new_asset_settings": {
             "playback_policy": "public",
             "max_resolution_tier": "1080p",
@@ -29,6 +30,7 @@ exports.createNewLiveStream = async (req, res) => {
             ]
         }
     };
+
 
     try {
 
@@ -43,19 +45,29 @@ exports.createNewLiveStream = async (req, res) => {
             }
         );
 
-        reqBody.status = 'LIVE'
-        reqBody.startTime = dateFormat.add_current_time()
-        reqBody.created_at = dateFormat.set_current_timestamp();
-        reqBody.updated_at = dateFormat.set_current_timestamp();
 
-        const addNewLiveStreaming = await LiveStream.create(reqBody)
+        const object = {
 
-        const obj = {
-            LiveStreamData: response.data,
-            addNewLiveStreaming
+            pujaId: reqBody.pujaId,
+            templeId: reqBody.templeId,
+            status: 'LIVE',
+            startTime: dateFormat.add_current_time(),
+            created_at: dateFormat.set_current_timestamp(),
+            updated_at: dateFormat.set_current_timestamp(),
+            muxData: {
+                stream_key: response.data.data.stream_key,
+                status: response.data.data.status,
+                reconnect_window: response.data.data.reconnect_window,
+                max_continuous_duration: response.data.data.max_continuous_duration,
+                latency_mode: response.data.data.latency_mode,
+                plackBackId: response.data.data.id,
+                created_at: response.data.data.created_at,
+            },
         }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.create_new_live_stream_video', obj, req.headers.lang);
+        const addNewLiveStreaming = await LiveStream.create(object)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.create_new_live_stream_video', addNewLiveStreaming, req.headers.lang);
 
     } catch (err) {
         console.log("err(createNewLiveStream)....", err)
@@ -65,8 +77,7 @@ exports.createNewLiveStream = async (req, res) => {
 
 
 
-
-exports.getAllLiveStream = async (req, res) => {
+exports.getAllLiveStreamByPuja = async (req, res) => {
 
     const { limit = 25, page = 1 } = req.query;
 
@@ -98,12 +109,53 @@ exports.getAllLiveStream = async (req, res) => {
             muxData: response.data
         }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.get_all_live_streams', allLivestreams, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.get_all_live_streams_by_puja', allLivestreams, req.headers.lang);
+    } catch (err) {
+        console.log("err(getAllLiveStreamByPuja)....", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+}
+
+
+exports.getAllLiveStreamByRithuals = async (req, res) => {
+
+    const { limit = 25, page = 1 } = req.query;
+
+    try {
+
+        const response = await axios.get(
+            `${MUXURL}/video/v1/live-streams`,
+            {
+                params: {
+                    limit,
+                    offset: (page - 1) * limit
+                },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+                }
+            }
+        );
+
+        const LiveStreamsData = await LiveStream.find()
+            .populate('templeId')
+            .populate('ritualId')
+            .sort()
+            .limit(parseInt(limit))
+            .skip((page - 1) * limit);
+
+        const allLivestreams = {
+            LiveStreamsData,
+            muxData: response.data
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.get_all_live_streams_by_rithuals', allLivestreams, req.headers.lang);
     } catch (err) {
         console.log("err(getAllLiveStream)....", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 }
+
 
 
 
@@ -167,8 +219,7 @@ exports.LiveStreamingEnd = async (req, res) => {
             {
                 new: true
             },
-
-        ).populate('templeId').populate('pujaId');
+        )
 
         const updateLiveStream = {
             endLiveStream: endLiveStream,

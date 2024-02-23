@@ -3,17 +3,17 @@ const mongoose = require('mongoose');
 
 const liveStreamSchema = new mongoose.Schema({
 
-    pujaId: { 
-        type: mongoose.Schema.Types.ObjectId, ref: 'pujas' , default:null
+    pujaId: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'pujas', default: null
     },
-    startTime:{
-        type:String
+    startTime: {
+        type: String
     },
-    endTime:{
-        type:String,
-        default:null
+    endTime: {
+        type: String,
+        default: null
     },
-    status: { 
+    status: {
         type: String, enum: ['LIVE', 'END']
     },
     templeId: {
@@ -23,16 +23,22 @@ const liveStreamSchema = new mongoose.Schema({
     ritualId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'rituals',
-        default:null
+        default: null
     },
-    playBackId:{
-        type:String
+    muxData: {
+        stream_key: String,
+        status: String,
+        reconnect_window: Number,
+        max_continuous_duration: String,
+        latency_mode: String,
+        plackBackId: String,
+        created_at: String
     },
-    created_at:{
-        type:String
+    created_at: {
+        type: String
     },
-    updated_at:{
-        type:String
+    updated_at: {
+        type: String
     },
 });
 

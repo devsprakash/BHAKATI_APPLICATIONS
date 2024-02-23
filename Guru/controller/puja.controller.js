@@ -7,7 +7,7 @@ const constants = require("../../config/constants");
 const { checkAdmin } = require('../../v1/services/user.service')
 const dateFormat = require('../../helper/dateformat.helper');
 const Temple = require('../../models/Temple.model');
-
+const User = require('../../models/user.model')
 
 
 
@@ -16,13 +16,18 @@ exports.addNewPuja = async (req, res) => {
     try {
 
         const reqBody = req.body;
-        const templeId = req.temple._id;
+        const userId = req.user._id;
 
-        const temple = await Temple.findOne({ _id: templeId })
-        console.log("temples", temple)
+        const users = await User.findOne({ _id: userId })
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.GURU))
+        if (!users || (users.user_type !== constants.USER_TYPE.ADMIN))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const pujaImagesPromises = req.files.map(file => `${BASEURL}/${file.filename}`);
+        const pujaImageUrls = await Promise.all(pujaImagesPromises);
+
+        reqBody.pujaImage = pujaImageUrls;
+        reqBody.category = [reqBody.category];
 
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
@@ -38,77 +43,40 @@ exports.addNewPuja = async (req, res) => {
 }
 
 
-// this api access only admin and integrate this api in the admin panel
+
 exports.getAllPuja = async (req, res) => {
 
     try {
 
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
+        const { page = 1, limit = 10, status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
 
-
-        const pujas = await Puja.find()
-            .skip(skip)
-            .limit(limit)
-
-
-        if (!pujas && pujas.length == 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang)
-
-        const totalpujas = await Puja.countDocuments();
-
-        let data = {
-            page: Number(page),
-            total_pujas: totalpujas,
-            pujas
+        if (parseInt(page) < 1 || parseInt(limit) < 1) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'Invalid page or limit values.', {}, req.headers.lang);
         }
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', data, req.headers.lang)
-
-    } catch (err) {
-        console.log('err(getAllPuja)', err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
-
-
-
-// this api access only admin and integrate this api in the admin panel
-exports.getAllUpcomingorLivePuja = async (req, res) => {
-
-    try {
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-        const status = req.query.status
-
 
         const pujas = await Puja.find({ status })
+            .populate('templeId')
             .skip(skip)
-            .limit(limit)
+            .limit(parseInt(limit));
 
+        const totalPujas = await Puja.countDocuments({ status });
 
-        if (!pujas && pujas.length == 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang)
+        if (!pujas || pujas.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
 
-        const totalpujas = await Puja.countDocuments({ status });
-
-        let data = {
-            page: Number(page),
-            total_pujas: totalpujas,
+        const data = {
+            page: parseInt(page),
+            total_pujas: totalPujas,
             pujas
-        }
+        };
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', data, req.headers.lang)
-
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', data, req.headers.lang);
     } catch (err) {
-        console.log('err(getAllUpcomingorLivePuja)...', err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.error('Error(getAllPuja)....', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
-
+};
 
 
 exports.updatePuja = async (req, res) => {
@@ -116,23 +84,27 @@ exports.updatePuja = async (req, res) => {
     try {
 
         const reqBody = req.body;
-
         const { pujaId } = req.params;
-        
         const templeId = req.temple._id;
-      
         const temple = await Temple.findOne({ _id: templeId })
-
         if (!temple || (temple.user_type !== constants.USER_TYPE.GURU))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const updatedPuja = await Puja.findOneAndUpdate({ _id: pujaId }, reqBody, { new: true })
+        const updatedPuja = await Puja.findByIdAndUpdate(pujaId, {
+
+            $set: {
+                pujaName: reqBody.pujaName,
+                StartTime: reqBody.StartTime,
+                EndTime: reqBody.EndTime,
+                description: reqBody.description,
+                date: reqBody.date,
+                updated_at: dateFormat.set_current_timestamp(),
+            }
+
+        }, { new: true });
 
         if (!updatedPuja)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang)
-
-        updatedPuja.updated_at = dateFormat.set_current_timestamp();
-        await updatedPuja.save();
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.update_puja ', updatedPuja, req.headers.lang);
 
