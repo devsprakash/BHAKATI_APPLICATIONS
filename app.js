@@ -73,7 +73,7 @@ const options = {
   },
   apis: [
     "./v1/routes/*.js",
-    "./GURU/routes/*.js",
+    "./Guru/routes/*.js",
     "./admin/routes/*.js"
   ]// Check this path
 };
