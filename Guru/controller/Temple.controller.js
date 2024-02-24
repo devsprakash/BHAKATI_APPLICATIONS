@@ -8,6 +8,7 @@ const bcrypt = require('bcryptjs')
 
 
 
+
 exports.templeLogin = async (req, res) => {
 
     try {
@@ -20,8 +21,7 @@ exports.templeLogin = async (req, res) => {
 
 
         let temple = await Temple.findOne({ email: reqBody.email });
-        console.log(temple)
-
+        
         const matchPassword = await bcrypt.compare(reqBody.password, temple.password);
     
         if (matchPassword === false)

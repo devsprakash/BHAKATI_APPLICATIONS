@@ -97,7 +97,17 @@ module.exports = {
       add_new_puja : 'successfully added a new puja',
       not_found: 'currently no puja found',
       get_all_puja : 'successfully get all puja',
-      update_puja : 'successfully update puja'
+      update_puja : 'successfully update puja',
+      add_new_rithuals: 'successfully add new rithuals',
+      Invalid_page: 'Invalid page or limit values.',
+      get_all_rithuals:'successfully get all rithuals'
+   },
+   'GURU':{
+      add_new_guru: 'successfully add new guru',
+      existing_email: 'this email is already existing',
+      guru_login_success:'guru login successfully',
+      guru_not_found: 'guru was not found',
+      guru_logout:'guru logout successfully'
    }
 
    

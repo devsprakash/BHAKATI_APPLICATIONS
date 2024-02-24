@@ -65,7 +65,7 @@ const templeSchema = new Schema({
     },
     user_type: {
         type: Number,
-        default: constants.USER_TYPE.GURU
+        default: constants.USER_TYPE.TEMPLEAUTHORITY
     }, 
     created_at: {
         type: String,

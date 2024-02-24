@@ -3,7 +3,8 @@ const { addNewPuja, getAllPuja, getAllUpcomingorLivePuja, updatePuja } = require
 const router = express.Router();
 const TempleAuthenticate = require('../../middleware/temple.auth')
 const { upload } = require('../../middleware/multer');
-const { verifyAccessToken } = require('../../middleware/admin.middleware')
+const { verifyAccessToken } = require('../../middleware/admin.middleware');
+const { addNewRithuals, getAllRithuals } = require('../controller/rituals.controller');
 
 /**
  * @swagger
@@ -142,7 +143,104 @@ router.get('/getAllpuja', getAllPuja);
  *     description: Temple bearer token for authentication
  */
 
-router.put('/updatepuja/:pujaId', TempleAuthenticate, updatePuja)
+router.put('/updatepuja/:pujaId', TempleAuthenticate, updatePuja);
+
+/**
+ * @swagger
+ * /guru/puja/addNewRithuals:
+ *   post:
+ *     summary: Add new rituals
+ *     description: Endpoint to add new rituals to the temple.
+ *     tags:
+ *       - Rituals
+ *     security:
+ *       - TempleAuthenticate: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               templeId:
+ *                 type: string
+ *                 example: "65bc50d8cc899f2df475a95f"
+ *               ritualName:
+ *                 type: string
+ *                 example: "sakala aarati"
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 example: "24-02-2024"
+ *               description:
+ *                 type: string
+ *                 example: "sakala aarati is starting now, please join"
+ *               StartTime:
+ *                 type: string
+ *                 format: time
+ *                 example: "5:10 AM"
+ *               EndTime:
+ *                 type: string
+ *                 format: time
+ *                 example: "5:40 AM"
+ *     responses:
+ *       200:
+ *         description: Rituals added successfully
+ *       401:
+ *         description: Unauthorized, authentication credentials were missing or incorrect
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post('/addNewRithuals' , TempleAuthenticate , addNewRithuals);
+
+/**
+ * @swagger
+ * /guru/puja/getAllRithuals:
+ *   get:
+ *     summary: Get all rituals
+ *     description: Endpoint to retrieve all rituals from the temple.
+ *     tags:
+ *       - Rituals
+ *     responses:
+ *       200:
+ *         description: An array of all rituals
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   templeId:
+ *                     type: string
+ *                     example: "65bc50d8cc899f2df475a95f"
+ *                   ritualName:
+ *                     type: string
+ *                     example: "sakala aarati"
+ *                   date:
+ *                     type: string
+ *                     format: date
+ *                     example: "24-02-2024"
+ *                   description:
+ *                     type: string
+ *                     example: "sakala aarati is starting now, please join"
+ *                   StartTime:
+ *                     type: string
+ *                     format: time
+ *                     example: "5:10 AM"
+ *                   EndTime:
+ *                     type: string
+ *                     format: time
+ *                     example: "5:40 AM"
+ *       401:
+ *         description: Unauthorized, authentication credentials were missing or incorrect
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get('/getAllRithuals' , getAllRithuals);
+
 
 
 module.exports = router;

@@ -1,5 +1,4 @@
 
-
 const { sendResponse } = require('../../services/common.service')
 const Puja = require('../../models/puja.model');
 const { BASEURL } = require('../../keys/development.keys')
@@ -8,6 +7,7 @@ const { checkAdmin } = require('../../v1/services/user.service')
 const dateFormat = require('../../helper/dateformat.helper');
 const Temple = require('../../models/Temple.model');
 const User = require('../../models/user.model')
+
 
 
 
@@ -52,7 +52,7 @@ exports.getAllPuja = async (req, res) => {
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
         if (parseInt(page) < 1 || parseInt(limit) < 1) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'Invalid page or limit values.', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'PUJA.Invalid_page', {}, req.headers.lang);
         }
 
         const pujas = await Puja.find({ status })

@@ -13,7 +13,8 @@ module.exports = {
 	'USER_TYPE': {
 		'ADMIN': 1,
 		'USER': 2,
-		'GURU': 3
+		'TEMPLEAUTHORITY': 3,
+		'GURU':4
 	},
 
 	'PROGRAM_TYPE': {

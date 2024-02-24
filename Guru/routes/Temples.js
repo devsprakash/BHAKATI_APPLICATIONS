@@ -10,7 +10,7 @@ const router = express.Router();
  *   post:
  *     summary: Temple Login
  *     description: Endpoint for temple login.
- *     tags: [GURU]
+ *     tags: [TEMPLE]
  *     requestBody:
  *       required: true
  *       content:
@@ -35,7 +35,7 @@ router.post('/login' , templeLogin);
  *   post:
  *     summary: Temple Logout
  *     description: Endpoint for temple login.
- *     tags: [GURU]
+ *     tags: [TEMPLE]
  *     requestBody:
  *       required: true
  *       content:

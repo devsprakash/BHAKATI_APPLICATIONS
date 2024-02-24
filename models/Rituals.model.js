@@ -1,9 +1,8 @@
 
-
 const mongoose = require('mongoose');
 
 
-const pujaSchema = new mongoose.Schema({
+const ritualSchema = new mongoose.Schema({
 
     ritualName: {
         type: String
@@ -20,9 +19,9 @@ const pujaSchema = new mongoose.Schema({
     EndTime: {
         type: String
     },
-    status: {
-        type: String,
-        default: 'upcoming'
+    templeId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'temples'
     },
     created_at: {
         type: String
@@ -33,5 +32,6 @@ const pujaSchema = new mongoose.Schema({
 })
 
 
-const Rituals = mongoose.model('rituals', pujaSchema);
+
+const Rituals = mongoose.model('rituals', ritualSchema);
 module.exports = Rituals;
