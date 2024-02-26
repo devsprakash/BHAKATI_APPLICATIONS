@@ -107,8 +107,11 @@ module.exports = {
       existing_email: 'this email is already existing',
       guru_login_success:'guru login successfully',
       guru_not_found: 'guru was not found',
-      guru_logout:'guru logout successfully'
+      guru_logout:'guru logout successfully',
+      get_all_gurus:'successfully get all the gurus information',
+      get_guru_profile: 'successfully get the guru profile',
+      guru_live_stream_created: 'guru successfully create a new live stream',
+      get_all_LiveStream : 'successfully get all the Live Stream',
+      get_Live_Stream_By_Guru:'successfully get all the Live stream'
    }
-
-   
 }

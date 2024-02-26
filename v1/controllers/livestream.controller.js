@@ -117,6 +117,7 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
 }
 
 
+
 exports.getAllLiveStreamByRithuals = async (req, res) => {
 
     const { limit = 25, page = 1 } = req.query;
@@ -150,6 +151,7 @@ exports.getAllLiveStreamByRithuals = async (req, res) => {
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.get_all_live_streams_by_rithuals', allLivestreams, req.headers.lang);
+        
     } catch (err) {
         console.log("err(getAllLiveStream)....", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);

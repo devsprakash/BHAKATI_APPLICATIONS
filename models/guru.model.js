@@ -1,5 +1,5 @@
 
-const constants  = require('../config/constants');
+const constants = require('../config/constants');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken')
 const dateFormat = require('../helper/dateformat.helper');
@@ -26,16 +26,16 @@ const templeGuruSchema = new mongoose.Schema({
     password: {
         type: String
     },
-    user_type:{
-      type:String,
-      default:constants.USER_TYPE.GURU
+    user_type: {
+        type: String,
+        default: constants.USER_TYPE.GURU
     },
     expertise: {
         type: String
     },
     status: {
         type: String,
-        default:'active'
+        default: 'active'
     },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -45,11 +45,11 @@ const templeGuruSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    aadharacardNumber:{
-        type:String
+    aadharacardNumber: {
+        type: String
     },
-    pancardNumber:{
-       type:String
+    pancardNumber: {
+        type: String
     },
     tokens: {
         type: String,
@@ -59,11 +59,53 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null,
     },
-    created_at:{
-        type:String
+    startTime: {
+        type: String,
+        default: null
     },
-    updated_at:{
-        type:String
+    endTime: {
+        type: String,
+        default: null
+    },
+    LiveStreamStatus: {
+        type: String,
+        default: null
+    },
+    muxData: {
+        stream_key: {
+            type: String,
+            default: null
+        },
+        status: {
+            type: String,
+            default: null
+        },
+        reconnect_window: {
+            type: String,
+            default: null
+        },
+        max_continuous_duration: {
+            type: String,
+            default: null
+        },
+        latency_mode: {
+            type: String,
+            default: null
+        },
+        plackBackId: {
+            type: String,
+            default: null
+        },
+        created_at: {
+            type: String,
+            default: null
+        },
+    },
+    created_at: {
+        type: String
+    },
+    updated_at: {
+        type: String
     }
 
 });

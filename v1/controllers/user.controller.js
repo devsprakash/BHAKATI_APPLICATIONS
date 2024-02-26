@@ -15,7 +15,6 @@ const { sendMail } = require('../../services/email.services')
 
 
 
-
 exports.logout = async (req, res, next) => {
 
     try {
@@ -164,7 +163,6 @@ exports.getUser = async (req, res) => {
 
 
 
-
 exports.updateProfile = async (req, res) => {
 
     try {
@@ -219,6 +217,8 @@ exports.updateProfile = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
+
 
 exports.updateDeviceToken = async (req, res) => {
 
