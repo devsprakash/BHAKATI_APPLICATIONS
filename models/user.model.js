@@ -36,7 +36,10 @@ const userSchema = new Schema({
         default: null
     },
 
-    profileImg: { type: String, default: null },
+    profileImg: {
+        type: String,
+        default: null
+    },
 
     user_type: {
         type: Number, //1-admin 2-user

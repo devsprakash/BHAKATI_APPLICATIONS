@@ -4,12 +4,9 @@ const mongoose = require('mongoose');
 
 const pujaSchema = new mongoose.Schema({
 
-    category: [{
+    pujaImage: {
         type: String
-    }],
-    pujaImage: [{
-        type: String
-    }],
+    },
     pujaName:{
         type:String,
         default:null
@@ -20,13 +17,13 @@ const pujaSchema = new mongoose.Schema({
     date: {
         type: String
     },
-    StartTime: {
+    duration: {
         type: String,
         default: null
     },
-    EndTime: {
-        type: String,
-        default: null
+    price:{
+        type:Number,
+        default:null
     },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,

@@ -282,6 +282,7 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
 
 
 exports.getAllLiveStreamByGuru = async (req, res) => {
+    
     const { limit = 25, page = 1 } = req.query;
 
     try {

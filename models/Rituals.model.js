@@ -7,12 +7,6 @@ const ritualSchema = new mongoose.Schema({
     ritualName: {
         type: String
     },
-    description: {
-        type: String
-    },
-    date: {
-        type: String
-    },
     StartTime: {
         type: String
     },
