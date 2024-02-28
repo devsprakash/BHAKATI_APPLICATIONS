@@ -2,7 +2,7 @@ const express = require('express');
 const { addNewPuja, getAllPuja, addPuja, getAllPujas } = require('../controller/puja.controller');
 const router = express.Router();
 const TempleAuthenticate = require('../../middleware/temple.auth')
-const { upload } = require('../../middleware/multer');
+const upload  = require('../../middleware/multer');
 const { verifyAccessToken } = require('../../middleware/admin.middleware');
 const { addNewRithuals, getAllRithuals } = require('../controller/rituals.controller');
 

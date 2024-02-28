@@ -17,7 +17,8 @@ const TempleRouter = require('./admin/routes/temple')
 const liveRouter = require('./v1/routes/Live');
 const templeGuruRouter = require('./Guru/routes/Temples');
 const pujaRouter = require('./Guru/routes/puja');
-const GuruRouter = require('./Guru/routes/guru')
+const GuruRouter = require('./Guru/routes/guru');
+const videoRouter = require('./Guru/routes/video')
 const app = express();
 
 
@@ -57,7 +58,11 @@ app.use('/admin/temple' , TempleRouter)
 app.use('/LiveStream' , liveRouter);
 app.use('/guru/temple' , templeGuruRouter);
 app.use('/guru/puja' , pujaRouter);
-app.use('/temple/guru' , GuruRouter)
+app.use('/temple/guru' , GuruRouter);
+app.use('/guru/video' , videoRouter);
+
+
+
 
 const options = {
   definition: {

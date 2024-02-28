@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyAccessToken } = require('../../middleware/admin.middleware');
 const { addNewGuru, guruLogin, gurulogout, getAllGuru, getGuruProfile, GuruCreateNewLiveStream, getAllLiveStreamByGuru } = require('../controller/guru.controller');
-const { upload } = require('../../middleware/multer')
+const  upload  = require('../../middleware/multer')
 
 
 /**
