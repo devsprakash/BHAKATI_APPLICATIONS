@@ -97,9 +97,9 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
             }
         );
 
-        const LiveStreamsData = await LiveStream.find()
-            .populate('templeId')
-            .populate('pujaId')
+        const LiveStreamsData = await LiveStream.find({}, { ritualId: 0 })
+            .populate('templeId', 'TempleName TempleImg _id Location')
+            .populate('pujaId', 'pujaName pujaImage _id')
             .sort()
             .limit(parseInt(limit))
             .skip((page - 1) * limit);
@@ -138,9 +138,9 @@ exports.getAllLiveStreamByRithuals = async (req, res) => {
             }
         );
 
-        const LiveStreamsData = await LiveStream.find()
-            .populate('templeId')
-            .populate('ritualId')
+        const LiveStreamsData = await LiveStream.find({}, { pujaId: 0 })
+            .populate('templeId', 'TempleName TempleImg _id Location')
+            .populate('ritualId', 'ritualName StartTime EndTime _id')
             .sort()
             .limit(parseInt(limit))
             .skip((page - 1) * limit);
@@ -151,7 +151,7 @@ exports.getAllLiveStreamByRithuals = async (req, res) => {
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.get_all_live_streams_by_rithuals', allLivestreams, req.headers.lang);
-        
+
     } catch (err) {
         console.log("err(getAllLiveStream)....", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);

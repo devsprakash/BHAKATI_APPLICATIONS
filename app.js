@@ -48,6 +48,7 @@ app.use(express.urlencoded({
   extended: false
 }));
 app.use(cookieParser());
+app.use('/uploads', express.static('uploads'));
 
 app.use('/v1/', indexRouter);
 app.use('/v1/users', usersRouter);

@@ -112,6 +112,10 @@ module.exports = {
       get_guru_profile: 'successfully get the guru profile',
       guru_live_stream_created: 'guru successfully create a new live stream',
       get_all_LiveStream : 'successfully get all the Live Stream',
-      get_Live_Stream_By_Guru:'successfully get all the Live stream'
+      get_Live_Stream_By_Guru:'successfully get all the Live stream',
+      guru_successfully_upload_new_video: 'successfully upload a new video',
+      get_all_videos: 'successfylly get all the videos',
+      not_found:'videos data was not found',
+      get_videos:'successfully get this video'
    }
 }

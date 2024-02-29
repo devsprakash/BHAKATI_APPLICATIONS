@@ -18,11 +18,14 @@ const videoSchema = new mongoose.Schema({
     totalWatchingTime: {
         type: Number, default: 0
     },
+    videoUrl:{
+        type:String,
+    },
     muxData: {
         mp4_support: String,
         master_access: String,
         encoding_tier: String,
-        plackBackId: String,
+        assetId: String,
         created_at: String
     },
     created_at: {

@@ -11,7 +11,7 @@ async function getAssetInputInfo(assetId) {
   try {
 
     const response = await axios.get(
-      `https://api.mux.com/video/v1/assets/${assetId}/input-info`,
+      `https://api.mux.com/video/v1/assets`,
       {
         auth: {
           username: MUX_TOKEN_ID,
@@ -31,8 +31,7 @@ async function getAssetInputInfo(assetId) {
 }
 
 // Example usage:
-const assetId = 'IOkuhk4LLyfSzICYfmcYey1ipBSq7uT6GGJocmEYTkk'; 
-getAssetInputInfo(assetId)
+getAssetInputInfo()
   .then(inputInfo => {
     console.log('Input Information:', inputInfo.data);
   })
