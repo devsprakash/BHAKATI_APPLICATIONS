@@ -35,8 +35,8 @@ exports.addTemple = async (req, res) => {
         if(templesEmailExist)
         return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.email_already_exist', {}, req.headers.lang);
 
-        let files = req.file;
-        const TempleImageUrl = `${BASEURL}/${files.destination}/${files.filename}`;
+        let file = req.file.filename;
+        const TempleImageUrl = `${BASEURL}/uploads/${file}`;
         reqBody.TempleImg = TempleImageUrl;
         reqBody.templeId = uuidv4()
         reqBody.password = await bcrypt.hash(reqBody.password , 10)

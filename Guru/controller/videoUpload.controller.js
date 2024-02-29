@@ -4,7 +4,7 @@ const constants = require("../../config/constants");
 const dateFormat = require('../../helper/dateformat.helper');
 const TempleGuru = require('../../models/guru.model');
 const Video = require('../../models/uploadVideo.model')
-const { MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET } = require('../../keys/development.keys');
+const { MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET , BASEURL } = require('../../keys/development.keys');
 const axios = require('axios');
 
 
@@ -16,7 +16,7 @@ exports.uploadNewVideo = async (req, res) => {
     const reqBody = req.body;
 
     const file = req.file.filename;
-    let videoUrl = `http://16.170.253.177:8001/uploads/${file}`
+    let videoUrl = `${BASEURL}/uploads/${file}`
 
     const requestData = {
         "input": videoUrl,

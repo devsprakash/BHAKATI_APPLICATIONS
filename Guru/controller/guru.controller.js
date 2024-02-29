@@ -38,7 +38,7 @@ exports.addNewGuru = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const guruImage = `${BASEURL}/${req.file.filename}`;
+        const guruImage = `${BASEURL}/uploads/${req.file.filename}`;
 
         const newGuru = await TempleGuru.create({
             ...req.body,
