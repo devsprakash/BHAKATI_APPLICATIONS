@@ -12,14 +12,17 @@ const videoSchema = new mongoose.Schema({
     description: {
         type: String
     },
-    totalViews: {
-        type: Number, default: 0
+    title: {
+        type: String,
     },
-    totalWatchingTime: {
-        type: Number, default: 0
+    tags: {
+        type: String,
     },
-    videoUrl:{
-        type:String,
+    comment: {
+        type: String
+    },
+    videoUrl: {
+        type: String,
     },
     muxData: {
         mp4_support: String,

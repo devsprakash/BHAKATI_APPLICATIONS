@@ -116,6 +116,7 @@ module.exports = {
       guru_successfully_upload_new_video: 'successfully upload a new video',
       get_all_videos: 'successfylly get all the videos',
       not_found:'videos data was not found',
-      get_videos:'successfully get this video'
+      get_videos:'successfully get this video',
+      get_total_views:'successfully get all the views'
    }
 }

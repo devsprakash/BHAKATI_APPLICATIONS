@@ -4,8 +4,9 @@ const constants = require("../../config/constants");
 const dateFormat = require('../../helper/dateformat.helper');
 const TempleGuru = require('../../models/guru.model');
 const Video = require('../../models/uploadVideo.model')
-const { MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET , BASEURL } = require('../../keys/development.keys');
+const { MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET, BASEURL } = require('../../keys/development.keys');
 const axios = require('axios');
+const { getViewerCountsToken } = require('../../services/muxSignInKey')
 
 
 
@@ -47,13 +48,16 @@ exports.uploadNewVideo = async (req, res) => {
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp(),
             description: reqBody.description,
+            title:reqBody.title,
+            comment: reqBody.comment,
+            tags:reqBody.tags,
             videoUrl: videoUrl,
             guruId: guruId,
             muxData: {
                 mp4_support: response.data.mp4_support,
                 master_access: response.data.data.master_access,
                 encoding_tier: response.data.data.encoding_tier,
-                plackBackId: response.data.data.id,
+                assetId: response.data.data.id,
                 created_at: response.data.data.created_at
             },
         }
@@ -130,7 +134,6 @@ exports.getVideo = async (req, res) => {
         if (!videoData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
 
-
         const videoData = await Video.findOne({ 'muxData.assetId': assetId })
             .populate('guruId', 'GuruName email mobile_number _id')
 
@@ -142,12 +145,46 @@ exports.getVideo = async (req, res) => {
             muxData: response.data
         }
 
-
-
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_videos', videos, req.headers.lang);
 
     } catch (err) {
         console.log("err(getVideo)....", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
+exports.getCountTotalViews = async (req, res) => {
+
+    try {
+
+        const { assetId } = req.query;
+
+        const token = await getViewerCountsToken(assetId);
+
+        const response = await axios.get(`https://stats.mux.com/counts?token=${token}`);
+
+        if (!response.data) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
+        }
+
+        const videoData = await Video.findOneAndUpdate({ 'muxData.assetId': assetId });
+
+        if (!videoData) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
+        }
+        
+        videoData.totalViews = undefined;
+        videoData.totalWatchingTime = undefined;
+
+        const videos = {
+            videoData: videoData,
+            TotalViews: response.data
+        };
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_total_views', videos, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(getCountTotalViews)....", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };

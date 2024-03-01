@@ -25,6 +25,18 @@ const liveStreamSchema = new mongoose.Schema({
         ref: 'rituals',
         default: null
     },
+    description: {
+        type: String
+    },
+    title: {
+        type: String,
+    },
+    tags: {
+        type: String,
+    },
+    comment: {
+        type: String
+    },
     muxData: {
         stream_key: String,
         status: String,

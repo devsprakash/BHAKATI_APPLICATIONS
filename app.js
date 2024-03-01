@@ -54,18 +54,17 @@ app.use('/v1/', indexRouter);
 app.use('/v1/users', usersRouter);
 app.use('/', indexAdminRouter);
 app.use('/admin', adminRouter);
-app.use('/v1/booking' , bookingRouter)
-app.use('/admin/temple' , TempleRouter)
-app.use('/LiveStream' , liveRouter);
-app.use('/guru/temple' , templeGuruRouter);
-app.use('/guru/puja' , pujaRouter);
-app.use('/temple/guru' , GuruRouter);
-app.use('/guru/video' , videoRouter);
-
-
+app.use('/v1/booking', bookingRouter)
+app.use('/admin/temple', TempleRouter)
+app.use('/LiveStream', liveRouter);
+app.use('/guru/temple', templeGuruRouter);
+app.use('/guru/puja', pujaRouter);
+app.use('/temple/guru', GuruRouter);
+app.use('/guru/video', videoRouter);
 
 
 const options = {
+
   definition: {
     openapi: "3.0.0",
     info: {
@@ -83,18 +82,18 @@ const options = {
     "./v1/routes/*.js",
     "./Guru/routes/*.js",
     "./admin/routes/*.js"
-  ]// Check this path
+  ]
 };
 
 const specs = swaggerJsDoc(options);
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs));
 
 
-
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
 });
+
 
 // error handler
 app.use(function (err, req, res, next) {

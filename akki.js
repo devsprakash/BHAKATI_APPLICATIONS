@@ -1,40 +1,30 @@
+const Mux  = require('@mux/mux-node');
+const mux = new Mux({
+  tokenId: 'd2681bb6-48ad-4eae-81eb-2796b232f17f',
+  tokenSecret: 'N0AxtIqmY/quZ5Tlm2lP8U/ktn2H4YjPRWzibqa0TFB3n4ci6i4+8jLfnL74X4Ihgukc69RnFJ+'
+});
+const myId = 'jBTYqYKgsgFoab8rKUlZ8OqspotbwUWD5h9YKnAa3gg'; // Enter the id for which you would like to get counts here
+const myIdType = 'asset'; // Enter the type of ID provided in myId; one of video_id | asset_id | playback_id | live_stream_id
+const signingKeyId = '28JftZVgvcjJSWtKm01dLenhMgvyAVgwNB8kiErCCxng'; // Enter your Mux signing key id here
+const privateKeyBase64 = 'LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBdmhHRWNmdjJRWkw3NTBWanRwTnpNUFFZL1lZcHdYZE4vcDZydTBEbUNWRkZ3M0RICitCY3hhMHNVZWtITktmdTJBMXFFT3JyUW0vY0Jtdzg0VFN4ZjNWa1pBOFdUNXd5VXkvQnZFNjNndnQ1Q0thVm8KVEpXNnlhTTV4d2xiZVdIUDk5a3A4SXpHVmJSajNNV1FmVlZKcC9VdWFlVDJGaXluZTZWd29ONEdmUEFQQncrNApaMmdLbzhQQU1MRmtlMkx6eUhYNkVueUlQYXVuVmF0VVhsR0pvUXpCVGs0aFdqbE1lWEt3WXBVWGhGYVQ2UTduCnVON1JNb01uM2NyMU54M1o3UGJ0cE9VZDJyTFJDRTlkV3kxalpDK3lCaGFTV0tsc1VMdDlOR1NBWlV6YTNLVUMKb2NEL1ZkTXZRNGdMUkJxRk5IalhQWjc2MEI4WlVraEc0QzZ4dndJREFRQUJBb0lCQUh1d2VLbVkxNnZhMUZXdgo0WEVhU2JkTTBzcUJ1Y0N1UERKNzNiUXhTc0k3Z3BQcVhDZ0dKK0h6N1RLV2ljWk5pU2hyaW11UjBWbitCNng1CjNpRFN4TndPTkdvdzlNeENjcjY1REFBWmdvMlRwQ2puL0pVQ1I1a2F3T25YSEJGRTV3c2E1dUVsSzVqd21LQSsKYllZeXI0aysxR0tUWHRZVlh6VG0rQUdvR3o3SDlSdVQrcnpKcFlGV3N0ZFpvclN1dEZ2Y1JxL3l4ZGV4K2pETQo2VC9jSUdrckJycXVqSFoyN2dNUzZWTkFsUVZicWVPNDJvOURDNnJTY0xSTm5LUU5xWHZBK0dsMlkwZ2ZYSGhCCjdCV2lWQ3U2WDhwWndYOWNaZnlOQ01SeTRrVDJYREtQbGlYQjh2b1R3WDRHYXBFNzZmcUU1dExweWVFSkFtZXcKTWJhME0rRUNnWUVBd3NOeWVDZ2Jmc0dFNkR4RFdkZkxFWEg1YTkrUW1uVkh6dGJVV1ZoQTlxUjNzL0lsTytmVQpZa2ZEbVFPMjZoZjlwZVMxT1Y2MVMwYkdCODNSV3puYkd5QmZPWjBhNDBrVmg3OXBZdjE4VXpsUmx5Vk1yMjczCmpxdmlRNUNFWXR6a2ZXSGJOTklQQm1COStzb1pTUHB0WlV4N1dPV1drcDVPS2pTT2d0YWNLODhDZ1lFQStkUXEKWkRwQkxwVExVQXBNejd3WHpZZWpHQmxDR2czbVh0T1FjZTh1VnIvOENaWVFaalpMZ21yR0tBenRzcjZxMkJ5UwpaeUhMbENLeVp0STh6OHFsWE9oOVNwTi92dGV1L1hPZkp4RzBKa3hic3FpWW1Fb05wZENzTExJbFBGVWY2Z2pJCnphUWovY1dzdVVycmdVbjZ3T1Z5Sk01UWE0bitTc3pGeExFNDV4RUNnWUVBbm9jM3hWWGdDMnk1SWM3cmcxV0MKbE5DUWxKMkV0alNBSG52K25EcVpwaWg0eHA5eWJ6QmtUeHJhdXRHck1TQVY5ZElUTUg5R1VkOXBrVENXR0FzZgpyUlRNYmJqVENlMlMrTXQwbkg1M2s4WTBBekw1R0ZMYWJlYTZaUVJjdlp2TzM3K25EWGR0ZzJOSEo3c1ltYTQ5CkhSY0R6M2dROTRhaldQY3VpSkRtelVFQ2dZRUFwUjR3SW14S05uSkxhZ3hVdGh2WUU1UnBHLzFkcmdDdjJNNjEKc2tmbDlab1FCM255UHN2MTNpMlo2RkNiTGI5TkJXYms4RnJxeFc2bFFNWUZRVVRyUkZ1NHEzaVBQdUFvblFVMQpGRXBrS2NmZjkxWHMvUUk4d1BJSlNjVTRUUWJwLy9Gc1hsWDFINzN0cWMyMWw0OEF0MHN1eE5yRFZrQXZITnI0CmYwYXVtREVDZ1lBNGlSQ3FCL0RGbVZpdExFLytXNEFrSFVBTjFrL1k0RDlXRlhFYU5IZW0xZUhhT1pPeHRFeVEKTExhakdtMGpCaWxNTDN1MzFFdndVTzIzcFlaemt3c05zNUZPc0x1Sm1BQUhZeS8yNjkwQmJKM2dxOThwbGFVbAptd0ZVT2pCVm5KU0FvWkErNVJyVTg1aHlZVUlCSGs4NEJod3BoVnRVbjhKWUFJb3VqOEJtR3c9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo='; // Enter your Mux base64 encoded private key 
+const axios = require('axios')
 
-const axios = require('axios');
 
-// Replace these values with your actual Mux token ID and secret
-const MUX_TOKEN_ID = 'd2681bb6-48ad-4eae-81eb-2796b232f17f';
-const MUX_TOKEN_SECRET = 'N0AxtIqmY/quZ5Tlm2lP8U/ktn2H4YjPRWzibqa0TFB3n4ci6i4+8jLfnL74X4Ihgukc69RnFJ+';
 
-// Function to retrieve input information for a specific asset
-async function getAssetInputInfo(assetId) {
+const getViewerCountsToken = async () => {
+    return await mux.jwt.signViewerCounts(myId, {
+        expiration: '1 day',
+        type: myIdType,
+        keyId: signingKeyId,
+        keySecret: privateKeyBase64,
+    });
+};
+const sign = async () => {
+    const token = await getViewerCountsToken();
+    console.log(token);
+};
 
-  try {
+sign();
 
-    const response = await axios.get(
-      `https://api.mux.com/video/v1/assets`,
-      {
-        auth: {
-          username: MUX_TOKEN_ID,
-          password: MUX_TOKEN_SECRET
-        },
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
 
-    return response.data;
-  } catch (error) {
-    console.error('Error retrieving input info:', error.response ? error.response.data : error.message);
-    throw error;
-  }
-}
 
-// Example usage:
-getAssetInputInfo()
-  .then(inputInfo => {
-    console.log('Input Information:', inputInfo.data);
-  })
-  .catch(error => {
-    console.error('Failed to retrieve input info:', error);
-  });

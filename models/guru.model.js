@@ -101,6 +101,19 @@ const templeGuruSchema = new mongoose.Schema({
             default: null
         },
     },
+    description: {
+        type: String
+    },
+    title: {
+        type: String,
+    },
+    tags: {
+        type: String,
+    },
+    comment: {
+        type: String
+    },
+
     created_at: {
         type: String
     },
