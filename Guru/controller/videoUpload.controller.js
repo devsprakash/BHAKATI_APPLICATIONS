@@ -172,9 +172,6 @@ exports.getCountTotalViews = async (req, res) => {
         if (!videoData) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
         }
-        
-        videoData.totalViews = undefined;
-        videoData.totalWatchingTime = undefined;
 
         const videos = {
             videoData: videoData,
