@@ -2,39 +2,96 @@
 const { sendResponse } = require("../../services/common.service");
 const dateFormat = require("../../helper/dateformat.helper");
 const Booking = require("../../models/Booking.model");
+const Slot = require("../../models/slot.model");
 const constants = require("../../config/constants");
-const { newBooking } = require("../services/booking.service")
+const { createBookingSlots } = require("../services/booking.service")
+const { checkAdmin } = require("../services/user.service")
 const { isValid } = require("../../services/blackListMail");
 const PDFDocument = require('pdfkit');
-const fs = require('fs')
-const blobStream = require('blob-stream');
+const fs = require('fs');
+const { v4: uuid } = require('uuid')
 
 
 
-exports.NewBookingSlot = async (req, res, next) => {
+exports.createdNewSlot = async (req, res, next) => {
 
     try {
 
         const reqBody = req.body
         const userId = req.user._id;
-        const checkMail = await isValid(reqBody.email)
-        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
+        const findAdmin = await checkAdmin(userId)
 
-        reqBody.userId = userId;
-        const randomDecimal = Math.random();
-        const randomNumber = Math.floor(randomDecimal * 100000000);
-        const formattedNumber = randomNumber.toString().padStart(8, '0');
-        reqBody.ref_no = formattedNumber;
-        reqBody.created_at = await dateFormat.set_current_timestamp();
-        reqBody.updated_at = await dateFormat.set_current_timestamp();
+        if (findAdmin.user_type !== constants.USER_TYPE.ADMIN)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const newSlotBooking = await newBooking(reqBody);
+        const NewSlots = await createBookingSlots(reqBody.startTime, reqBody.endTime, reqBody.slotsCount, reqBody.templeId, reqBody.slotDurationInMinutes);
+        reqBody.created_at = dateFormat.set_current_timestamp();
+        reqBody.updated_at = dateFormat.set_current_timestamp();
+        reqBody.slotNumber = reqBody.slotsCount;
+        let slot = await Slot.create(reqBody);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.new_slot_booking', newSlotBooking, req.headers.lang);
+        const updatedBookings = NewSlots.map(async (booking) => {
+            booking.slotId = slot._id;
+            await booking.save();
+            return booking;
+        });
+
+        const updatedBookingsResult = await Promise.all(updatedBookings);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.create_new_slot', updatedBookingsResult, req.headers.lang);
 
     } catch (err) {
+        console.log("err(createdNewSlot)....", err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
 
-        console.log("err(NewBookingSlot)....", err)
+
+exports.createNewBooking = async (req, res) => {
+
+    try {
+
+        const reqBody = req.body;
+        const userId = req.user._id;
+
+        const bookings = await Booking.find({ _id: reqBody.bookingId });
+
+        if (!bookings && bookings.length <= 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang);
+
+        for (const booking of bookings) {
+            if (booking.available === false) {
+                return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.already_booked_slot', booking, req.headers.lang);
+            }
+        }
+
+        const updatedBookings = bookings.map(async (booking) => {
+
+            booking.userId = userId;
+            booking.available = false;
+            booking.ref_no = uuid();
+            booking.Name = reqBody.Name;
+            booking.email = reqBody.email;
+            booking.mobile_number = reqBody.mobile_number;
+            booking.created_at = dateFormat.set_current_timestamp();
+            booking.updated_at = dateFormat.set_current_timestamp();
+            let slots = await Slot.findOne({ _id: booking.slotId });
+
+            if (!slots)
+                return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.slots_not_found', {}, req.headers.lang);
+
+            slots.slotNumber--;
+            await Promise.all([slots.save(), booking.save()]);
+
+            return booking;
+        });
+
+        const updatedBookingsResult = await Promise.all(updatedBookings);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_slot', updatedBookingsResult, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(createNewBooking)....", err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }

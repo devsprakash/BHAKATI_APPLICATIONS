@@ -9,9 +9,6 @@ const bookingSchema = new Schema({
     date: {
         type: String
     },
-    Slot: {
-        type: Number
-    },
     StartTime: {
         type: String
     },
@@ -24,25 +21,38 @@ const bookingSchema = new Schema({
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'users'
+        ref: 'users',
+        default:null
+    },
+    slotId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'slots',
+        default:null
     },
     Name:{
-        type:String
+        type:String,
+        default:null
     },
     email:{
-        type:String
+        type:String,
+        default:null
     },
     mobile_number:{
-        type:String
+        type:String,
+        default:null
     },
     ref_no:{
-        type:String
+        type:String,
+        default:null
     },
+    available: { type: Boolean, default:true },
     created_at: {
         type: String,
+        default:null
     },
     updated_at: {
         type: String,
+        default:null
     },
     deleted_at: {
         type: String,

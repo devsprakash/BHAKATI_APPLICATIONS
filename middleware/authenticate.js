@@ -20,7 +20,6 @@ let authenticate = async (req, res, next) => {
 
         const decoded = await jwt.verify(token, JWT_SECRET);
         const user = await User.findOne({ _id: decoded._id, 'tokens': token }).lean();
-        console.log(user)
 
         if (!user) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang)
     

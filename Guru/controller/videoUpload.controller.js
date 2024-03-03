@@ -40,8 +40,6 @@ exports.uploadNewVideo = async (req, res) => {
                 }
             }
         );
-        console.log(response.data)
-
 
         const object = {
             startTime: dateFormat.add_current_time(),

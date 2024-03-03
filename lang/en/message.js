@@ -69,11 +69,14 @@ module.exports = {
         blackList_mail: `Please enter a valid email, we don't allow dummy emails.`
     },
     'BOOKING':{
-        new_slot_booking:'slot booking successfully',
-        not_found:'all the booking slot data is not found',
+        create_new_slot:'admin successfully created all the slots',
+        booking_slot:'user successfully booking',
+        not_found:'bookings data not found',
         get_all_booking:'successfully get all booking slots',
         get_all_temples:'successfully get all booking temples',
-        booking_downlod:'successfully downloading this booking slot'
+        booking_downlod:'successfully downloading this booking slot',
+        slots_not_found:'currently no slots are available',
+        already_booked_slot:'This slot already booked please booked another slot'
     },
     'TEMPLE':{
         addTemple:'successfully add a new temple',
