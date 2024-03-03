@@ -6,7 +6,7 @@ const TempleGuru = require('../../models/guru.model');
 const Video = require('../../models/uploadVideo.model')
 const { MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET, BASEURL } = require('../../keys/development.keys');
 const axios = require('axios');
-const { getViewerCountsToken } = require('../../services/muxSignInKey')
+const { getViewerCountsToken }  = require('../../services/muxSignInKey')
 
 
 
