@@ -1,5 +1,5 @@
 const express = require('express');
-const { addNewPuja, getAllPuja, addPuja, getAllPujas } = require('../controller/puja.controller');
+const { addNewPuja, getAllPuja, addPuja, ListOfPuja } = require('../controller/puja.controller');
 const router = express.Router();
 const TempleAuthenticate = require('../../middleware/temple.auth')
 const upload  = require('../../middleware/multer');
@@ -81,7 +81,7 @@ router.post('/addNewPuja', upload.array('pujaImage'), verifyAccessToken, addNewP
  *       '500':
  *         description: Internal server error - Something went wrong
  */
-router.get('/pujaList', getAllPujas)
+router.get('/pujaList', ListOfPuja)
 
 /**
  * @swagger

@@ -4,7 +4,8 @@ const mongoose = require('mongoose');
 const liveStreamSchema = new mongoose.Schema({
 
     pujaId: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'pujas', default: null
+        type: mongoose.Schema.Types.ObjectId, ref: 'pujas', 
+        default: null
     },
     startTime: {
         type: String
@@ -43,7 +44,8 @@ const liveStreamSchema = new mongoose.Schema({
         reconnect_window: Number,
         max_continuous_duration: String,
         latency_mode: String,
-        plackBackId: String,
+        LiveStreamingId: String,
+        playBackId:String,
         created_at: String
     },
     created_at: {

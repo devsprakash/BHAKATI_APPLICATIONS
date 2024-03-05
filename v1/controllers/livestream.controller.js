@@ -45,6 +45,8 @@ exports.createNewLiveStream = async (req, res) => {
             }
         );
 
+        const ids = response.data.data.playback_ids.map((item) => item.id);
+        console.log(ids[0])
 
         const object = {
 
@@ -55,12 +57,13 @@ exports.createNewLiveStream = async (req, res) => {
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp(),
             muxData: {
+                playBackId: ids[0],
                 stream_key: response.data.data.stream_key,
                 status: response.data.data.status,
                 reconnect_window: response.data.data.reconnect_window,
                 max_continuous_duration: response.data.data.max_continuous_duration,
                 latency_mode: response.data.data.latency_mode,
-                plackBackId: response.data.data.id,
+                LiveStreamingId: response.data.data.id,
                 created_at: response.data.data.created_at,
             },
         }

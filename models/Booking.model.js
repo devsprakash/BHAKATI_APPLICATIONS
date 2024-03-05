@@ -6,9 +6,6 @@ const Schema = mongoose.Schema;
 //Define user schema
 const bookingSchema = new Schema({
 
-    date: {
-        type: String
-    },
     StartTime: {
         type: String
     },
@@ -28,6 +25,15 @@ const bookingSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'slots',
         default:null
+    },
+    ritualId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'rituals',
+        default: null
+    },
+    pujaId: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'pujas', 
+        default: null
     },
     Name:{
         type:String,

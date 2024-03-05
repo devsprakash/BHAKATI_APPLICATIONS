@@ -20,7 +20,7 @@ exports.uploadNewVideo = async (req, res) => {
     let videoUrl = `${BASEURL}/uploads/${file}`
 
     const requestData = {
-        "input": videoUrl,
+        "input": 'https://sample-videos.com/video321/mp4/480/big_buck_bunny_480p_20mb.mp4',
         "playback_policy": ["public"],
         "encoding_tier": "smart",
         "max_resolution_tier": "2160p"
@@ -28,7 +28,6 @@ exports.uploadNewVideo = async (req, res) => {
 
 
     try {
-
 
         const response = await axios.post(
             `${MUXURL}/video/v1/assets`,
@@ -41,6 +40,9 @@ exports.uploadNewVideo = async (req, res) => {
             }
         );
 
+        const ids = response.data.data.playback_ids.map((item) => item.id);
+        console.log(ids[0])
+
         const object = {
             startTime: dateFormat.add_current_time(),
             created_at: dateFormat.set_current_timestamp(),
@@ -52,6 +54,7 @@ exports.uploadNewVideo = async (req, res) => {
             videoUrl: videoUrl,
             guruId: guruId,
             muxData: {
+                playBackId:ids[0],
                 mp4_support: response.data.mp4_support,
                 master_access: response.data.data.master_access,
                 encoding_tier: response.data.data.encoding_tier,

@@ -8,7 +8,7 @@ const { update_profile_validator,
 const {
   login,
   logout,
-  getUser , verifyOtp , updateProfile, updateDeviceToken
+  getUser , verifyOtp , updateProfile, updateDeviceToken, generate_refresh_tokens
 } = require('../controllers/user.controller');
 
 
@@ -193,32 +193,10 @@ router.get('/getProfile' , authenticate , getUser);
  * 
  */
 
-router.put('/updateProfile/:userId' ,   updateProfile);
+router.put('/updateProfile/:userId' ,   updateProfile)
 
-/**
- * @swagger
- * /v1/users/updateDeviceToken:
- *   post:
- *     summary: User updated device token
- *     description: Endpoint for user updated device token
- *     tags: [USER]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           example:
- *             device_token: "1234567"
- *             device_type: 1 andorid for 1 and ios for 2
- *     responses:
- *       '200':
- *         description: User updated device token successfully
- *         content:
- *           application/json:
- *             example:
- *               message: User updated device token successfully
- */
-
-router.post('/updateDeviceToken' , authenticate , updateDeviceToken)
+router.post('/updateDeviceToken' , authenticate , updateDeviceToken);
+router.post('/generated_new_Tokens/:refresh_tokens' , generate_refresh_tokens)
 
 
 module.exports = router;

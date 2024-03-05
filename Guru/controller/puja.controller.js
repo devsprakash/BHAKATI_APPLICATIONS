@@ -50,6 +50,7 @@ exports.addNewPuja = async (req, res) => {
 exports.getAllPuja = async (req, res) => {
 
     try {
+
         const { page = 1, limit = 10, sortField = 'pujaName', sortOrder = 'asc' } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -86,11 +87,12 @@ exports.getAllPuja = async (req, res) => {
 };
 
 
-exports.getAllPujas = async (req, res) => {
+
+exports.ListOfPuja = async (req, res) => {
 
     try {
 
-        const { page = 1, limit = 10, sortField = 'pujaName', sortOrder = 'asc', status } = req.query;
+        const { page = 1, limit = 10, sortField = 'pujaName', sortOrder = 'asc', status, filter } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
         if (parseInt(page) < 1 || parseInt(limit) < 1) {
@@ -100,13 +102,19 @@ exports.getAllPujas = async (req, res) => {
         const sortOptions = {};
         sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
 
-        const pujas = await Puja.find({ status }).select('pujaImage pujaName description duration price status')
+        const filterCondition = status ? { status } : {};
+
+        if (filter) {
+            filterCondition["someField"] = filter;
+        }
+
+        const pujas = await Puja.find(filterCondition).select('pujaImage pujaName description duration price status')
             .populate('templeId', 'TempleName TempleImg')
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit));
 
-        const totalPujas = await Puja.countDocuments({ status });
+        const totalPujas = await Puja.countDocuments(filterCondition);
 
         if (!pujas || pujas.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
@@ -120,7 +128,7 @@ exports.getAllPujas = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', data, req.headers.lang);
 
     } catch (err) {
-        console.error('Error(getAllPuja)....', err);
+        console.error('Error(ListOfPuja)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };

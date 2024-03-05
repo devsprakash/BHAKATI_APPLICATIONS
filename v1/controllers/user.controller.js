@@ -11,7 +11,7 @@ const {
 const constants = require("../../config/constants");
 const { BASEURL } = require("../../keys/keys");
 const { sendMail } = require('../../services/email.services')
-
+const { LoginResponse, LoginResponseData, VerifyOtpResponse, userResponse } = require('../../ResponseData/user.reponse')
 
 
 
@@ -56,7 +56,8 @@ exports.login = async (req, res, next) => {
             reqBody.created_at = await dateFormat.set_current_timestamp();
             reqBody.updated_at = await dateFormat.set_current_timestamp();
             let users = await User.create(reqBody);
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', users, req.headers.lang);
+            let user = LoginResponse(users)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', user, req.headers.lang);
         }
 
         if (user.verify === false)
@@ -80,16 +81,9 @@ exports.login = async (req, res, next) => {
         user.device_type = device_type;
         await user.save()
 
-        let resData = user
-        resData.tokens = '';
-        resData.refresh_tokens = ''
-        delete resData.reset_password_token;
-        delete resData.reset_password_expires;
-        delete resData.password;
-        delete resData.refresh_tokens;
-        delete resData.tokens;
+        let users = LoginResponseData(user)
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', resData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', users, req.headers.lang);
 
     } catch (err) {
 
@@ -119,7 +113,9 @@ exports.verifyOtp = async (req, res) => {
 
         let users = await User.findOneAndUpdate({ _id: userId }, { $set: { otp: null, tokens: newToken, refresh_tokens: refreshToken, verify: true } }, { new: true })
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.opt_verify', users, req.headers.lang);
+        let ResponseData = VerifyOtpResponse(users)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.opt_verify', ResponseData, req.headers.lang);
 
     } catch (err) {
 
@@ -141,17 +137,9 @@ exports.getUser = async (req, res) => {
         if (!user)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
 
-        let resData = user
-        delete resData.reset_password_token;
-        delete resData.password;
-        delete resData.tokens;
-        delete resData.user_type;
-        delete resData.status;
-        delete resData.signup_status;
-        delete resData.refresh_tokens;
-        delete resData.tempTokens;
+        let users = userResponse(user);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.profile_fetch_success', resData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.profile_fetch_success', users, req.headers.lang);
 
     } catch (err) {
 
@@ -174,18 +162,11 @@ exports.updateProfile = async (req, res) => {
         if (userData.isUpdated === true)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.already_updated', {}, req.headers.lang);
 
-        // if (!req.file)
-        //     return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.no_image_upload', {}, req.headers.lang);
-
-        // let files = req.file;
-        // const imageUrl = `${BASEURL}/${files.destination}/${files.filename}`;
-
         const user = await User.findOneAndUpdate({ _id: userId },
             {
                 $set: {
 
                     full_name: reqBody.full_name,
-                    email: reqBody.email,
                     gender: reqBody.gender,
                     mobile_number: reqBody.mobile_number,
                     dob: reqBody.dob,
@@ -199,17 +180,9 @@ exports.updateProfile = async (req, res) => {
         if (!user)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
 
-        let resData = user
-        delete resData.reset_password_token;
-        delete resData.password;
-        delete resData.tokens;
-        delete resData.user_type;
-        delete resData.status;
-        delete resData.signup_status;
-        delete resData.refresh_tokens;
-        delete resData.tempTokens;
+        let users = userResponse(user);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.profile_update_success', resData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.profile_update_success', users, req.headers.lang);
 
     } catch (err) {
 
@@ -237,17 +210,13 @@ exports.updateDeviceToken = async (req, res) => {
         users.updated_at = dateFormat.set_current_timestamp()
         await users.save();
 
-        let resData = users
-        delete resData.reset_password_token;
-        delete resData.password;
-        delete resData.tokens;
-        delete resData.user_type;
-        delete resData.status;
-        delete resData.signup_status;
-        delete resData.refresh_tokens;
-        delete resData.tempTokens;
+        let user =
+        {
+            device_token: device_token,
+            device_type: device_type
+        }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.update_device_token', resData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.update_device_token', user , req.headers.lang);
 
     } catch (err) {
 
@@ -257,3 +226,22 @@ exports.updateDeviceToken = async (req, res) => {
 }
 
 
+exports.generate_refresh_tokens = async (req, res, next) => {
+
+    try {
+
+        const refresh_tokens = req.params.refresh_tokens
+
+        let user = await User.findOne({ refresh_tokens: refresh_tokens })
+
+        console.log("user....", user)
+
+        let newToken = await user.generateAuthToken();
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', newToken, req.headers.lang);
+
+    } catch (err) {
+        console.log('err(generate_refresh_tokens)', err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}

@@ -13,7 +13,9 @@ const { v4: uuid } = require('uuid')
 
 
 
-exports.createdNewSlot = async (req, res, next) => {
+
+
+exports.createdNewSlot = async (req, res ) => {
 
     try {
 
@@ -47,12 +49,15 @@ exports.createdNewSlot = async (req, res, next) => {
 }
 
 
-exports.createNewBooking = async (req, res) => {
+
+
+exports.BookingRithuals = async (req, res) => {
 
     try {
 
         const reqBody = req.body;
         const userId = req.user._id;
+        const { ritualId } = reqBody;
 
         const bookings = await Booking.find({ _id: reqBody.bookingId });
 
@@ -71,6 +76,7 @@ exports.createNewBooking = async (req, res) => {
             booking.available = false;
             booking.ref_no = uuid();
             booking.Name = reqBody.Name;
+            booking.ritualId = ritualId;
             booking.email = reqBody.email;
             booking.mobile_number = reqBody.mobile_number;
             booking.created_at = dateFormat.set_current_timestamp();
@@ -91,7 +97,61 @@ exports.createNewBooking = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_slot', updatedBookingsResult, req.headers.lang);
 
     } catch (err) {
-        console.log("err(createNewBooking)....", err)
+        console.log("err(BookingRithuals)....", err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
+
+
+exports.BookingPuja = async (req, res) => {
+
+    try {
+
+        const reqBody = req.body;
+        const userId = req.user._id;
+        const { pujaId , bookingId} = reqBody;
+
+        const bookings = await Booking.find({ _id: bookingId });
+
+        if (!bookings && bookings.length <= 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang);
+
+        for (const booking of bookings) {
+            if (booking.available === false) {
+                return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.already_booked_slot', booking, req.headers.lang);
+            }
+        }
+
+        let slots = await Slot.findOne({ _id: bookings.slotId });
+
+        if (!slots)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.slots_not_found', {}, req.headers.lang);
+
+
+        const updatedBookings = bookings.map(async (booking) => {
+
+            booking.userId = userId;
+            booking.available = false;
+            booking.ref_no = uuid();
+            booking.Name = reqBody.Name;
+            booking.pujaId = pujaId;
+            booking.email = reqBody.email;
+            booking.mobile_number = reqBody.mobile_number;
+            booking.created_at = dateFormat.set_current_timestamp();
+            booking.updated_at = dateFormat.set_current_timestamp();
+
+            slots.slotNumber--;
+            await Promise.all([slots.save(), booking.save()]);
+
+            return booking;
+        });
+
+        const updatedBookingsResult = await Promise.all(updatedBookings);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_slot', updatedBookingsResult, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(BookingPuja)....", err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
@@ -111,8 +171,10 @@ exports.getAllBookingSlot = async (req, res, next) => {
             sortOptions[field] = order === 'desc' ? -1 : 1;
         }
 
-        const bookings = await Booking.find({ userId: userId }, { date: 1, StartTime: 1, EndTime: 1, _id: 1, Slot: 1, Name: 1 })
+        const bookings = await Booking.find({ userId: userId })
             .populate('templeId')
+            .populate('pujaId')
+            .populate('ritualId')
             .sort(sortOptions)
             .skip((page - 1) * per_page)
             .limit(Number(per_page));

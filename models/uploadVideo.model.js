@@ -25,6 +25,7 @@ const videoSchema = new mongoose.Schema({
         type: String,
     },
     muxData: {
+        playBackId:String,
         mp4_support: String,
         master_access: String,
         encoding_tier: String,
