@@ -144,7 +144,7 @@ userSchema.methods.generateAuthToken = async function () {
     // });
     user.tokens = token
     user.updated_at = await dateFormat.set_current_timestamp();
-    user.refresh_tokens_expires = await dateFormat.add_time_current_date(1, 'days')
+    user.refresh_tokens_expires = await dateFormat.add_time_current_date(3, 'days')
     await user.save()
     return token
 }

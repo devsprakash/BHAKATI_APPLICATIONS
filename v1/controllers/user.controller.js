@@ -230,9 +230,7 @@ exports.generate_refresh_tokens = async (req, res, next) => {
 
     try {
 
-        const refresh_tokens = req.params.refresh_tokens
-
-        let user = await User.findOne({ refresh_tokens: refresh_tokens })
+        let user = await User.findOne({ refresh_tokens: req.body.refresh_tokens })
 
         console.log("user....", user)
 

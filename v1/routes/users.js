@@ -196,7 +196,7 @@ router.get('/getProfile' , authenticate , getUser);
 router.put('/updateProfile/:userId' ,   updateProfile)
 
 router.post('/updateDeviceToken' , authenticate , updateDeviceToken);
-router.post('/generated_new_Tokens/:refresh_tokens' , generate_refresh_tokens)
+router.post('/generated_new_Tokens' , generate_refresh_tokens)
 
 
 module.exports = router;

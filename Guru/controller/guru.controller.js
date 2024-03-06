@@ -49,6 +49,7 @@ exports.addNewGuru = async (req, res) => {
         });
 
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.add_new_guru', newGuru, req.headers.lang);
+
     } catch (error) {
         console.error('Error in addNewGuru:', error);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', error.message, req.headers.lang);
@@ -109,7 +110,6 @@ exports.guruLogin = async (req, res) => {
 
 
 
-
 exports.gurulogout = async (req, res, next) => {
 
     try {
@@ -140,7 +140,6 @@ exports.getGuruProfile = async (req, res) => {
         if (!guru) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
         }
-    
 
         const sanitizedGuru = {
             _id: guru._id,
@@ -155,6 +154,7 @@ exports.getGuruProfile = async (req, res) => {
         };
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_guru_profile', sanitizedGuru, req.headers.lang);
+
     } catch (err) {
         console.error('Error(getGuruProfile)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
@@ -204,7 +204,7 @@ exports.getAllGuru = async (req, res) => {
 
 exports.GuruCreateNewLiveStream = async (req, res) => {
 
-    const { guruId } = req.params;
+    const { guruId } = req.body;
 
     const requestData = {
 

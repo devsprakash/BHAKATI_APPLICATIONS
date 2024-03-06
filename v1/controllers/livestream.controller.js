@@ -5,6 +5,9 @@ const { MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUXURL } = require('../../keys/developme
 const axios = require('axios');
 const LiveStream = require('../../models/liveStreaming.model')
 const dateFormat = require('../../helper/dateformat.helper')
+const { LiveStreamingResponse, LiveStreamingEndResponse } = require('../../ResponseData/LiveStream.reponse')
+
+
 
 
 
@@ -46,7 +49,6 @@ exports.createNewLiveStream = async (req, res) => {
         );
 
         const ids = response.data.data.playback_ids.map((item) => item.id);
-        console.log(ids[0])
 
         const object = {
 
@@ -56,6 +58,8 @@ exports.createNewLiveStream = async (req, res) => {
             startTime: dateFormat.add_current_time(),
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp(),
+            description:reqBody.description,
+            title:reqBody.title,
             muxData: {
                 playBackId: ids[0],
                 stream_key: response.data.data.stream_key,
@@ -69,8 +73,9 @@ exports.createNewLiveStream = async (req, res) => {
         }
 
         const addNewLiveStreaming = await LiveStream.create(object)
+        const streams = LiveStreamingResponse(addNewLiveStreaming)
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.create_new_live_stream_video', addNewLiveStreaming, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.create_new_live_stream_video', streams, req.headers.lang);
 
     } catch (err) {
         console.log("err(createNewLiveStream)....", err)
@@ -100,12 +105,20 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
             }
         );
 
-        const LiveStreamsData = await LiveStream.find({}, { ritualId: 0 })
+        if (!response.data)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
+
+        const LiveStreamsData = await LiveStream.find().select('_id status startTime muxData')
             .populate('templeId', 'TempleName TempleImg _id Location')
             .populate('pujaId', 'pujaName pujaImage _id')
             .sort()
             .limit(parseInt(limit))
             .skip((page - 1) * limit);
+
+        if (!LiveStreamsData && LiveStreamsData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
+
 
         const allLivestreams = {
             LiveStreamsData,
@@ -141,12 +154,20 @@ exports.getAllLiveStreamByRithuals = async (req, res) => {
             }
         );
 
-        const LiveStreamsData = await LiveStream.find({}, { pujaId: 0 })
+
+        if (!response.data)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
+
+        const LiveStreamsData = await LiveStream.find().select('_id status startTime muxData')
             .populate('templeId', 'TempleName TempleImg _id Location')
             .populate('ritualId', 'ritualName StartTime EndTime _id')
             .sort()
             .limit(parseInt(limit))
             .skip((page - 1) * limit);
+
+        if (!LiveStreamsData && LiveStreamsData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
 
         const allLivestreams = {
             LiveStreamsData,
@@ -181,14 +202,19 @@ exports.deleteLiveStream = async (req, res) => {
             }
         );
 
+        if (!response.data)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
+
         const livestream = await LiveStream.findOneAndDelete({ _id: id });
 
-        const deleteStream = {
-            livestream,
-            muxData: response.data
-        }
+        if (!livestream)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.delete_live_streams', deleteStream, req.headers.lang);
+
+        const livestreams = LiveStreamingResponse(livestream)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.delete_live_streams', livestreams, req.headers.lang);
 
     } catch (err) {
         console.log("err(deleteLiveStream)....", err);
@@ -205,7 +231,7 @@ exports.LiveStreamingEnd = async (req, res) => {
 
     try {
 
-        const response = await axios.put(
+          const response =  await axios.put(
             `${MUXURL}/video/v1/live-streams/${LIVE_STREAM_ID}/complete`,
             reqBody,
             {
@@ -215,6 +241,10 @@ exports.LiveStreamingEnd = async (req, res) => {
                 }
             }
         );
+
+        if (!response.data)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
 
         const endLiveStream = await LiveStream.findOneAndUpdate({ _id: id },
             {
@@ -226,12 +256,13 @@ exports.LiveStreamingEnd = async (req, res) => {
             },
         )
 
-        const updateLiveStream = {
-            endLiveStream: endLiveStream,
-            muxData: response.data
-        }
+        if (!endLiveStream)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.update_live_streams', updateLiveStream, req.headers.lang);
+
+        const endLiveStreams = LiveStreamingEndResponse(endLiveStream)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.update_live_streams', endLiveStreams, req.headers.lang);
 
     } catch (err) {
         console.log("err(LiveStreamingEnd)....", err);

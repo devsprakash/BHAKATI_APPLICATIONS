@@ -94,7 +94,9 @@ module.exports = {
        create_new_live_stream_video: 'successfully created a new live streaming video',
        get_all_live_streams_by_puja: 'successfully get all live streams by puja',
        get_all_live_streams_by_rithuals: 'successfully get all live streams by rithuals',
-       delete_live_streams: 'successfully delete live streaming'
+       delete_live_streams: 'successfully delete live streaming',
+       not_found_streams:'muxdata was not found',
+       not_found:'This LiveStream data was not found in the database'
    },
    'PUJA':{
       add_new_puja : 'successfully added a new puja',

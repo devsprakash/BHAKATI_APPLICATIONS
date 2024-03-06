@@ -32,12 +32,6 @@ const liveStreamSchema = new mongoose.Schema({
     title: {
         type: String,
     },
-    tags: {
-        type: String,
-    },
-    comment: {
-        type: String
-    },
     muxData: {
         stream_key: String,
         status: String,
