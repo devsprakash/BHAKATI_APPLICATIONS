@@ -10,7 +10,8 @@ const { templeSave } = require('../services/temple.service')
 const dateFormat = require("../../helper/dateformat.helper");
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs');
+const {TempleReponse} = require('../../ResponseData/Temple.reponse')
 
 
 
@@ -35,8 +36,8 @@ exports.addTemple = async (req, res) => {
         if(templesEmailExist)
         return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.email_already_exist', {}, req.headers.lang);
 
-        let file = req.file.filename;
-        const TempleImageUrl = `${BASEURL}/uploads/${file}`;
+        let files = req.file;
+        const TempleImageUrl = `${BASEURL}/uploads/${files.filename}`;
         reqBody.TempleImg = TempleImageUrl;
         reqBody.templeId = uuidv4()
         reqBody.password = await bcrypt.hash(reqBody.password , 10)
@@ -48,9 +49,11 @@ exports.addTemple = async (req, res) => {
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
 
-        const templeData = await templeSave(reqBody)
+        const templeData = await templeSave(reqBody);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'TEMPLE.addTemple', templeData, req.headers.lang);
+        const responseData = TempleReponse(templeData)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'TEMPLE.addTemple', responseData, req.headers.lang);
 
     } catch (err) {
 
@@ -159,6 +162,7 @@ exports.SearchAllTemples = async (req, res, next) => {
 
 exports.templeDelete = async (req, res) => {
 
+
     try {
 
         const { templeId } = req.query;
@@ -177,7 +181,9 @@ exports.templeDelete = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.already_delete_temples', {}, req.headers.lang);
         }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.delete_temples', templeData, req.headers.lang);
+        const responseData = TempleReponse(templeData)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.delete_temples', responseData , req.headers.lang);
 
     } catch (err) {
 

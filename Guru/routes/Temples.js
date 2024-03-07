@@ -1,5 +1,5 @@
 const express = require('express');
-const { templeLogin, logout } = require('../controller/Temple.controller');
+const { templeLogin, logout , getTempleProfile } = require('../controller/Temple.controller');
 const router = express.Router();
 
 
@@ -51,7 +51,8 @@ router.post('/login' , templeLogin);
  *               message: Temple logout in successfully
  */
 
-router.post('/logout' , logout)
+router.post('/logout' , logout);
+router.get('/getTempleProfile/:templeId' , getTempleProfile)
 
 
 

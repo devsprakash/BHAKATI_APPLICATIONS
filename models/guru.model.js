@@ -27,7 +27,7 @@ const templeGuruSchema = new mongoose.Schema({
         type: String
     },
     user_type: {
-        type: String,
+        type: Number,
         default: constants.USER_TYPE.GURU
     },
     expertise: {
@@ -96,6 +96,10 @@ const templeGuruSchema = new mongoose.Schema({
             type: String,
             default: null
         },
+        LiveStreamId: {
+            type: String,
+            default: null
+        },
         created_at: {
             type: String,
             default: null
@@ -112,6 +116,10 @@ const templeGuruSchema = new mongoose.Schema({
     },
     updated_at: {
         type: String
+    },
+    deleted_at: {
+        type: String,
+        default: null
     }
 
 });

@@ -67,71 +67,6 @@ const  upload  = require('../../middleware/multer')
 
 router.post('/addNewGuru', upload.single('guruImage'), verifyAccessToken, addNewGuru);
 
-/**
- * @swagger
- * /temple/guru/gurulogin:
- *   post:
- *     summary: Guru Login
- *     description: Endpoint for Guru authentication.
- *     tags:
- *       - GURU
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: guru@example.com
- *               password:
- *                 type: string
- *                 format: password
- *                 example: password123
- *     responses:
- *       200:
- *         description: Login successful
- *       400:
- *         description: Bad request, missing or invalid parameters
- *       401:
- *         description: Unauthorized, incorrect email or password
- *       500:
- *         description: Internal server error
- */
-
-router.post('/gurulogin', guruLogin);
-
-/**
- * @swagger
- * /temple/guru/guruLogout:
- *   post:
- *     summary: Guru Logout
- *     description: Endpoint for Guru logout.
- *     tags:
- *       - GURU
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               guruId:
- *                 type: string
- *                 example: "65bc50d8cc899f2df475a95f"
- *     responses:
- *       200:
- *         description: Logout successful
- *       400:
- *         description: Bad request, missing or invalid parameters
- *       401:
- *         description: Unauthorized, authentication credentials were missing or incorrect
- *       500:
- *         description: Internal server error
- */
-router.post('/guruLogout', gurulogout);
 
 /**
  * @swagger
@@ -227,7 +162,7 @@ router.get('/getProfile/:guruId' , getGuruProfile);
  *         description: Internal server error
  */
 
-router.post('/GuruCreatedLiveStream/:guruId' , GuruCreateNewLiveStream);
+router.post('/GuruCreatedLiveStream' , GuruCreateNewLiveStream);
 
 /**
  * @swagger

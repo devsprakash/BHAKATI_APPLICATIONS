@@ -80,13 +80,14 @@ module.exports = {
     },
     'TEMPLE':{
         addTemple:'successfully add a new temple',
-        not_found:'temples are not found',
+        not_found:'temples or guru are not found',
         get_all_temples:'successfully get all temples',
         delete_temples:'successfully delete this temple',
         already_delete_temples:'this temple is already deleted',
-        temple_login : 'temple login sucessfully',
+        temple_login : 'temple or guru login sucessfully',
         email_already_exist:'email already exists',
-        logout_success:'temple logout succesfully'
+        logout_success:'temple or guru logout succesfully',
+        get_temple_profile:'successfully get the temple profile'
    },
 
    'LIVESTREAM':{

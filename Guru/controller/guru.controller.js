@@ -10,6 +10,8 @@ const bcrypt = require('bcryptjs')
 const { isValid } = require("../../services/blackListMail");
 const { MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUXURL } = require('../../keys/development.keys')
 const axios = require('axios');
+const { guruResponseData, guruLiveStreamResponse } = require('../../ResponseData/Guru.response')
+
 
 
 
@@ -38,7 +40,8 @@ exports.addNewGuru = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const guruImage = `${BASEURL}/uploads/${req.file.filename}`;
+        let files = req.file
+        const guruImage = `${BASEURL}/uploads/${files.filename}`;
 
         const newGuru = await TempleGuru.create({
             ...req.body,
@@ -48,7 +51,9 @@ exports.addNewGuru = async (req, res) => {
             updated_at: dateFormat.set_current_timestamp()
         });
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.add_new_guru', newGuru, req.headers.lang);
+        const responseData = guruResponseData(newGuru)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.add_new_guru', responseData, req.headers.lang);
 
     } catch (error) {
         console.error('Error in addNewGuru:', error);
@@ -57,77 +62,6 @@ exports.addNewGuru = async (req, res) => {
 };
 
 
-
-exports.guruLogin = async (req, res) => {
-
-    try {
-
-        const reqBody = req.body
-
-        const checkMail = await isValid(reqBody.email)
-
-        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
-
-        let guru = await TempleGuru.findOne({ email: reqBody.email });
-
-        if (!guru)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
-
-
-        const matchPassword = await bcrypt.compare(reqBody.password, guru.password);
-
-        if (matchPassword === false)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
-
-        if (guru == 1) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.email_not_found', {}, req.headers.lang);
-        if (guru == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
-
-        if (guru.status == 0) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
-        if (guru.status == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
-        if (guru.deleted_at != null) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
-
-        let newToken = await guru.generateAuthToken();
-        let refreshToken = await guru.generateRefreshToken()
-
-        guru.refresh_tokens = refreshToken
-        guru.tokens = newToken;
-        await guru.save()
-
-        let resData = guru;
-        resData.verify = undefined;
-        resData.status = undefined;
-        resData.password = undefined;
-        resData.pancardNumber = undefined;
-        resData.aadharacardNumber = undefined;
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_login_success', resData, req.headers.lang);
-
-    } catch (err) {
-        console.log('err(guruLogin).....', err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
-
-
-
-exports.gurulogout = async (req, res, next) => {
-
-    try {
-
-        const { guruId } = req.body;
-
-        let guruData = await TempleGuru.findById(guruId)
-        guruData.tokens = null
-        guruData.refresh_tokens = null
-
-        await guruData.save()
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_logout', guruData, req.headers.lang);
-
-    } catch (err) {
-        console.log("err(gurulogout)....")
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
 
 
 exports.getGuruProfile = async (req, res) => {
@@ -141,19 +75,9 @@ exports.getGuruProfile = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
         }
 
-        const sanitizedGuru = {
-            _id: guru._id,
-            GuruName: guru.GuruName,
-            email: guru.email,
-            mobile_number: guru.mobile_number,
-            expertise: guru.expertise,
-            templeId: guru.templeId,
-            GuruImg: guru.GuruImg,
-            created_at: guru.created_at,
-            updated_at: guru.updated_at
-        };
+        const responseData = guruResponseData(guru);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_guru_profile', sanitizedGuru, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_guru_profile', responseData, req.headers.lang);
 
     } catch (err) {
         console.error('Error(getGuruProfile)....', err);
@@ -238,6 +162,7 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
             }
         );
 
+        const ids = response.data.data.playback_ids.map((item) => item.id);
 
         const object = {
 
@@ -251,7 +176,8 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
                 reconnect_window: response.data.data.reconnect_window,
                 max_continuous_duration: response.data.data.max_continuous_duration,
                 latency_mode: response.data.data.latency_mode,
-                plackBackId: response.data.data.id,
+                LiveStreamId: response.data.data.id,
+                plackBackId: ids[0],
                 created_at: response.data.data.created_at,
             },
         }
@@ -272,7 +198,10 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
                 req.headers.lang
             );
         }
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.guru_live_stream_created', addNewLiveStreamingByGuru, req.headers.lang);
+
+        const responseData = guruLiveStreamResponse(addNewLiveStreamingByGuru)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.guru_live_stream_created', responseData, req.headers.lang);
 
     } catch (err) {
         console.log("err(GuruCreateNewLiveStream)....", err)
@@ -282,11 +211,11 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
 
 
 exports.getAllLiveStreamByGuru = async (req, res) => {
-    
+
     const { limit = 25, page = 1 } = req.query;
 
     try {
-        
+
         const response = await axios.get(
             `${MUXURL}/video/v1/live-streams`,
             {
@@ -301,11 +230,19 @@ exports.getAllLiveStreamByGuru = async (req, res) => {
             }
         );
 
-        const LiveStreamsData = await TempleGuru.find()
-            .populate('templeId')
-            .sort({createdAt: -1}) 
+        if (!response.data)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
+        const selectedFields = 'GuruName email mobile_number expertise templeId GuruImg _id muxData.plackBackId muxData.stream_key  muxData.LiveStreamId created_at';
+        
+        const LiveStreamsData = await TempleGuru.find().select(selectedFields)
+            .populate('templeId', 'TempleName TempleImg _id')
+            .sort({ createdAt: -1 })
             .limit(parseInt(limit))
             .skip((page - 1) * limit);
+
+        if (!LiveStreamsData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
 
         const allLivestreams = {
             LiveStreamsData,
