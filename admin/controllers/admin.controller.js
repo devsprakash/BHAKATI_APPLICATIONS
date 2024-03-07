@@ -6,6 +6,8 @@ const {
     deleteUserAccount,
     checkAdmin
 } = require("../../v1/services/user.service");
+const { LoginResponseData } = require('../../ResponseData/user.reponse')
+const bcrypt = require('bcryptjs')
 
 
 
@@ -16,14 +18,12 @@ exports.login = async (req, res) => {
 
     try {
 
-        const user = await User.findOne({ email: email, deleted_at: null });
-        console.log(user)
+        const user = await User.findOne({ email: email, deleted_at: null })
 
         if (!user) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_username_password', {}, req.headers.lang);
         }
-       
-        
+
         if (user.user_type !== constants.USER_TYPE.ADMIN) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
         }
@@ -31,10 +31,12 @@ exports.login = async (req, res) => {
         await user.generateAuthToken();
         await user.generateRefreshToken();
 
-       return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', user, req.headers.lang);
+        let users = LoginResponseData(user)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', users, req.headers.lang);
     } catch (err) {
         console.log("err(admin_login)........", err)
-       return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
 
@@ -49,8 +51,8 @@ exports.logout = async (req, res) => {
         UserData.refresh_tokens = null
 
         await UserData.save()
-        
-       return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.logout_success', {}, req.headers.lang);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.logout_success', {}, req.headers.lang);
     } catch (err) {
         console.log("err(admin_logout)........", err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
@@ -122,7 +124,7 @@ exports.deleteProfile = async (req, res) => {
 
     try {
 
-        const { userId } =  req.query
+        const { userId } = req.query
         const userIds = req.user._id;
 
         const findAdmin = await checkAdmin(userIds);

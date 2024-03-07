@@ -45,7 +45,6 @@ exports.templeLogin = async (req, res) => {
         if (matchPassword === false) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
         }
-        console.log("222")
 
         if (user.status === 0) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
