@@ -4,7 +4,7 @@ const router = express.Router();
 const { verifyAccessToken } = require('../../middleware/admin.middleware');
 const { addNewGuru, guruLogin, gurulogout, getAllGuru, getGuruProfile, GuruCreateNewLiveStream, getAllLiveStreamByGuru } = require('../controller/guru.controller');
 const  upload  = require('../../middleware/multer')
-
+const GuruAuth = require('../../middleware/guru.auth')
 
 /**
  * @swagger
@@ -130,7 +130,7 @@ router.get('/getAllGurus', getAllGuru);
  *         description: Internal server error
  */
 
-router.get('/getProfile/:guruId' , getGuruProfile);
+router.get('/getProfile' , GuruAuth , getGuruProfile);
 
 /**
  * @swagger
@@ -162,7 +162,7 @@ router.get('/getProfile/:guruId' , getGuruProfile);
  *         description: Internal server error
  */
 
-router.post('/GuruCreatedLiveStream' , GuruCreateNewLiveStream);
+router.post('/GuruCreatedLiveStream' , GuruAuth , GuruCreateNewLiveStream);
 
 /**
  * @swagger

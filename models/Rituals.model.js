@@ -15,7 +15,7 @@ const ritualSchema = new mongoose.Schema({
     },
     templeId:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'temples'
+        ref:'Guru'
     },
     created_at: {
         type: String

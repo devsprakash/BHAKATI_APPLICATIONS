@@ -1,6 +1,7 @@
 const express = require('express');
-const { templeLogin, logout , getTempleProfile } = require('../controller/Temple.controller');
+const { templeLogin, logout, getTempleProfile } = require('../controller/Temple.controller');
 const router = express.Router();
+const GuruAuth = require('../../middleware/guru.auth')
 
 
 
@@ -27,7 +28,7 @@ const router = express.Router();
  *               message: Temple logged in successfully
  */
 
-router.post('/login' , templeLogin);
+router.post('/login', templeLogin);
 
 /**
  * @swagger
@@ -51,8 +52,8 @@ router.post('/login' , templeLogin);
  *               message: Temple logout in successfully
  */
 
-router.post('/logout' , logout);
-router.get('/getTempleProfile/:templeId' , getTempleProfile)
+router.get('/logout', GuruAuth, logout);
+router.get('/getTempleProfile', GuruAuth , getTempleProfile)
 
 
 

@@ -47,6 +47,7 @@ exports.addNewGuru = async (req, res) => {
             ...req.body,
             GuruImg: guruImage,
             password: hashedPassword,
+            templeId: reqBody.templeId,
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp()
         });
@@ -68,8 +69,10 @@ exports.getGuruProfile = async (req, res) => {
 
     try {
 
-        const { guruId } = req.params;
-        const guru = await TempleGuru.findById(guruId);
+        const guruId = req.guru._id;
+
+        const guru = await TempleGuru.findById(guruId)
+            .populate('templeId', 'TempleName TempleImg _id')
 
         if (!guru) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
@@ -86,7 +89,6 @@ exports.getGuruProfile = async (req, res) => {
 };
 
 
-
 exports.getAllGuru = async (req, res) => {
 
     try {
@@ -98,12 +100,19 @@ exports.getAllGuru = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'PUJA.Invalid_page', {}, req.headers.lang);
         }
 
+        const query = {
+            GuruName: { $ne: null },
+            GuruImg: { $ne: null },
+            mobile_number: { $ne: null },
+            expertise: { $ne: null }
+        };
+
         const [gurus, totalGurus] = await Promise.all([
-            TempleGuru.find({}, '_id GuruName email mobile_number expertise templeId GuruImg created_at updated_at')
-                .populate('templeId')
+            TempleGuru.find(query, '_id GuruName email mobile_number expertise templeId GuruImg created_at updated_at')
+                .populate('templeId', 'TempleName TempleImg _id')
                 .skip(skip)
                 .limit(parseInt(limit)),
-            TempleGuru.countDocuments()
+            TempleGuru.countDocuments(query)
         ]);
 
         if (!gurus || gurus.length === 0) {
@@ -128,7 +137,7 @@ exports.getAllGuru = async (req, res) => {
 
 exports.GuruCreateNewLiveStream = async (req, res) => {
 
-    const { guruId } = req.body;
+    const guruId = req.guru._id;
 
     const requestData = {
 
@@ -186,7 +195,7 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
             { _id: guruId },
             { $set: object },
             { new: true }
-        ).populate('templeId');
+        )
 
         if (!addNewLiveStreamingByGuru) {
             return sendResponse(
@@ -233,9 +242,16 @@ exports.getAllLiveStreamByGuru = async (req, res) => {
         if (!response.data)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
 
-        const selectedFields = 'GuruName email mobile_number expertise templeId GuruImg _id muxData.plackBackId muxData.stream_key  muxData.LiveStreamId created_at';
-        
-        const LiveStreamsData = await TempleGuru.find().select(selectedFields)
+        const query = {
+            GuruName: { $ne: null },
+            GuruImg: { $ne: null },
+            mobile_number: { $ne: null },
+            expertise: { $ne: null }
+        };
+
+        const selectedFields = 'GuruName email mobile_number title description expertise templeId GuruImg _id muxData.plackBackId muxData.stream_key  muxData.LiveStreamId created_at';
+
+        const LiveStreamsData = await TempleGuru.find(query).select(selectedFields)
             .populate('templeId', 'TempleName TempleImg _id')
             .sort({ createdAt: -1 })
             .limit(parseInt(limit))

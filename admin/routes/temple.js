@@ -8,7 +8,6 @@ const {verifyAccessToken} = require('../../middleware/admin.middleware')
 
 
 router.post('/addTemple' , upload.single('templeImage')  , verifyAccessToken ,  addTemple);
-router.get('/getAllTemples' , getAllTemples)
 router.get('/searchTemples' , SearchAllTemples);
 router.delete('/deleteTemple' , verifyAccessToken , templeDelete)
 

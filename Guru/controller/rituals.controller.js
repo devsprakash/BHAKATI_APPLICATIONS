@@ -2,7 +2,7 @@
 const { sendResponse } = require('../../services/common.service')
 const constants = require("../../config/constants");
 const dateFormat = require('../../helper/dateformat.helper');
-const Temple = require('../../models/Temple.model');
+const TempleGuru = require('../../models/guru.model');
 const Rituals = require('../../models/Rituals.model')
 
 
@@ -16,7 +16,7 @@ exports.addNewRithuals = async (req, res) => {
         const reqBody = req.body;
         const templeId = req.temple._id;
 
-        const temples = await Temple.findOne({ _id: templeId })
+        const temples = await TempleGuru.findOne({ _id: templeId })
 
         if (!temples || ( temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);

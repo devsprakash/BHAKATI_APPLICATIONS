@@ -17,9 +17,9 @@ const liveStreamSchema = new mongoose.Schema({
     status: {
         type: String, enum: ['LIVE', 'END']
     },
-    templeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'temples'
+    templeId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Guru'
     },
     ritualId: {
         type: mongoose.Schema.Types.ObjectId,

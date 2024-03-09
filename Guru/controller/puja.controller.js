@@ -5,7 +5,7 @@ const { BASEURL } = require('../../keys/development.keys')
 const constants = require("../../config/constants");
 const { checkAdmin } = require('../../v1/services/user.service')
 const dateFormat = require('../../helper/dateformat.helper');
-const Temple = require('../../models/Temple.model');
+const TempleGuru = require('../../models/guru.model');
 const User = require('../../models/user.model')
 
 

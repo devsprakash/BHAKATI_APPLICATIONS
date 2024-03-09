@@ -1,12 +1,11 @@
 
 const { sendResponse } = require('../../services/common.service')
-const Temple = require('../../models/Temple.model');
 const { BASEURL } = require('../../keys/development.keys')
 const { isValid } = require("../../services/blackListMail");
 const constants = require("../../config/constants");
 const bcrypt = require('bcryptjs')
 const TempleGuru = require('../../models/guru.model');
-const { TempleLoginReponse , TempleReponse  } = require('../../ResponseData/Temple.reponse')
+const { TempleLoginReponse, TempleReponse } = require('../../ResponseData/Temple.reponse')
 const { guruLoginResponse } = require('../../ResponseData/Guru.response')
 
 
@@ -15,27 +14,16 @@ const { guruLoginResponse } = require('../../ResponseData/Guru.response')
 exports.templeLogin = async (req, res) => {
 
     try {
-
         const reqBody = req.body;
-        const userType = reqBody.userType;
 
         const checkMail = await isValid(reqBody.email);
 
-        if (checkMail == false) {
+        if (checkMail === false) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
         }
 
-        let user;
+        let user = await TempleGuru.findOne({ email: reqBody.email });
 
-        if (userType === constants.USER_TYPE.GURU) {
-            user = await TempleGuru.findOne({ email: reqBody.email });
-        } else if (userType === constants.USER_TYPE.TEMPLEAUTHORITY) {
-            user = await Temple.findOne({ email: reqBody.email });
-        } else {
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
-        }
-
-        console.log('users', user)
         if (!user) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
         }
@@ -58,7 +46,6 @@ exports.templeLogin = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
         }
 
-
         let newToken = await user.generateAuthToken();
         let refreshToken = await user.generateRefreshToken();
 
@@ -66,14 +53,13 @@ exports.templeLogin = async (req, res) => {
         user.tokens = newToken;
         await user.save();
 
-        let responseData;
+        let responseData
 
-        if (user.user_type == 3) {
+        if (user.user_type === constants.USER_TYPE.TEMPLEAUTHORITY) {
             responseData = TempleLoginReponse(user);
-        } else if (user.user_type == 4) {
-            responseData = guruLoginResponse(user)
+        } else{
+            responseData = guruLoginResponse(user);
         }
-
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_login', responseData, req.headers.lang);
 
@@ -84,22 +70,13 @@ exports.templeLogin = async (req, res) => {
 }
 
 
-
 exports.logout = async (req, res, next) => {
 
     try {
 
-        const { userId, userType } = req.body;
+        const templeId = req.guru._id;
 
-        let userData;
-
-        if (userType === constants.USER_TYPE.TEMPLEAUTHORITY) {
-            userData = await Temple.findById(userId);
-        } else if (userType === constants.USER_TYPE.GURU) {
-            userData = await TempleGuru.findById(userId);
-        } else {
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
-        }
+        let userData = await TempleGuru.findById(templeId);
 
         if (!userData) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
@@ -125,8 +102,9 @@ exports.getTempleProfile = async (req, res) => {
 
     try {
 
-        const { templeId } = req.params;
-        const temple = await Temple.findById(templeId);
+        const templeId = req.guru._id;
+
+        const temple = await TempleGuru.findById(templeId);
 
         if (!temple) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
@@ -134,7 +112,7 @@ exports.getTempleProfile = async (req, res) => {
 
         const responseData = TempleReponse(temple);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData , req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
 
     } catch (err) {
         console.error('Error(getGuruProfile)....', err);

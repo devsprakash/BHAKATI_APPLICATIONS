@@ -11,6 +11,7 @@ const { JWT_SECRET } = require('../keys/keys')
 
 //authenticate user
 let authenticate = async (req, res, next) => {
+    
     try {
 
         if (!req.header('Authorization')) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
@@ -19,6 +20,7 @@ let authenticate = async (req, res, next) => {
         if (!token) sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.not_token', {}, req.headers.lang)
 
         const decoded = await jwt.verify(token, JWT_SECRET);
+
         const user = await User.findOne({ _id: decoded._id, 'tokens': token }).lean();
 
         if (!user) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang)

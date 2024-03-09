@@ -109,7 +109,7 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
 
 
-        const LiveStreamsData = await LiveStream.find().select('_id status startTime muxData')
+        const LiveStreamsData = await LiveStream.find().select('_id status startTime muxData title description')
             .populate('templeId', 'TempleName TempleImg _id Location')
             .populate('pujaId', 'pujaName pujaImage _id')
             .sort()

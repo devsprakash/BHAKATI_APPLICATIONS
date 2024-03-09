@@ -27,7 +27,7 @@ const pujaSchema = new mongoose.Schema({
     },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'temples'
+        ref: 'Guru'
     },
     status: {
         type: String,

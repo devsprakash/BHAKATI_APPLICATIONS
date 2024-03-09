@@ -1,7 +1,7 @@
 const express = require('express');
 const { addNewPuja, getAllPuja, addPuja, ListOfPuja } = require('../controller/puja.controller');
 const router = express.Router();
-const TempleAuthenticate = require('../../middleware/temple.auth')
+const GuruAuth = require('../../middleware/guru.auth')
 const upload  = require('../../middleware/multer');
 const { verifyAccessToken } = require('../../middleware/admin.middleware');
 const { addNewRithuals, getAllRithuals } = require('../controller/rituals.controller');
@@ -155,7 +155,7 @@ router.get('/getAllpuja', getAllPuja);
  */
 
 
-router.post('/addpuja/:pujaId', TempleAuthenticate, addPuja);
+router.post('/addpuja/:pujaId', GuruAuth, addPuja);
 
 
 /**
@@ -202,7 +202,7 @@ router.post('/addpuja/:pujaId', TempleAuthenticate, addPuja);
  */
 
 
-router.post('/addNewRithuals', TempleAuthenticate, addNewRithuals);
+router.post('/addNewRithuals', GuruAuth, addNewRithuals);
 
 /**
  * @swagger

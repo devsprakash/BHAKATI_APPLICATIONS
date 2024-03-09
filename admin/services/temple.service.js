@@ -1,5 +1,5 @@
 
-const Temple = require('../../models/Temple.model');
+const TempleGuru = require('../../models/guru.model');
 
 
-exports.templeSave = (data) => Temple(data).save();
+exports.templeSave = (data) => TempleGuru(data).save();

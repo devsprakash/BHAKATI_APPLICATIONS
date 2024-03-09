@@ -12,26 +12,31 @@ const {
 const templeGuruSchema = new mongoose.Schema({
 
     GuruName: {
-        type: String
+        type: String,
+        default: null
     },
     GuruImg: {
-        type: String
+        type: String,
+        default: null
     },
     mobile_number: {
-        type: String
+        type: String,
+        default: null
     },
     email: {
-        type: String
+        type: String,
+        default: null
     },
     password: {
-        type: String
+        type: String,
+        default: null
     },
     user_type: {
         type: Number,
-        default: constants.USER_TYPE.GURU
     },
     expertise: {
-        type: String
+        type: String,
+        default: null
     },
     status: {
         type: String,
@@ -46,10 +51,12 @@ const templeGuruSchema = new mongoose.Schema({
         default: false
     },
     aadharacardNumber: {
-        type: String
+        type: String,
+        default: null
     },
     pancardNumber: {
-        type: String
+        type: String,
+        default: null
     },
     tokens: {
         type: String,
@@ -106,10 +113,52 @@ const templeGuruSchema = new mongoose.Schema({
         },
     },
     description: {
-        type: String
+        type: String,
+        default: null
     },
     title: {
         type: String,
+        default: null
+    },
+    TempleName: {
+        type: String,
+        default: null
+    },
+    TempleImg: {
+        type: String,
+        default: null
+    },
+    Location: {
+        type: String,
+        default: null
+    },
+    State: {
+        type: String,
+        default: null
+    },
+    District: {
+        type: String,
+        default: null
+    }, 
+    templeId: {
+        type: String,
+        default: null
+    },
+    Desc: {
+        type: String,
+        default: null
+    },
+    Temple_Open_time: {
+        type: String,
+        default: null
+    },
+    Closing_time: {
+        type: String,
+        default: null
+    },
+    templeId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Guru'
     },
     created_at: {
         type: String

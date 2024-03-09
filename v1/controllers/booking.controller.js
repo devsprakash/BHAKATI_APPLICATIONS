@@ -14,7 +14,6 @@ const { v4: uuid } = require('uuid')
 
 
 
-
 exports.createdNewSlot = async (req, res ) => {
 
     try {
@@ -24,7 +23,7 @@ exports.createdNewSlot = async (req, res ) => {
         const findAdmin = await checkAdmin(userId)
 
         if (findAdmin.user_type !== constants.USER_TYPE.ADMIN)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED , constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const NewSlots = await createBookingSlots(reqBody.startTime, reqBody.endTime, reqBody.slotsCount, reqBody.templeId, reqBody.slotDurationInMinutes);
         reqBody.created_at = dateFormat.set_current_timestamp();
