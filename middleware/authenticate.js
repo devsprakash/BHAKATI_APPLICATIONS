@@ -11,24 +11,34 @@ const { JWT_SECRET } = require('../keys/keys')
 
 //authenticate user
 let authenticate = async (req, res, next) => {
-    
+
     try {
 
         if (!req.header('Authorization')) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const token = req.header('Authorization').replace('Bearer ', '');
+
         if (!token) sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.not_token', {}, req.headers.lang)
+        console.log("token", token)
 
-        const decoded = await jwt.verify(token, JWT_SECRET);
-
+        let decoded;
+        try {
+            decoded = await jwt.verify(token, JWT_SECRET);
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
+            } else {
+                throw error;
+            }
+        }
         const user = await User.findOne({ _id: decoded._id, 'tokens': token }).lean();
-
+        
         if (!user) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang)
-    
+
         if (user.status == 0) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.inactive_account', {}, req.headers.lang);
         if (user.status == 2) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.deactive_account', {}, req.headers.lang);
         if (user.deleted_at != null) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.delete_account', {}, req.headers.lang);
-    
+
         req.token = token;
         req.user = user;
 
