@@ -1,10 +1,10 @@
 
-const { body, validationResult , param } = require('express-validator');
+const { body, validationResult, param } = require('express-validator');
 
 const validGender = ['male', 'female', 'other']
 
 
-exports.user_validator = [
+exports.update_validator = [
 
   body('full_name')
     .not()
@@ -29,32 +29,13 @@ exports.user_validator = [
     .withMessage('please enter a valid gender')
     .trim(),
 
-  body('email')
-    .not()
-    .isEmpty()
-    .withMessage('email is required')
-    .isString().withMessage('email should be a string')
-    .isEmail().withMessage('please enter a valid email address')
-    .trim(),
-
-  body('password')
-    .not()
-    .isEmpty()
-    .withMessage('password is required')
-    .isString()
-    .withMessage('password should be a string')
-    .trim()
-    .isLength({ min: 8 }).withMessage('password should be at least 8 characters')
-    .matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$.!%*#?&])[A-Za-z\d@$.!%*#?&]{8,}$/)
-    .withMessage('please enter a valid password like this : demo122@'),
-
   body('mobile_number')
     .not()
     .isEmpty()
     .withMessage('mobile_number is required')
     .isString().withMessage('mobile_number should be a string')
     .isMobilePhone().withMessage('please enter a valid mobile_number address')
-    .trim(),
+    .trim()
 
 ];
 
@@ -71,20 +52,29 @@ exports.login_validator = [
 
 ]
 
-exports.update_profile_validator = [
+exports.verifyOtp_validator = [
 
-      param('userId')
-      .not()
-      .isEmpty()
-      .withMessage('userId is required')
-      .isString().withMessage('userId should be a string')
-      .isMongoId().withMessage('please enter a valid userId')
+  param('userId')
+    .not()
+    .isEmpty()
+    .withMessage('userId is required')
+    .isString().withMessage('userId should be a string')
+    .isMongoId().withMessage('please enter a valid userId')
+    .trim(),
+
+  body('otp')
+    .not()
+    .isEmpty()
+    .withMessage('otp is requires')
+    .isLength({ min: 1, max: 6 })
+    .withMessage('otp length must be at least 6 digits')
+    .trim()
 
 ]
 
 exports.admin_login_validator = [
 
- 
+
   body('email')
     .not()
     .isEmpty()

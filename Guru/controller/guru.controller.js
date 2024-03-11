@@ -109,7 +109,7 @@ exports.getAllGuru = async (req, res) => {
 
         const [gurus, totalGurus] = await Promise.all([
             TempleGuru.find(query, '_id GuruName email mobile_number expertise templeId GuruImg created_at updated_at')
-                .populate('templeId', 'TempleName TempleImg _id')
+                .populate('templeId', 'TempleName TempleImg Location State District Desc Temple_Open_time Closing_time _id templeId user_type')
                 .skip(skip)
                 .limit(parseInt(limit)),
             TempleGuru.countDocuments(query)
@@ -252,17 +252,21 @@ exports.getAllLiveStreamByGuru = async (req, res) => {
         const selectedFields = 'GuruName email mobile_number title description expertise templeId GuruImg _id muxData.plackBackId muxData.stream_key  muxData.LiveStreamId created_at';
 
         const LiveStreamsData = await TempleGuru.find(query).select(selectedFields)
-            .populate('templeId', 'TempleName TempleImg _id')
+            .populate('templeId', 'TempleName TempleImg Location State District Desc Temple_Open_time Closing_time _id templeId user_type')
             .sort({ createdAt: -1 })
             .limit(parseInt(limit))
             .skip((page - 1) * limit);
 
-        if (!LiveStreamsData)
+        if (!LiveStreamsData || LiveStreamsData.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
+
+        const LiveStreamingData = LiveStreamsData.map(stream => stream.muxData.LiveStreamId);
+
+        const streamingData = response.data.data.filter(stream => LiveStreamingData == stream.id);
 
         const allLivestreams = {
             LiveStreamsData,
-            muxData: response.data
+            streamingData
         };
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', allLivestreams, req.headers.lang);

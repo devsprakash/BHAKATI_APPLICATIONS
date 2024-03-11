@@ -25,14 +25,10 @@ let authenticate = async (req, res, next) => {
         try {
             decoded = await jwt.verify(token, JWT_SECRET);
         } catch (error) {
-            if (error.name === 'TokenExpiredError') {
-                return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
-            } else {
-                throw error;
-            }
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
         }
         const user = await User.findOne({ _id: decoded._id, 'tokens': token }).lean();
-        
+
         if (!user) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang)
 
         if (user.status == 0) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.inactive_account', {}, req.headers.lang);

@@ -8,90 +8,96 @@ const {
     Usersave,
     getUser
 } = require("../services/user.service");
-const constants = require("../../config/constants");
+const { WEB_STATUS_CODE, STATUS_CODE } = require("../../config/constants");
 const { BASEURL } = require("../../keys/keys");
 const { sendMail } = require('../../services/email.services')
-const { LoginResponse, LoginResponseData, VerifyOtpResponse, userResponse } = require('../../ResponseData/user.reponse')
+const { LoginResponse, LoginResponseData, VerifyOtpResponse, userResponse } = require('../../ResponseData/user.reponse');
+const constants = require("../../config/constants");
 
 
 
-exports.logout = async (req, res, next) => {
+
+exports.logout = async (req, res) => {
 
     try {
 
-        const reqBody = req.user;
 
-        let UserData = await User.findById(reqBody._id)
-        UserData.tokens = null
-        UserData.refresh_tokens = null
+        const user = req.user;
 
-        await UserData.save()
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.logout_success', {}, req.headers.lang);
+        const userData = await User.findById(user._id);
+
+        if (userData.user_type !== constants.USER_TYPE.USER) {
+            return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+        }
+        // Clear tokens and refresh tokens
+        userData.tokens = null;
+        userData.refresh_tokens = null;
+
+        await userData.save();
+
+        return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.logout_success', {}, req.headers.lang);
 
     } catch (err) {
-        console.log("err(logout)....")
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.error("Error in logout:", err);
+        return sendResponse(res, WEB_STATUS_CODE.SERVER_ERROR, STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
+};
 
 
 
-exports.login = async (req, res, next) => {
+exports.login = async (req, res) => {
 
     try {
 
-        const reqBody = req.body
-        const { device_token, device_type } = reqBody;
+        const { email } = req.body;
 
-        const checkMail = await isValid(reqBody.email)
-        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
-
-        let user = await User.findOne({ email: reqBody.email })
-        let otp = Math.floor(100000 + Math.random() * 900000);
-        let text = `${otp}`
-
-        if (!user) {
-            sendMail(reqBody.email, text)
-            reqBody.otp = text;
-            reqBody.created_at = await dateFormat.set_current_timestamp();
-            reqBody.updated_at = await dateFormat.set_current_timestamp();
-            let users = await User.create(reqBody);
-            let user = LoginResponse(users)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', user, req.headers.lang);
+        const isEmailValid = await isValid(email);
+        if (!isEmailValid) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
         }
 
-        if (user.verify === false)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.not_verify', user, req.headers.lang);
+        let user = await User.findOne({ email });
 
-        if (user == 1) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.email_not_found', {}, req.headers.lang);
-        if (user == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
+        let otp = Math.floor(100000 + Math.random() * 900000);
+        let text = `${otp}`;
 
-        if (user.status == 0) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
-        if (user.status == 2) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
-        if (user.deleted_at != null) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
+        if (!user) {
+            sendMail(email, text);
+            const newUser = await User.create({ email, otp, created_at: new Date(), updated_at: new Date() });
+            const responseData = LoginResponse(newUser);
+            return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.login_success', responseData, req.headers.lang);
+        }
 
-        let newToken = await user.generateAuthToken();
-        let refreshToken = await user.generateRefreshToken()
+        if (!user.verify) {
+            return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.not_verify', user, req.headers.lang);
+        }
 
-        sendMail(reqBody.email, text)
-        user.otp = text
-        user.refresh_tokens = refreshToken
+        if (user.status === 0) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
+        }
+        if (user.status === 2 || user.deleted_at !== null) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
+        }
+
+
+        sendMail(email, text);
+        user.otp = text;
+        await user.save();
+
+        const newToken = await user.generateAuthToken();
+        const refreshToken = await user.generateRefreshToken();
+        user.refresh_tokens = refreshToken;
         user.tokens = newToken;
-        user.device_token = device_token;
-        user.device_type = device_type;
-        await user.save()
+        await user.save();
 
-        let users = LoginResponseData(user)
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.login_success', users, req.headers.lang);
+        const responseData = LoginResponseData(user);
+        return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.login_success', responseData, req.headers.lang);
 
     } catch (err) {
-
-        console.log('err(login).....', err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.error('Error in login:', err);
+        return sendResponse(res, WEB_STATUS_CODE.SERVER_ERROR, STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
-
+};
 
 
 exports.verifyOtp = async (req, res) => {
@@ -99,32 +105,42 @@ exports.verifyOtp = async (req, res) => {
     try {
 
         const { userId } = req.params;
+        const { otp } = req.body;
 
         const user = await User.findOne({ _id: userId })
 
-        if (!user)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
+        console.log(user)
 
-        if (user.otp !== req.body.otp)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.otp_not_matched', {}, req.headers.lang);
+        if (!user) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
+        }
 
-        let newToken = await user.generateAuthToken();
-        let refreshToken = await user.generateRefreshToken();
+        if (user.otp !== otp) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.otp_not_matched', {}, req.headers.lang);
+        }
 
-        let users = await User.findOneAndUpdate({ _id: userId }, { $set: { otp: null, tokens: newToken, refresh_tokens: refreshToken, verify: true } }, { new: true })
+        if (user.user_type !== constants.USER_TYPE.USER) {
+            return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+        }
 
-        let ResponseData = VerifyOtpResponse(users)
+        const newToken = await user.generateAuthToken();
+        const refreshToken = await user.generateRefreshToken();
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.opt_verify', ResponseData, req.headers.lang);
+        const updatedUser = await User.findByIdAndUpdate(userId, {
+            otp: null,
+            tokens: newToken,
+            refresh_tokens: refreshToken,
+            verify: true
+        }, { new: true });
 
+        const responseData = VerifyOtpResponse(updatedUser);
+
+        return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.otp_verify', responseData, req.headers.lang);
     } catch (err) {
-
-        console.log('err(verifyOtp).....', err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.error('Error in verifyOtp:', err);
+        return sendResponse(res, WEB_STATUS_CODE.SERVER_ERROR, STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
-
-
+};
 
 
 exports.getUser = async (req, res) => {
@@ -132,23 +148,25 @@ exports.getUser = async (req, res) => {
     try {
 
         const userId = req.user._id;
-        
+
         const user = await getUser(userId);
 
-        if (!user)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
+        if (!user) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
+        }
 
-        let users = userResponse(user);
+        if (user.user_type !== constants.USER_TYPE.USER) {
+            return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+        }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.profile_fetch_success', users, req.headers.lang);
+        const responseData = userResponse(user);
 
+        return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.profile_fetch_success', responseData, req.headers.lang);
     } catch (err) {
-
-        console.log('err(getUser).....', err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.error('Error in getUser:', err);
+        return sendResponse(res, WEB_STATUS_CODE.SERVER_ERROR, STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
-
+};
 
 
 
@@ -158,15 +176,24 @@ exports.updateProfile = async (req, res) => {
 
         const { userId } = req.params;
         const reqBody = req.body;
-        const userData = await User.findOne({ _id: userId });
 
-        if (userData.isUpdated === true)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.already_updated', {}, req.headers.lang);
+        const userData = await User.findById(userId);
 
-        const user = await User.findOneAndUpdate({ _id: userId },
+        if (!userData) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
+        }
+
+        if (userData.isUpdated === true) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.already_updated', {}, req.headers.lang);
+        }
+
+        if (userData.user_type !== constants.USER_TYPE.USER) {
+            return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userId,
             {
                 $set: {
-
                     full_name: reqBody.full_name,
                     gender: reqBody.gender,
                     mobile_number: reqBody.mobile_number,
@@ -175,22 +202,23 @@ exports.updateProfile = async (req, res) => {
                     status: constants.STATUS.ACTIVE
                 }
             },
+            { new: true }
+        );
 
-            { new: true })
+        if (!updatedUser) {
+            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
+        }
 
-        if (!user)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
+        const responseData = userResponse(updatedUser);
 
-        let users = userResponse(user);
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.profile_update_success', users, req.headers.lang);
+        return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.profile_update_success', responseData, req.headers.lang);
 
     } catch (err) {
-
-        console.log('err(updateProfile).....', err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.error('Error in updateProfile:', err);
+        return sendResponse(res, WEB_STATUS_CODE.SERVER_ERROR, STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
+};
+
 
 
 
@@ -206,6 +234,9 @@ exports.updateDeviceToken = async (req, res) => {
         if (!users)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
 
+        if (UserData.user_typ !== constants.USER_TYPE.USER)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+
         users.device_token = device_token;
         users.device_type = device_type;
         users.updated_at = dateFormat.set_current_timestamp()
@@ -217,7 +248,7 @@ exports.updateDeviceToken = async (req, res) => {
             device_type: device_type
         }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.update_device_token', user , req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.update_device_token', user, req.headers.lang);
 
     } catch (err) {
 
@@ -225,6 +256,7 @@ exports.updateDeviceToken = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
 
 
 exports.generate_refresh_tokens = async (req, res, next) => {

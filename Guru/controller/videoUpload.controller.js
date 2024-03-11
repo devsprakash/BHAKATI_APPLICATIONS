@@ -6,7 +6,7 @@ const TempleGuru = require('../../models/guru.model');
 const Video = require('../../models/uploadVideo.model')
 const { MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET, BASEURL } = require('../../keys/development.keys');
 const axios = require('axios');
-const { getViewerCountsToken }  = require('../../services/muxSignInKey')
+const { getViewerCountsToken } = require('../../services/muxSignInKey')
 
 
 
@@ -17,7 +17,7 @@ exports.uploadNewVideo = async (req, res) => {
     const reqBody = req.body;
 
     const file = req.file.filename;
-    let videoUrl = `${BASEURL}/uploads/${file}`
+    let videoUrl = `${'http://16.170.253.177:8001'}/uploads/${file}`
 
     const requestData = {
         "input": 'https://sample-videos.com/video321/mp4/480/big_buck_bunny_480p_20mb.mp4',
@@ -48,13 +48,13 @@ exports.uploadNewVideo = async (req, res) => {
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp(),
             description: reqBody.description,
-            title:reqBody.title,
+            title: reqBody.title,
             comment: reqBody.comment,
-            tags:reqBody.tags,
+            tags: reqBody.tags,
             videoUrl: videoUrl,
             guruId: guruId,
             muxData: {
-                playBackId:ids[0],
+                playBackId: ids[0],
                 mp4_support: response.data.mp4_support,
                 master_access: response.data.data.master_access,
                 encoding_tier: response.data.data.encoding_tier,
@@ -91,7 +91,13 @@ exports.getAllVideo = async (req, res) => {
             }
         );
 
-        const videoData = await Video.find({}, { totalViews: 0, totalWatchingTime: 0 })
+        if (!response.data || response.data.length === 0)
+            return sendResponse(res, WEB_STATUS_CODE.NOT_FOUND, STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
+
+        const assetsId = response.data.data.map(assetId => assetId.id);
+
+        const videoData = await Video.find({ 'muxData.assetId': { $in: assetsId } }, { totalViews: 0, totalWatchingTime: 0 })
             .populate('guruId', 'GuruName email mobile_number _id')
             .sort({ [sortBy]: sortOrder })
             .skip((page - 1) * limit)
@@ -101,8 +107,6 @@ exports.getAllVideo = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
 
         let videos = {
-            page: Number(page),
-            limit: Number(limit),
             videoData: videoData,
             muxData: response.data
         }
@@ -132,11 +136,17 @@ exports.getVideo = async (req, res) => {
             }
         );
 
-        if (!videoData)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
+
+        if (!response.data)
+            return sendResponse(res, WEB_STATUS_CODE.NOT_FOUND, STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
 
         const videoData = await Video.findOne({ 'muxData.assetId': assetId })
             .populate('guruId', 'GuruName email mobile_number _id')
+
+        if (!videoData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
+
 
         videoData.totalViews = undefined;
         videoData.totalWatchingTime = undefined;
@@ -153,6 +163,8 @@ exports.getVideo = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
 
 exports.getCountTotalViews = async (req, res) => {
 

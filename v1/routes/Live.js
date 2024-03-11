@@ -1,6 +1,7 @@
 const express = require('express');
-const { createNewLiveStream, getAllLiveStreamByPuja,deleteLiveStream, LiveStreamingEnd, getAllLiveStreamByRithuals } = require('../controllers/livestream.controller');
+const { createNewLiveStream, getAllLiveStreamByPuja, deleteLiveStream, LiveStreamingEnd, getAllLiveStreamByRithuals, createNewLiveStreamByRithuls } = require('../controllers/livestream.controller');
 const router = express.Router();
+const { create_liveStream_validator, createNewLiveStreamByRithuls_validator, ValidatorResult, deleteLiveStreaming_validator } = require('../../validation/liveStream.validator')
 
 
 /**
@@ -34,7 +35,8 @@ const router = express.Router();
  */
 
 
-router.post('/createNewLiveStream',  createNewLiveStream);
+router.post('/createNewLiveStream', create_liveStream_validator, ValidatorResult, createNewLiveStream);
+router.post('/createNewLiveStreamByRithuls', createNewLiveStreamByRithuls_validator, ValidatorResult, createNewLiveStreamByRithuls);
 
 /**
  * @swagger
@@ -63,7 +65,7 @@ router.post('/createNewLiveStream',  createNewLiveStream);
  *         description: No live streams found
  */
 
-router.get('/getAllLiveStreamByPuja' , getAllLiveStreamByPuja);
+router.get('/getAllLiveStreamByPuja', getAllLiveStreamByPuja);
 
 /**
  * @swagger
@@ -92,7 +94,7 @@ router.get('/getAllLiveStreamByPuja' , getAllLiveStreamByPuja);
  *         description: No live streams found
  */
 
-router.get('/getAllLiveStreamByRithuals' , getAllLiveStreamByRithuals);
+router.get('/getAllLiveStreamByRithuals', getAllLiveStreamByRithuals);
 
 /**
  * @swagger
@@ -123,7 +125,7 @@ router.get('/getAllLiveStreamByRithuals' , getAllLiveStreamByRithuals);
  *         description: Internal server error
  */
 
-router.put('/LiveStreamEnd/:LIVE_STREAM_ID/:id' , LiveStreamingEnd);
+router.put('/LiveStreamEnd/:LIVE_STREAM_ID/:id', deleteLiveStreaming_validator, ValidatorResult, LiveStreamingEnd);
 
 /**
  * @swagger
@@ -154,7 +156,7 @@ router.put('/LiveStreamEnd/:LIVE_STREAM_ID/:id' , LiveStreamingEnd);
  *         description: Internal server error
  */
 
-router.delete('/deleteLiveStreams/:LIVE_STREAM_ID/:id' , deleteLiveStream)
+router.delete('/deleteLiveStreams/:LIVE_STREAM_ID/:id', deleteLiveStreaming_validator, ValidatorResult, deleteLiveStream)
 
 
 

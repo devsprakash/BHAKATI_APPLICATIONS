@@ -139,7 +139,7 @@ const templeGuruSchema = new mongoose.Schema({
     District: {
         type: String,
         default: null
-    }, 
+    },
     templeId: {
         type: String,
         default: null
@@ -152,13 +152,16 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    trust_name: {
+        type: String
+    },
     Closing_time: {
         type: String,
         default: null
     },
-    templeId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Guru'
+    templeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Guru'
     },
     created_at: {
         type: String
