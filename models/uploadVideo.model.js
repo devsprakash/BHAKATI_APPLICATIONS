@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 
 const videoSchema = new mongoose.Schema({
 
-
     guruId: {
         type: mongoose.Schema.Types.ObjectId, ref: 'Guru'
     },
@@ -15,17 +14,15 @@ const videoSchema = new mongoose.Schema({
     title: {
         type: String,
     },
-    tags: {
-        type: String,
-    },
-    comment: {
-        type: String
-    },
     videoUrl: {
         type: String,
     },
+    status: {
+        type: String,
+        enum: ['live', 'end', 'upcoming']
+    },
     muxData: {
-        playBackId:String,
+        playBackId: String,
         mp4_support: String,
         master_access: String,
         encoding_tier: String,

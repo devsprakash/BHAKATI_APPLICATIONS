@@ -1,5 +1,5 @@
 const express = require('express');
-const { templeLogin, logout, getTempleProfile } = require('../controller/Temple.controller');
+const { templeLogin, logout, getTempleProfile, addBankDetails, getBankDetails, addpanditDetails, getpanditDetails, UpdatepanditDetails } = require('../controller/Temple.controller');
 const router = express.Router();
 const GuruAuth = require('../../middleware/guru.auth')
 
@@ -53,8 +53,12 @@ router.post('/login', templeLogin);
  */
 
 router.get('/logout', GuruAuth, logout);
-router.get('/getTempleProfile', GuruAuth , getTempleProfile)
-
+router.get('/getTempleProfile', GuruAuth , getTempleProfile);
+router.post('/addBankDetails' , GuruAuth , addBankDetails)
+router.get('/getBankDetails/:bankId' , GuruAuth , getBankDetails)
+router.post('/addPanditDetails', GuruAuth , addpanditDetails)
+router.get('/getpanditDetails/:panditId' , GuruAuth , getpanditDetails);
+router.put('/updatepanditDetails/:panditId' , GuruAuth , UpdatepanditDetails)
 
 
 module.exports = router;

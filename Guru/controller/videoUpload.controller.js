@@ -16,6 +16,14 @@ exports.uploadNewVideo = async (req, res) => {
     const guruId = req.guru._id;
     const reqBody = req.body;
 
+    const guru = await TempleGuru.findById(guruId)
+
+    if (!guru)
+        return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
+
+    if (guru.user_type !== constants.USER_TYPE.GURU)
+        return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+
     const file = req.file.filename;
     let videoUrl = `${'http://16.170.253.177:8001'}/uploads/${file}`
 
@@ -52,6 +60,7 @@ exports.uploadNewVideo = async (req, res) => {
             comment: reqBody.comment,
             tags: reqBody.tags,
             videoUrl: videoUrl,
+            status:reqBody.status,
             guruId: guruId,
             muxData: {
                 playBackId: ids[0],

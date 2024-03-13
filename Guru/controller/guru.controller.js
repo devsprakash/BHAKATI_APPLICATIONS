@@ -11,7 +11,7 @@ const { isValid } = require("../../services/blackListMail");
 const { MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUXURL } = require('../../keys/development.keys')
 const axios = require('axios');
 const { guruResponseData, guruLiveStreamResponse } = require('../../ResponseData/Guru.response')
-
+const Video = require('../../models/uploadVideo.model')
 
 
 
@@ -74,13 +74,23 @@ exports.getGuruProfile = async (req, res) => {
         const guru = await TempleGuru.findById(guruId)
             .populate('templeId', 'TempleName TempleImg _id')
 
-        if (!guru) {
+        if (!guru)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
+
+        if (guru.user_type !== constants.USER_TYPE.GURU)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+
+        const VideoData = await Video.find({ guruId: guruId._id }, { _id: 1, status: 1, title: 1, description: 1, videoUrl: 1, guruId: 1, muxData: 1 })
+
+        if (!VideoData || VideoData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
+
+        let data = {
+            guruData: guruResponseData(guru),
+            VideoData: VideoData
         }
 
-        const responseData = guruResponseData(guru);
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_guru_profile', responseData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_guru_profile', data, req.headers.lang);
 
     } catch (err) {
         console.error('Error(getGuruProfile)....', err);
@@ -139,6 +149,11 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
 
     const guruId = req.guru._id;
 
+    const guru = await TempleGuru.findById(guruId)
+
+    if (guru.user_type !== constants.USER_TYPE.GURU)
+        return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', addBank, req.headers.lang);
+
     const requestData = {
 
         "playback_policy": [
@@ -175,7 +190,7 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
 
         const object = {
 
-            status: 'LIVE',
+            status: 'live',
             startTime: dateFormat.add_current_time(),
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp(),
