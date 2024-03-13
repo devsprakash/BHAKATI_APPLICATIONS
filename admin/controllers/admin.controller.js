@@ -4,9 +4,10 @@ const constants = require('../../config/constants');
 const User = require('../../models/user.model');
 const {
     deleteUserAccount,
-    checkAdmin
+    checkAdmin,
+    getUser
 } = require("../../v1/services/user.service");
-const { LoginResponseData } = require('../../ResponseData/user.reponse')
+const { LoginResponseData  , userResponse} = require('../../ResponseData/user.reponse')
 const bcrypt = require('bcryptjs')
 
 
@@ -59,64 +60,92 @@ exports.logout = async (req, res) => {
     }
 }
 
+
 // this api access only admin and integrate this api in the admin panel
 exports.getAllUser = async (req, res) => {
-
     try {
-
         const userId = req.user._id;
-        const findAdmin = await checkAdmin(userId)
+        const findAdmin = await checkAdmin(userId);
 
         if (findAdmin.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const filter = {};
+        const filter = { user_type: 2 };
 
-        if (req.query.country) {
-            filter['address.country'] = req.query.country;
+        if (req.query.email) {
+            filter.email = req.query.email;
         }
 
-        if (req.query.city) {
-            filter['address.city'] = req.query.city;
+        if (req.query.mobileNumber) {
+            filter.mobileNumber = req.query.mobileNumber;
         }
 
-        if (req.query.state) {
-            filter['address.state'] = req.query.state;
+        if (req.query.full_name) {
+            filter.full_name = req.query.full_name;
         }
 
-        filter['user_type'] = 2;
-
+        const sortBy = req.query.sortBy || 'created_at';
+        const sortOrder = req.query.sortOrder || 1;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        const sortBy = req.query.sortBy || 'created_at';
+        let usersQuery = User.find(filter).sort({ [sortBy]: sortOrder }).skip(skip).limit(limit);
 
-        const users = await User.find(filter)
-            .skip(skip)
-            .limit(limit)
-            .sort({ [sortBy]: sortOrder });
-
-        if (!users && users.length == 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang)
-
-        const totalUsers = await User.countDocuments(filter);
-
-        let data = {
-            page: Number(page),
-            total_pages: Math.ceil(totalUsers / per_page),
-            total_users: totalUsers,
-            users
+        if (!req.query.email && !req.query.mobileNumber && !req.query.full_name) {
+            usersQuery = User.find({ user_type: 2 }).sort({ [sortBy]: sortOrder }).skip(skip).limit(limit);
         }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.getAllUser', data, req.headers.lang)
+        const users = await usersQuery;
 
+        if (!users || users.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
+
+        const totalUsers = await User.countDocuments({ user_type: 2 });
+        const activeUser = await User.countDocuments({ status: 1 });
+
+        let data = {
+            total_users: totalUsers,
+            activeUsers: activeUser,
+            users: users
+        };
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.getAllUser', data, req.headers.lang);
 
     } catch (err) {
-        console.log('err(getAllUser)', err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.log('err(getAllUser)', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
+};
+
+
+
+
+exports.getUser = async (req, res) => {
+
+    try {
+
+        const userId = req.user._id;
+
+        const user = await getUser(userId);
+
+        if (!user) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
+        }
+
+        if (user.user_type !== constants.USER_TYPE.ADMIN) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+        }
+
+        const responseData = userResponse(user);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.profile_fetch_success', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error('Error in getUser:', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR , constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
 
 
 // this api access only admin and integrate this api in the admin panel

@@ -55,6 +55,7 @@ exports.VerifyOtpResponse = (user) => {
     return VerifyOtpResponse;
 }
 
+
 exports.userResponse = (user) => {
 
     const users = {

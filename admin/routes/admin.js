@@ -5,7 +5,8 @@ const {
   login,
   logout,
   getAllUser,
-  deleteProfile
+  deleteProfile,
+  getUser
 } = require('../controllers/admin.controller');
 const  { verifyAccessToken } = require('../../middleware/admin.middleware');
 
@@ -133,6 +134,7 @@ router.get('/getAllUsers' , verifyAccessToken , getAllUser )
  */
 
 router.delete('/deleteUserAccount' , verifyAccessToken , deleteProfile);
+router.get('/getProfile' , verifyAccessToken , getUser)
 
 
 

@@ -6,11 +6,12 @@ const { upload } = require('../../middleware/multer')
 const {
   login,
   logout,
-  getUser, verifyOtp, updateProfile, updateDeviceToken, generate_refresh_tokens
+  getUser, verifyOtp, updateProfile, updateDeviceToken, generate_refresh_tokens , signUp
 } = require('../controllers/user.controller');
 
 
 
+router.post('/signUp' , signUp)
 
 /**
  * @swagger

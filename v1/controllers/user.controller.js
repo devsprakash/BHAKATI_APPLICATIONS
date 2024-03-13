@@ -13,6 +13,50 @@ const { BASEURL } = require("../../keys/keys");
 const { sendMail } = require('../../services/email.services')
 const { LoginResponse, LoginResponseData, VerifyOtpResponse, userResponse } = require('../../ResponseData/user.reponse');
 const constants = require("../../config/constants");
+const { JWT_SECRET } = require('../../keys/development.keys')
+
+
+
+
+
+
+exports.signUp = async (req, res, next) => {
+
+    try {
+        
+        const reqBody = req.body
+
+        const checkMail = await isValid(reqBody.email)
+
+        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
+
+        let existingUser = await getUser(reqBody.email, 'email');
+
+        if (existingUser)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.email_already_exist', {}, req.headers.lang);
+
+        reqBody.password = await bcrypt.hash(reqBody.password, 10);
+        reqBody.created_at = await dateFormat.set_current_timestamp();
+        reqBody.updated_at = await dateFormat.set_current_timestamp();
+        reqBody.tempTokens = await jwt.sign({
+            data: reqBody.email
+        }, JWT_SECRET, {
+            expiresIn: constants.URL_EXPIRE_TIME
+        })
+
+        reqBody.device_type = (reqBody.device_type) ? reqBody.device_type : null
+        reqBody.device_token = (reqBody.device_token) ? reqBody.device_token : null
+        const user = await Usersave(reqBody);
+
+        let users = userResponse(user);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.signUp_success', users, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(SignUp)........", err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
 
 
 
@@ -143,6 +187,7 @@ exports.verifyOtp = async (req, res) => {
 };
 
 
+
 exports.getUser = async (req, res) => {
 
     try {
@@ -155,13 +200,14 @@ exports.getUser = async (req, res) => {
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
         }
 
-        if (user.user_type !== constants.USER_TYPE.USER) {
+        if (user.user_type !== constants.USER_TYPE.USER || user.user_type !== constants.USER_TYPE.ADMIN) {
             return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
         }
 
         const responseData = userResponse(user);
 
         return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.profile_fetch_success', responseData, req.headers.lang);
+
     } catch (err) {
         console.error('Error in getUser:', err);
         return sendResponse(res, WEB_STATUS_CODE.SERVER_ERROR, STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
