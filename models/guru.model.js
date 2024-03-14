@@ -155,10 +155,6 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    // templeId: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Guru'
-    // },
     created_at: {
         type: String
     },
