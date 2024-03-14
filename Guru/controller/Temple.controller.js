@@ -109,8 +109,8 @@ exports.getTempleProfile = async (req, res) => {
 
     try {
 
-        const templeId = req.guru._id;
-        const temple = await TempleGuru.findById(templeId);
+        const { templeId } = req.body;
+        const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
@@ -133,17 +133,17 @@ exports.getTempleProfile = async (req, res) => {
         if (!temple)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
 
-        const VideoData = await Video.find({ guruId: templeData._id });
+        // const VideoData = await Video.find({ guruId: templeData._id });
 
-        if (!VideoData || VideoData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
+        // if (!VideoData || VideoData.length === 0)
+        //     return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
 
 
         const data = {
             templeData: TempleReponse(temple),
             liveAarati: LiveArati,
             pujaData: pujaData,
-            VideoData: VideoData
+            //VideoData: VideoData
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', data, req.headers.lang);

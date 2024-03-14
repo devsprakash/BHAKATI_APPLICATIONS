@@ -53,7 +53,7 @@ router.post('/login', templeLogin);
  */
 
 router.get('/logout', GuruAuth, logout);
-router.get('/getTempleProfile', GuruAuth , getTempleProfile);
+router.get('/getTempleProfile', getTempleProfile);
 router.post('/addBankDetails' , GuruAuth , addBankDetails)
 router.get('/getBankDetails/:bankId' , GuruAuth , getBankDetails)
 router.post('/addPanditDetails', GuruAuth , addpanditDetails)
