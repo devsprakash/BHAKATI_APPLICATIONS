@@ -6,10 +6,9 @@
     "start": "nodemon ./bin/www",
     "dev": "pm2 start ./bin/www",
     "stop": "pm2 stop ./bin/www",
-    "list":"pm2 log"
+    "list": "pm2 log"
   },
   "dependencies": {
-    "@mux/mux-node": "^8.0.0",
     "agora-access-token": "^2.0.4",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
