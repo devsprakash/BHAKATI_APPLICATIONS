@@ -155,10 +155,10 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    templeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Guru'
-    },
+    // templeId: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'Guru'
+    // },
     created_at: {
         type: String
     },
@@ -229,5 +229,4 @@ templeGuruSchema.methods.generateRefreshToken = async function () {
 
 // Define model for temple guru
 const TempleGuru = mongoose.model('Guru', templeGuruSchema);
-
 module.exports = TempleGuru;
