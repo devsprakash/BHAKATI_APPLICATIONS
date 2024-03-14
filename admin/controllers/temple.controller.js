@@ -40,7 +40,11 @@ exports.addTemple = async (req, res) => {
         const TempleImageUrl = `${BASEURL}/uploads/${files.filename}`;
         reqBody.TempleImg = TempleImageUrl;
         reqBody.templeId = uuidv4()
-        reqBody.password = await bcrypt.hash(reqBody.password, 10)
+        if (reqBody.password)
+            reqBody.password = await bcrypt.hash(reqBody.password, 10)
+        else {
+            reqBody.password = null;
+        }
 
         reqBody.tempTokens = await jwt.sign({
             email: reqBody.email.toString()
@@ -66,7 +70,7 @@ exports.addTemple = async (req, res) => {
 exports.SearchAllTemples = async (req, res, next) => {
 
     try {
-        
+
         const { page = 1, per_page = 10, sort, state, templename, location, district, email } = req.query;
 
         let query = {};

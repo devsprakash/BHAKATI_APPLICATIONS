@@ -311,8 +311,6 @@ exports.generate_refresh_tokens = async (req, res, next) => {
 
         let user = await User.findOne({ refresh_tokens: req.body.refresh_tokens })
 
-        console.log("user....", user)
-
         let newToken = await user.generateAuthToken();
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', newToken, req.headers.lang);
