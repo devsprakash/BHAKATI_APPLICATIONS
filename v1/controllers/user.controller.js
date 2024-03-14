@@ -23,7 +23,7 @@ const { JWT_SECRET } = require('../../keys/development.keys')
 exports.signUp = async (req, res, next) => {
 
     try {
-        
+
         const reqBody = req.body
 
         const checkMail = await isValid(reqBody.email)
@@ -93,14 +93,14 @@ exports.login = async (req, res) => {
 
     try {
 
-        const { email } = req.body;
+        const { email, user_type } = req.body;
 
         const isEmailValid = await isValid(email);
         if (!isEmailValid) {
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
         }
 
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ email, user_type: 2 });
 
         let otp = Math.floor(100000 + Math.random() * 900000);
         let text = `${otp}`;

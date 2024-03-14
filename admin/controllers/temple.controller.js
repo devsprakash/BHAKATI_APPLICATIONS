@@ -63,84 +63,29 @@ exports.addTemple = async (req, res) => {
 }
 
 
-
-exports.getAllTemples = async (req, res, next) => {
-
-    try {
-
-        const { page = 1, per_page = 10, sort } = req.query;
-
-        const sortOptions = {};
-
-        if (sort) {
-
-            const [field, order] = sort.split(':');
-            sortOptions[field] = order === 'desc' ? -1 : 1;
-        }
-
-        const temples = await TempleGuru.find().select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time  Closing_time')
-            .sort(sortOptions)
-            .skip((page - 1) * per_page)
-            .limit(Number(per_page));
-
-        if (!temples || temples.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
-
-        const countsTemples = await TempleGuru.countDocuments();
-
-        let data = {
-            countsTemples,
-            temples
-        }
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_temples', data, req.headers.lang);
-
-    } catch (err) {
-
-        console.log("err(getAllTemples)....", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
-
 exports.SearchAllTemples = async (req, res, next) => {
 
     try {
         
-        const { page = 1, per_page = 10, sort, state, templename, location, keyword, district } = req.query;
+        const { page = 1, per_page = 10, sort, state, templename, location, district, email } = req.query;
 
         let query = {};
 
         if (templename) {
-            query.TempleName = { $regex: new RegExp(templename, 'i') };
+            query.TempleName = templename;
         }
         if (state) {
             query.State = state;
         }
         if (location) {
-            query.Location = { $regex: new RegExp(location, 'i') };
+            query.Location = location;
         }
         if (district) {
-            query.District = { $regex: new RegExp(district, 'i') };
+            query.District = district;
         }
-
-        if (keyword) {
-            query.$or = [
-                { TempleName: { $regex: new RegExp(keyword, 'i') } },
-                { Location: { $regex: new RegExp(keyword, 'i') } },
-                { State: { $regex: new RegExp(keyword, 'i') } },
-                { District: { $regex: new RegExp(keyword, 'i') } }
-            ];
+        if (email) {
+            query.email = email;
         }
-
-        // Additional conditions to filter out documents where specific fields are null
-        query.TempleName = { $ne: null };
-        query.TempleImg = { $ne: null };
-        query.State = { $ne: null };
-        query.Location = { $ne: null };
-        query.District = { $ne: null };
-        query.Desc = { $ne: null };
-        query.Temple_Open_time = { $ne: null };
-        query.Closing_time = { $ne: null };
 
         const sortOptions = {};
 
@@ -149,23 +94,43 @@ exports.SearchAllTemples = async (req, res, next) => {
             sortOptions[field] = order === 'desc' ? -1 : 1;
         }
 
-        const temples = await TempleGuru.find(query)
-            .select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time Closing_time')
-            .sort(sortOptions)
-            .skip((page - 1) * per_page)
-            .limit(Number(per_page));
+        let temples;
+        let countTemples;
+
+        if (Object.keys(query).length === 0) { // Checking if no query parameters are provided
+            temples = await TempleGuru.find({ user_type: 3 })
+                .select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time Closing_time')
+                .sort(sortOptions)
+                .skip((page - 1) * per_page)
+                .limit(Number(per_page));
+
+            countTemples = await TempleGuru.countDocuments({ user_type: 3 });
+        } else {
+            temples = await TempleGuru.find({ user_type: 3, ...query })
+                .select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time Closing_time')
+                .sort(sortOptions)
+                .skip((page - 1) * per_page)
+                .limit(Number(per_page));
+
+            countTemples = await TempleGuru.countDocuments({ user_type: 3, ...query });
+        }
 
         if (!temples || temples.length === 0) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
         }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_temples', temples, req.headers.lang);
+        let data = {
+            totalTemples: countTemples,
+            templeData: temples,
+        };
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_temples', data, req.headers.lang);
 
     } catch (err) {
         console.log("err(SearchAllTemples)....", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
+};
 
 
 

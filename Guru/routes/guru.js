@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { verifyAccessToken } = require('../../middleware/admin.middleware');
-const { addNewGuru, guruLogin, gurulogout, getAllGuru, getGuruProfile, GuruCreateNewLiveStream, getAllLiveStreamByGuru } = require('../controller/guru.controller');
+const { addNewGuru, SearchAllGuru, getGuruProfile, GuruCreateNewLiveStream, getAllLiveStreamByGuru } = require('../controller/guru.controller');
 const  upload  = require('../../middleware/multer')
 const GuruAuth = require('../../middleware/guru.auth')
 
@@ -68,39 +68,6 @@ const GuruAuth = require('../../middleware/guru.auth')
 router.post('/addNewGuru', upload.single('guruImage'), verifyAccessToken, addNewGuru);
 
 
-/**
- * @swagger
- * /temple/guru/getAllGurus:
- *   get:
- *     summary: Get all gurus
- *     description: Retrieve a list of all gurus.
- *     tags:
- *       - GURU
- *     responses:
- *       200:
- *         description: A list of all gurus
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 page:
- *                   type: integer
- *                   description: Current page number
- *                 total_gurus:
- *                   type: integer
- *                   description: Total number of gurus
- *                 gurus:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Guru'
- *       404:
- *         description: No gurus found
- *       500:
- *         description: Internal server error
- */
-
-router.get('/getAllGurus', getAllGuru);
 
 /**
  * @swagger
@@ -188,7 +155,7 @@ router.post('/GuruCreatedLiveStream' , GuruAuth , GuruCreateNewLiveStream);
  */
 
 router.get('/getAllGuruLiveStream' , getAllLiveStreamByGuru)
-
+router.get('/SearchAllGuru', SearchAllGuru);
 
 
 

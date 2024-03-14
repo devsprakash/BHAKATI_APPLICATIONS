@@ -20,7 +20,7 @@ exports.addNewGuru = async (req, res) => {
 
     try {
 
-        const { email, password } = req.body;
+        const { email, password , templeId } = req.body;
         const userId = req.user._id;
 
         const isAdmin = await checkAdmin(userId);
@@ -47,7 +47,7 @@ exports.addNewGuru = async (req, res) => {
             ...req.body,
             GuruImg: guruImage,
             password: hashedPassword,
-            templeId: reqBody.templeId,
+            templeId: templeId,
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp()
         });
@@ -99,46 +99,83 @@ exports.getGuruProfile = async (req, res) => {
 };
 
 
-exports.getAllGuru = async (req, res) => {
+
+
+exports.SearchAllGuru = async (req, res) => {
 
     try {
 
-        const { page = 1, limit = 10 } = req.query;
+
+        const { page = 1, limit = 10, sort, guruname, email, expertise, mobile_number } = req.query;
+
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
         if (parseInt(page) < 1 || parseInt(limit) < 1) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'PUJA.Invalid_page', {}, req.headers.lang);
         }
 
-        const query = {
-            GuruName: { $ne: null },
-            GuruImg: { $ne: null },
-            mobile_number: { $ne: null },
-            expertise: { $ne: null }
-        };
+        const query = { user_type: 4 };
 
-        const [gurus, totalGurus] = await Promise.all([
-            TempleGuru.find(query, '_id GuruName email mobile_number expertise templeId GuruImg created_at updated_at')
+        if (email) {
+            query.email = email;
+        }
+
+        if (guruname) {
+            query.GuruName = guruname;
+        }
+
+        if (expertise) {
+            query.expertise = expertise;
+        }
+
+        if (mobile_number) {
+            query.mobile_number = mobile_number;
+        }
+
+        const sortOptions = {};
+        if (sort) {
+            const [field, order] = sort.split(':');
+            sortOptions[field] = order === 'desc' ? -1 : 1;
+        }
+
+        let guruData;
+        let totalGurus
+        const selectFields = '_id GuruName email mobile_number expertise templeId GuruImg created_at updated_at'
+        if (query.length === 0) {
+            [guruData, totalGurus] = await Promise.all([
+                TempleGuru.find({ user_type: 4 })
+                    .select(selectFields)
+                    .populate('templeId', 'TempleName TempleImg Location State District Desc Temple_Open_time Closing_time _id templeId user_type')
+                    .sort(sortOptions)
+                    .skip(skip)
+                    .limit(parseInt(limit)),
+                TempleGuru.countDocuments({ user_type: 4 })
+            ]);
+        }
+
+        [guruData, totalGurus] = await Promise.all([
+            TempleGuru.find(query)
+                .select(selectFields)
                 .populate('templeId', 'TempleName TempleImg Location State District Desc Temple_Open_time Closing_time _id templeId user_type')
+                .sort(sortOptions)
                 .skip(skip)
                 .limit(parseInt(limit)),
             TempleGuru.countDocuments(query)
         ]);
 
-        if (!gurus || gurus.length === 0) {
+        if (!guruData || guruData.length === 0) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
         }
 
         const data = {
-            page: parseInt(page),
             total_gurus: totalGurus,
-            gurus
+            guruData: guruData
         };
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_gurus', data, req.headers.lang);
 
     } catch (err) {
-        console.error('Error(getAllGuru)....', err);
+        console.error('Error(SearchAllGuru)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
