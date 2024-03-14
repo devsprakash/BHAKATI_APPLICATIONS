@@ -42,10 +42,6 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: 'active'
     },
-    templeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'temples'
-    },
     verify: {
         type: Boolean,
         default: false
