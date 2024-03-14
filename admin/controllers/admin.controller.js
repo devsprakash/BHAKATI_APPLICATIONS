@@ -120,6 +120,62 @@ exports.getAllUser = async (req, res) => {
 
 
 
+exports.getAllAdmin = async (req, res) => {
+
+    try {
+
+        const userId = req.user._id;
+        const findAdmin = await checkAdmin(userId);
+
+        if (findAdmin.user_type !== constants.USER_TYPE.ADMIN)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const filter = { user_type: 1 };
+
+        if (req.query.email) {
+            filter.email = req.query.email;
+        }
+
+        if (req.query.mobileNumber) {
+            filter.mobileNumber = req.query.mobileNumber;
+        }
+
+        if (req.query.full_name) {
+            filter.full_name = req.query.full_name;
+        }
+
+        const sortBy = req.query.sortBy || 'created_at';
+        const sortOrder = req.query.sortOrder || 1;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        let usersQuery = User.find(filter).sort({ [sortBy]: sortOrder }).skip(skip).limit(limit);
+
+        if (!req.query.email && !req.query.mobileNumber && !req.query.full_name) {
+            usersQuery = User.find({ user_type: 1 }).sort({ [sortBy]: sortOrder }).skip(skip).limit(limit);
+        }
+
+        const users = await usersQuery;
+
+        if (!users || users.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
+
+        const totalUsers = await User.countDocuments({ user_type: 1 });
+
+        let data = {
+            total_users: totalUsers,
+            users: users
+        };
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.getAllUser', data, req.headers.lang);
+
+    } catch (err) {
+        console.log('err(getAllAdmin)', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
 
 exports.getUser = async (req, res) => {
 
