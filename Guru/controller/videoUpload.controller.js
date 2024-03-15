@@ -6,7 +6,7 @@ const TempleGuru = require('../../models/guru.model');
 const Video = require('../../models/uploadVideo.model')
 const { MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET, BASEURL } = require('../../keys/development.keys');
 const axios = require('axios');
-const { getViewerCountsToken } = require('../../services/muxSignInKey')
+//const { getViewerCountsToken } = require('../../services/muxSignInKey')
 
 
 
@@ -175,35 +175,35 @@ exports.getVideo = async (req, res) => {
 
 
 
-exports.getCountTotalViews = async (req, res) => {
+// exports.getCountTotalViews = async (req, res) => {
 
-    try {
+//     try {
 
-        const { assetId } = req.query;
+//         const { assetId } = req.query;
 
-        const token = await getViewerCountsToken(assetId);
+//         const token = await getViewerCountsToken(assetId);
 
-        const response = await axios.get(`https://stats.mux.com/counts?token=${token}`);
+//         const response = await axios.get(`https://stats.mux.com/counts?token=${token}`);
 
-        if (!response.data) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
-        }
+//         if (!response.data) {
+//             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
+//         }
 
-        const videoData = await Video.findOneAndUpdate({ 'muxData.assetId': assetId });
+//         const videoData = await Video.findOneAndUpdate({ 'muxData.assetId': assetId });
 
-        if (!videoData) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
-        }
+//         if (!videoData) {
+//             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
+//         }
 
-        const videos = {
-            videoData: videoData,
-            TotalViews: response.data
-        };
+//         const videos = {
+//             videoData: videoData,
+//             TotalViews: response.data
+//         };
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_total_views', videos, req.headers.lang);
+//         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_total_views', videos, req.headers.lang);
 
-    } catch (err) {
-        console.log("err(getCountTotalViews)....", err);
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
-    }
-};
+//     } catch (err) {
+//         console.log("err(getCountTotalViews)....", err);
+//         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+//     }
+// };

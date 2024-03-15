@@ -8,7 +8,7 @@ const upload = require('../../middleware/multer')
 router.post('/addNewVideo' , upload.single('video') , GuruAuth , uploadNewVideo );
 router.get('/getAllVideos' , getAllVideo);
 router.get('/getVideo/:assetId' , getVideo)
-router.get('/totalViews' , getCountTotalViews)
+//router.get('/totalViews' , getCountTotalViews)
 
 
 module.exports = router;
