@@ -194,15 +194,16 @@ exports.getUser = async (req, res) => {
 
         const userId = req.user._id;
 
-        const user = await getUser(userId);
+        const user = await User.findOne({ _id: userId });
 
         if (!user) {
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
         }
 
-        if (user.user_type !== constants.USER_TYPE.USER || user.user_type !== constants.USER_TYPE.ADMIN) {
+        if (user.user_type !== constants.USER_TYPE.USER && user.user_type !== constants.USER_TYPE.ADMIN) {
             return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
         }
+
 
         const responseData = userResponse(user);
 
@@ -309,7 +310,10 @@ exports.generate_refresh_tokens = async (req, res, next) => {
 
     try {
 
-        let user = await User.findOne({ refresh_tokens: req.body.refresh_tokens })
+        let user = await User.findOne({ refresh_tokens: req.body.refresh_tokens });
+
+        if (!user)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
 
         let newToken = await user.generateAuthToken();
 
