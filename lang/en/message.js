@@ -66,7 +66,8 @@ module.exports = {
         unauthorized_user: 'Unauthorized, please login.',
         invalid_user: 'You are not authorized to do this operation.',
         invalid_login: 'You are not authorized.',
-        blackList_mail: `Please enter a valid email, we don't allow dummy emails.`
+        blackList_mail: `Please enter a valid email, we don't allow dummy emails.`,
+        token_expired:'this token is invalid or expired'
     },
     'BOOKING': {
         create_new_slot: 'admin successfully created all the slots',
