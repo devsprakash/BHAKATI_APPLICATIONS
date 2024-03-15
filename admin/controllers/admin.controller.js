@@ -86,14 +86,11 @@ exports.getAllUser = async (req, res) => {
 
         const sortBy = req.query.sortBy || 'created_at';
         const sortOrder = req.query.sortOrder || 1;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
 
-        let usersQuery = User.find(filter).sort({ [sortBy]: sortOrder }).skip(skip).limit(limit);
+        let usersQuery = User.find(filter).sort({ [sortBy]: sortOrder })
 
         if (!req.query.email && !req.query.mobileNumber && !req.query.full_name) {
-            usersQuery = User.find({ user_type: 2 }).sort({ [sortBy]: sortOrder }).skip(skip).limit(limit);
+            usersQuery = User.find({ user_type: 2 }).sort({ [sortBy]: sortOrder })
         }
 
         const users = await usersQuery;

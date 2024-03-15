@@ -101,20 +101,16 @@ exports.SearchAllTemples = async (req, res, next) => {
         let temples;
         let countTemples;
 
-        if (Object.keys(query).length === 0) { // Checking if no query parameters are provided
+        if (Object.keys(query).length === 0) { 
             temples = await TempleGuru.find({ user_type: 3 })
                 .select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time Closing_time')
                 .sort(sortOptions)
-                .skip((page - 1) * per_page)
-                .limit(Number(per_page));
 
             countTemples = await TempleGuru.countDocuments({ user_type: 3 });
         } else {
             temples = await TempleGuru.find({ user_type: 3, ...query })
                 .select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time Closing_time')
                 .sort(sortOptions)
-                .skip((page - 1) * per_page)
-                .limit(Number(per_page));
 
             countTemples = await TempleGuru.countDocuments({ user_type: 3, ...query });
         }
