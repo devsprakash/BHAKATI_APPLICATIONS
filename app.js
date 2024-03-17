@@ -89,7 +89,7 @@ const options = {
 
 const specs = swaggerJsDoc(options);
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs));
-app.use('/admin-panel' , express.static('admin-panel'))
+app.use('admin-panel/admin-project-b' , express.static('admin-panel/admin-project-b'))
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
