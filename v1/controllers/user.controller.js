@@ -89,6 +89,7 @@ exports.logout = async (req, res) => {
 
 
 
+
 exports.login = async (req, res) => {
 
     try {
@@ -96,6 +97,7 @@ exports.login = async (req, res) => {
         const { email, user_type } = req.body;
 
         const isEmailValid = await isValid(email);
+
         if (!isEmailValid) {
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
         }
@@ -122,7 +124,6 @@ exports.login = async (req, res) => {
         if (user.status === 2 || user.deleted_at !== null) {
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
         }
-
 
         sendMail(email, text);
         user.otp = text;
@@ -231,7 +232,7 @@ exports.updateProfile = async (req, res) => {
         }
 
         if (userData.isUpdated === true) {
-            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.already_updated', {}, req.headers.lang);
+            return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.already_updated', userData, req.headers.lang);
         }
 
         if (userData.user_type !== constants.USER_TYPE.USER) {
@@ -281,8 +282,8 @@ exports.updateDeviceToken = async (req, res) => {
         if (!users)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
 
-        if (UserData.user_typ !== constants.USER_TYPE.USER)
-            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+        // if (users.user_typ !== constants.USER_TYPE.USER)
+        //     return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
         users.device_token = device_token;
         users.device_type = device_type;

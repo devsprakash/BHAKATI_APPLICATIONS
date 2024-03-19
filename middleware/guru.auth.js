@@ -11,7 +11,7 @@ const { JWT_SECRET } = require('../keys/keys')
 
 
 //authenticate user
-let GuruAuth = async (req, res, next) => {
+let TempleAuth = async (req, res, next) => {
 
     try {
 
@@ -27,16 +27,16 @@ let GuruAuth = async (req, res, next) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
         }
 
-        const guru = await TempleGuru.findOne({ _id: decoded._id, 'tokens': token }).lean();
+        const Temple = await TempleGuru.findOne({ _id: decoded._id, 'tokens': token }).lean();
 
-        if (!guru) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang)
+        if (!Temple) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang)
 
-        if (guru.status == 0) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.inactive_account', {}, req.headers.lang);
-        if (guru.status == 2) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.deactive_account', {}, req.headers.lang);
-        if (guru.deleted_at != null) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.delete_account', {}, req.headers.lang);
+        if (Temple.status == 0) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.inactive_account', {}, req.headers.lang);
+        if (Temple.status == 2) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.deactive_account', {}, req.headers.lang);
+        if (Temple.deleted_at != null) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'USER.delete_account', {}, req.headers.lang);
 
         req.token = token;
-        req.guru = guru;
+        req.Temple = Temple;
 
         next();
 
@@ -46,4 +46,4 @@ let GuruAuth = async (req, res, next) => {
     }
 }
 
-module.exports = GuruAuth;
+module.exports = TempleAuth ;

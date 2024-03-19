@@ -1,11 +1,11 @@
 
 const { sendResponse } = require('../../services/common.service')
-const { BASEURL } = require('../../keys/development.keys')
+const { BASEURL, MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET } = require('../../keys/development.keys')
 const { isValid } = require("../../services/blackListMail");
 const constants = require("../../config/constants");
 const bcrypt = require('bcryptjs')
 const TempleGuru = require('../../models/guru.model');
-const { TempleLoginReponse, TempleReponse } = require('../../ResponseData/Temple.reponse')
+const { TempleLoginReponse, TempleReponse, TempleLiveStreamingReponse } = require('../../ResponseData/Temple.reponse')
 const { guruLoginResponse } = require('../../ResponseData/Guru.response')
 const dateFormat = require('../../helper/dateformat.helper')
 const Bank = require('../../models/bankDetails.model');
@@ -13,6 +13,7 @@ const Pandit = require('../../models/pandit.model');
 const Puja = require('../../models/puja.model');
 const LiveStream = require('../../models/liveStreaming.model');
 const Video = require('../../models/uploadVideo.model');
+const axios = require('axios')
 
 
 
@@ -82,7 +83,7 @@ exports.logout = async (req, res, next) => {
 
     try {
 
-        const templeId = req.guru._id;
+        const templeId = req.Temple._id;
 
         let userData = await TempleGuru.findById(templeId);
 
@@ -109,7 +110,7 @@ exports.getTempleProfile = async (req, res) => {
 
     try {
 
-        const { templeId } = req.body;
+        const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple)
@@ -118,41 +119,186 @@ exports.getTempleProfile = async (req, res) => {
         if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
-        const LiveArati = await LiveStream.find({ templeId: templeId }, { pujaId: 0 }).populate('ritualId');
+        const LiveAratiResponse = await axios.get(
+            `${MUXURL}/video/v1/live-streams/${temple.muxData.LiveStreamId}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+                }
+            }
+        );
 
-        if (!LiveArati || LiveArati.length === 0)
+        if (!liveArati)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
 
-        const pujaData = await Puja.find({ templeId: templeId, status: 'upcoming' });
+        const selectFields = 'TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time';
+        const templeList = await TempleGuru.find({ user_type: constants.USER_TYPE.TEMPLEAUTHORITY }).sort().select(selectFields);
 
-        if (!pujaData || pujaData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
+        const VideoData = await Video.find({ _id: temple._id });
 
-        const templeData = await TempleGuru.findOne({ templeId: templeId });
-
-        if (!temple)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
-
-        // const VideoData = await Video.find({ guruId: templeData._id });
-
-        // if (!VideoData || VideoData.length === 0)
-        //     return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
-
-
-        const data = {
-            templeData: TempleReponse(temple),
-            liveAarati: LiveArati,
-            pujaData: pujaData,
-            //VideoData: VideoData
+        const object = {
+            TempleName: temple.TempleName,
+            category: temple.category,
+            TempleImg: temple.TempleImg,
+            _id: temple._id,
+            State: temple.State,
+            District: temple.District,
+            Location: temple.Location,
+            trust_name: temple.trust_name,
         }
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', data, req.headers.lang);
+        const data = {
+            templeData: object,
+            liveAarati: LiveAratiResponse.data,
+            TempleList: templeList,
+            VideoData: VideoData
+        };
 
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', data, req.headers.lang);
     } catch (err) {
-        console.error('Error(getGuruProfile)....', err);
+        console.error('Error(getTempleProfile)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
+
+
+exports.CreateNewLiveStreamByTemple = async (req, res) => {
+
+
+    const templeId = req.Temple._id;
+    const reqBody = req.body;
+    const temple = await TempleGuru.findById(templeId)
+
+    if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+
+    const requestData = {
+
+        "playback_policy": [
+            "public"
+        ],
+
+        "new_asset_settings": {
+            "playback_policy": "public",
+            "max_resolution_tier": "1080p",
+            "generated_subtitles": [
+                {
+                    "name": "Auto-generated Subtitles",
+                    "language_code": "en"
+                }
+            ]
+        }
+    };
+
+
+    try {
+
+        const response = await axios.post(
+            `${MUXURL}/video/v1/live-streams`,
+            requestData,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+                }
+            }
+        );
+
+        const ids = response.data.data.playback_ids.map((item) => item.id);
+
+        const object = {
+            startTime: dateFormat.add_current_time(),
+            created_at: dateFormat.set_current_timestamp(),
+            updated_at: dateFormat.set_current_timestamp(),
+            description: reqBody.description,
+            title: reqBody.title,
+            templeId: templeId,
+            muxData: {
+                stream_key: response.data.data.stream_key,
+                status: response.data.data.status,
+                reconnect_window: response.data.data.reconnect_window,
+                max_continuous_duration: response.data.data.max_continuous_duration,
+                latency_mode: response.data.data.latency_mode,
+                LiveStreamId: response.data.data.id,
+                plackBackId: ids[0],
+                created_at: response.data.data.created_at,
+            },
+        }
+
+        const addNewLiveStreamingByGuru = await TempleGuru.findOneAndUpdate(
+            { _id: templeId },
+            { $set: object },
+            { new: true }
+        )
+
+        if (!addNewLiveStreamingByGuru) {
+            return sendResponse(
+                res,
+                constants.WEB_STATUS_CODE.NOT_FOUND,
+                constants.STATUS_CODE.FAIL,
+                'TEMPLE.not_found',
+                {},
+                req.headers.lang
+            );
+        }
+
+        const responseData = TempleLiveStreamingReponse(addNewLiveStreamingByGuru)
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.guru_live_stream_created', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(CreateNewLiveStreamByTemple)....", err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
+
+
+
+exports.getAllTempleLiveStream = async (req, res) => {
+
+
+    try {
+
+        const response = await axios.get(
+            `${MUXURL}/video/v1/live-streams`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+                }
+            }
+        );
+
+        if (!response.data || !response.data.data || response.data.data.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
+        const selectFields = ' muxData.plackBackId muxData.stream_key  muxData.LiveStreamId TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time'
+        const LiveStreamsData = await TempleGuru.find({ user_type: 3 })
+            .select(selectFields)
+            .sort({ createdAt: -1 })
+
+        if (!LiveStreamsData || LiveStreamsData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
+
+        const LiveStreamingData = LiveStreamsData.map(stream => stream.muxData.LiveStreamId);
+        const streamingData = response.data.data.filter(stream => LiveStreamingData.includes(stream.id));
+
+        const allLivestreams = {
+            LiveStreamsData,
+            streamingData
+        };
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', allLivestreams, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(getAllTempleLiveStream )....", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
 
 
 
@@ -161,7 +307,7 @@ exports.addBankDetails = async (req, res) => {
 
     try {
 
-        const templeId = req.guru._id;
+        const templeId = req.Temple._id;
 
         const temple = await TempleGuru.findOne({ _id: templeId });
 
@@ -193,7 +339,7 @@ exports.getBankDetails = async (req, res) => {
     try {
 
         const { bankId } = req.params;
-        const templeId = req.guru._id;
+        const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple)
@@ -223,7 +369,7 @@ exports.addpanditDetails = async (req, res) => {
 
     try {
 
-        const templeId = req.guru._id;
+        const templeId = req.Temple._id;
         const reqBody = req.body;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
@@ -260,7 +406,7 @@ exports.getpanditDetails = async (req, res) => {
     try {
 
         const { panditId } = req.params;
-        const templeId = req.guru._id;
+        const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple)
@@ -292,7 +438,7 @@ exports.UpdatepanditDetails = async (req, res) => {
 
         const { panditId } = req.params;
         const reqBody = req.body;
-        const templeId = req.guru._id;
+        const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple)

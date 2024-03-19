@@ -6,7 +6,7 @@ module.exports = {
     'PASSWORD_FORM': 'ezTruck@3579',
     'EMAIL_SERVICE': 'gmail',
     'MONGODB_URI': 'mongodb+srv://root:akki909@cluster0.sm3rshd.mongodb.net/Bhakati',
-    'BASEURL': 'http://13.234.66.251:8001',
+    'BASEURL': 'https://13.126.177.227:8001',
     'APPID': '064f804292cf437d8d949e9e1ed01d3e',
     'APPCERTIFICATE': 'e6b6368d981c47b3bb99ad3a5ae1e4cd',
     'MUX_TOKEN_ID': '21c870d8-d9ea-4fab-ad46-5546e43492b3',

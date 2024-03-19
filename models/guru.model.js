@@ -1,11 +1,12 @@
 
-const constants = require('../config/constants');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken')
 const dateFormat = require('../helper/dateformat.helper');
 const {
     JWT_SECRET
 } = require('../keys/keys')
+
+
 
 
 // Define schema for temple guru
@@ -45,14 +46,6 @@ const templeGuruSchema = new mongoose.Schema({
     verify: {
         type: Boolean,
         default: false
-    },
-    aadharacardNumber: {
-        type: String,
-        default: null
-    },
-    pancardNumber: {
-        type: String,
-        default: null
     },
     tokens: {
         type: String,
@@ -112,6 +105,16 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    templeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Guru',
+        default: null
+    },
+    guruId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Guru',
+        default: null
+    },
     title: {
         type: String,
         default: null
@@ -144,16 +147,19 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    Temple_Open_time: {
+    Open_time: {
         type: String,
         default: null
     },
     trust_name: {
-        type: String
+        type: String,
     },
     Closing_time: {
         type: String,
         default: null
+    },
+    category: {
+        type: String,
     },
     created_at: {
         type: String

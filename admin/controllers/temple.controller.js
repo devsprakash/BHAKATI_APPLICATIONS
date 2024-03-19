@@ -5,13 +5,17 @@ const TempleGuru = require('../../models/guru.model');
 const {
     checkAdmin
 } = require("../../v1/services/user.service");
-const { BASEURL, JWT_SECRET } = require('../../keys/development.keys')
+const { BASEURL, JWT_SECRET, MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET } = require('../../keys/development.keys')
 const { templeSave } = require('../services/temple.service')
 const dateFormat = require("../../helper/dateformat.helper");
 const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { TempleReponse } = require('../../ResponseData/Temple.reponse')
+const User = require('../../models/user.model');
+const axios = require('axios');
+
+
 
 
 
@@ -52,7 +56,7 @@ exports.addTemple = async (req, res) => {
 
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
-
+        reqBody.user_type = 3;
         const templeData = await templeSave(reqBody);
 
         const responseData = TempleReponse(templeData)
@@ -71,12 +75,17 @@ exports.SearchAllTemples = async (req, res, next) => {
 
     try {
 
-        const { page = 1, per_page = 10, sort, state, templename, location, district, email } = req.query;
+        const { sort, state, templename, location, district, email, category } = req.query;
 
         let query = {};
 
         if (templename) {
-            query.TempleName = templename;
+            const templeRegex = new RegExp(templename.split(' ').join('|'), 'i');
+            query.TempleName = templeRegex;
+        }
+        if (category) {
+            const categoryRegex = new RegExp(category.split(' ').join('|'), 'i');
+            query.category = categoryRegex;
         }
         if (state) {
             query.State = state;
@@ -101,15 +110,15 @@ exports.SearchAllTemples = async (req, res, next) => {
         let temples;
         let countTemples;
 
-        if (Object.keys(query).length === 0) { 
+        if (Object.keys(query).length === 0) {
             temples = await TempleGuru.find({ user_type: 3 })
-                .select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time Closing_time')
+                .select('TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time')
                 .sort(sortOptions)
 
             countTemples = await TempleGuru.countDocuments({ user_type: 3 });
         } else {
             temples = await TempleGuru.find({ user_type: 3, ...query })
-                .select('TempleName TempleImg _id State District Location Desc trust_mobile_number guru_name email Temple_Open_time Closing_time')
+                .select('TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time')
                 .sort(sortOptions)
 
             countTemples = await TempleGuru.countDocuments({ user_type: 3, ...query });
@@ -149,7 +158,7 @@ exports.templeDelete = async (req, res) => {
         if (user.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const templeData = await Temple.findOneAndDelete({ _id: templeId });
+        const templeData = await TempleGuru.findOneAndDelete({ _id: templeId });
 
         if (!templeData) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.already_delete_temples', {}, req.headers.lang);
@@ -167,4 +176,54 @@ exports.templeDelete = async (req, res) => {
 
 }
 
+exports.getTempleProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findOne({ _id: userId });
 
+        if (!user || user.user_type !== constants.USER_TYPE.ADMIN)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+
+        const templeId = req.body.templeId; // Assuming templeId is passed in the request body
+        const temple = await TempleGuru.findOne({ _id: templeId });
+
+        if (!temple)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
+
+        const LiveAratiResponse = await axios.get(
+            `${MUXURL}/video/v1/live-streams/${temple.muxData.LiveStreamId}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+                }
+            }
+        );
+
+        if (!LiveAratiResponse.data)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
+
+        const selectFields = 'TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time';
+        const templeList = await TempleGuru.find({ user_type: constants.USER_TYPE.TEMPLEAUTHORITY }).sort().select(selectFields);
+
+        const data = {
+            templeData: {
+                TempleName: temple.TempleName,
+                category: temple.category,
+                TempleImg: temple.TempleImg,
+                _id: temple._id,
+                State: temple.State,
+                District: temple.District,
+                Location: temple.Location,
+                trust_name: temple.trust_name,
+            },
+            liveAarati: LiveAratiResponse.data,
+            TempleList: templeList,
+        };
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', data, req.headers.lang);
+    } catch (err) {
+        console.error('Error(getTempleProfile)....', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
