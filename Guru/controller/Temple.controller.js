@@ -129,9 +129,6 @@ exports.getTempleProfile = async (req, res) => {
             }
         );
 
-        if (!LiveAratiResponse)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
-
         const selectFields = 'TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time';
         const templeList = await TempleGuru.find({ user_type: constants.USER_TYPE.TEMPLEAUTHORITY }).sort().select(selectFields);
 

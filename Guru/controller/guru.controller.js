@@ -88,9 +88,6 @@ exports.getGuruProfile = async (req, res) => {
             }
         );
 
-        if (!guruLiveStreamResponse)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
-
         const VideoData = await Video.find({ guruId: guru._id });
 
         let object = {
