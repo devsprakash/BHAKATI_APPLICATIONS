@@ -19,6 +19,10 @@ const templeGuruRouter = require('./Guru/routes/Temples');
 const pujaRouter = require('./Guru/routes/puja');
 const GuruRouter = require('./Guru/routes/guru');
 const videoRouter = require('./Guru/routes/video')
+//const path = require('path');
+
+var ejs = require('ejs');
+
 const app = express();
 
 
@@ -41,9 +45,25 @@ app.use(
 //Database connection with mongodb
 const mongoose = require('./config/database');
 
+app.set("view engine", "ejs");
+
 app.use('/uploads', express.static('uploads'));
 
-app.use(cors());
+//app.use(cors());
+// CORS configuration
+const allowedOrigins = ['https://3.108.211.160', 'http://13.126.177.227', 'https://13.126.177.227']; // Add your allowed origins here
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
+
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({
@@ -75,7 +95,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://16.170.253.177:8001",
+        url: "https://13.126.177.227",
       },
     ],
   },

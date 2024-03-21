@@ -7,6 +7,9 @@
 const app = require('../app');
 const debug = require('debug')('bhakati:server');
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 
 const Keys = require('../keys/keys')
 
@@ -23,7 +26,21 @@ console.log(Keys.PORT + " is running.")
  * Create HTTP server.
  */
 
-const server = http.createServer(app);
+//const server = http.createServer(app);
+
+// Load SSL certificate and private key
+const sslOptions = {
+  key: fs.readFileSync(path.resolve(__dirname, 'certificates', 'private.key')),
+  cert: fs.readFileSync(path.resolve(__dirname, 'certificates', 'certificate.crt')),
+  requestCert: true,
+  ca: fs.readFileSync(path.resolve(__dirname, 'certificates', 'ca_bundle.crt')),
+  rejectUnauthorized: false 
+};
+
+// Create HTTPS server
+const server = https.createServer(sslOptions, app);
+
+
 
 /**
  * Listen on provided port, on all network interfaces.
