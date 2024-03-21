@@ -10,7 +10,7 @@ const TempleAuth  = require('../../middleware/guru.auth')
 
 
 router.post('/addNewGuru', upload.single('guruImage'), addNewGuru);
-router.get('/getProfile' , TempleAuth, getGuruProfile);
+router.get('/getProfile' , getGuruProfile);
 router.post('/GuruCreatedLiveStream' , TempleAuth , GuruCreateNewLiveStream);
 router.get('/getAllGuruLiveStream' , getAllLiveStreamByGuru)
 router.get('/SearchAllGuru' , SearchAllGuru);
