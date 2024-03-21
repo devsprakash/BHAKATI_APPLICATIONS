@@ -110,7 +110,7 @@ exports.getTempleProfile = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
+        const { templeId } = req.body;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple)
