@@ -65,7 +65,7 @@ exports.getGuruProfile = async (req, res) => {
 
     try {
 
-        const guruId = req.Temple._id;
+        const { guruId } = req.body;
 
         const guru = await TempleGuru.findById(guruId);
 
