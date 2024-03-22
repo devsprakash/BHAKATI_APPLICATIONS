@@ -171,11 +171,9 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
     const requestData = {
-
         "playback_policy": [
             "public"
         ],
-
         "new_asset_settings": {
             "playback_policy": "public",
             "max_resolution_tier": "1080p",
@@ -188,9 +186,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
         }
     };
 
-
     try {
-
         const response = await axios.post(
             `${MUXURL}/video/v1/live-streams`,
             requestData,
@@ -204,45 +200,35 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
 
         const ids = response.data.data.playback_ids.map((item) => item.id);
 
-        const object = {
+        const liveStreamData = {
             startTime: dateFormat.add_current_time(),
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp(),
             description: reqBody.description,
             title: reqBody.title,
-            templeId: templeId,
-            muxData: {
-                stream_key: response.data.data.stream_key,
-                status: response.data.data.status,
-                reconnect_window: response.data.data.reconnect_window,
-                max_continuous_duration: response.data.data.max_continuous_duration,
-                latency_mode: response.data.data.latency_mode,
-                LiveStreamId: response.data.data.id,
-                plackBackId: ids[0],
-                created_at: response.data.data.created_at,
-            },
-        }
+            guruId: templeId
+        };
 
-        const addNewLiveStreamingByGuru = await TempleGuru.findOneAndUpdate(
+        const templeData = await TempleGuru.findOneAndUpdate(
             { _id: templeId },
-            { $set: object },
+            { $set: liveStreamData },
             { new: true }
-        )
+        );
 
-        if (!addNewLiveStreamingByGuru) {
-            return sendResponse(
-                res,
-                constants.WEB_STATUS_CODE.NOT_FOUND,
-                constants.STATUS_CODE.FAIL,
-                'TEMPLE.not_found',
-                {},
-                req.headers.lang
-            );
-        }
+        templeData.muxData.push({
+            stream_key: response.data.data.stream_key,
+            status: response.data.data.status,
+            reconnect_window: response.data.data.reconnect_window,
+            max_continuous_duration: response.data.data.max_continuous_duration,
+            latency_mode: response.data.data.latency_mode,
+            LiveStreamId: response.data.data.id,
+            plackBackId: ids[0],
+            created_at: response.data.data.created_at,
+        });
 
-        const responseData = TempleLiveStreamingReponse(addNewLiveStreamingByGuru)
+        await templeData.save()
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.guru_live_stream_created', responseData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.guru_live_stream_created', templeData, req.headers.lang);
 
     } catch (err) {
         console.log("err(CreateNewLiveStreamByTemple)....", err)
@@ -277,12 +263,20 @@ exports.getAllTempleLiveStream = async (req, res) => {
         if (!LiveStreamsData || LiveStreamsData.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
 
-        const LiveStreamingData = LiveStreamsData.map(stream => stream.muxData.LiveStreamId);
-        const streamingData = response.data;
+            const liveStreamIds = LiveStreamsData.map(item => item.muxData.map(mux => mux.LiveStreamId)).flat();
+            const matchedStreamingData = [];
+
+
+            for (const stream of response.data.data) {
+            
+                if (liveStreamIds.includes(stream.id)) {
+                    matchedStreamingData.push(stream); 
+                }
+            }
 
         const allLivestreams = {
             LiveStreamsData,
-            streamingData
+            matchedStreamingData
         };
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', allLivestreams, req.headers.lang);

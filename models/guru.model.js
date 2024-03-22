@@ -67,7 +67,7 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    muxData: {
+    muxData: [{
         stream_key: {
             type: String,
             default: null
@@ -100,7 +100,7 @@ const templeGuruSchema = new mongoose.Schema({
             type: String,
             default: null
         },
-    },
+    }],
     description: {
         type: String,
         default: null
