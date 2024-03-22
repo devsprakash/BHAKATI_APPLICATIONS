@@ -9,7 +9,7 @@ const { muxWebhookMiddleware } = require('../../middleware/Livestream.webHooks')
 
 router.post('/login', templeLogin);
 router.get('/logout', TempleAuth, logout);
-router.get('/getTempleProfile', getTempleProfile);
+router.get('/getTempleProfile',TempleAuth , getTempleProfile);
 router.post('/createLiveStreamingByTemple', TempleAuth, CreateNewLiveStreamByTemple);
 router.get('/getAllTempleLiveStream', getAllTempleLiveStream)
 router.post('/addBankDetails', TempleAuth, addBankDetails)

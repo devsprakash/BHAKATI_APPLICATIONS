@@ -18,8 +18,8 @@ exports.uploadNewVideo = async (req, res) => {
     const reqBody = req.body;
     const guru = await TempleGuru.findById(guruId)
 
-    if (!guru || guru.user_type !== constants.USER_TYPE.GURU)
-        return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+    // if (!guru || guru.user_type !== constants.USER_TYPE.GURU )
+    //     return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
     const file = req.file;
     const videoUrl = await `${BASEURL}/uploads/${file.filename}`;

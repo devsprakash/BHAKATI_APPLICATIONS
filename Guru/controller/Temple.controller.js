@@ -110,7 +110,7 @@ exports.getTempleProfile = async (req, res) => {
 
     try {
 
-        const { templeId } = req.body;
+        const templeId = req.Temple._id;
         
         const temple = await TempleGuru.findOne({ _id: templeId });
 
@@ -138,6 +138,11 @@ exports.getTempleProfile = async (req, res) => {
             District: temple.District,
             Location: temple.Location,
             trust_name: temple.trust_name,
+            title:temple.title,
+            description: temple.description,
+            streamKey:temple.muxData.stream_key,
+            plackBackId:temple.muxData.plackBackId,
+            LiveStreamId:temple.muxData.LiveStreamId
         }
 
         const data = {
