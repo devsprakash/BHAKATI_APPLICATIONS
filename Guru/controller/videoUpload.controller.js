@@ -25,7 +25,7 @@ exports.uploadNewVideo = async (req, res) => {
     const videoUrl = await `${BASEURL}/uploads/${file.filename}`;
 
     const requestData = {
-        "input": videoUrl,
+        "input": `https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4`,
         "playback_policy": ["public"],
         "encoding_tier": "smart",
         "max_resolution_tier": "2160p"

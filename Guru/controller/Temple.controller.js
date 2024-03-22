@@ -127,7 +127,7 @@ exports.getTempleProfile = async (req, res) => {
         const selectFields = 'TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time';
         const templeList = await TempleGuru.find({ user_type: constants.USER_TYPE.TEMPLEAUTHORITY }).sort().select(selectFields).limit(10)
 
-        const VideoData = await Video.find({ _id: temple._id }).sort().limit(8)
+        const VideoData = await Video.find({ guruId: temple._id }).sort().limit(8)
 
         const object = {
             TempleName: temple.TempleName,
