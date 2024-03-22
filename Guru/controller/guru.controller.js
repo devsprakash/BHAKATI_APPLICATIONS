@@ -311,8 +311,7 @@ exports.getAllLiveStreamByGuru = async (req, res) => {
         if (!LiveStreamsData || LiveStreamsData.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
 
-        const LiveStreamingData = LiveStreamsData.map(stream => stream.muxData.LiveStreamId);
-        const streamingData = response.data.data.filter(stream => LiveStreamingData.includes(stream.id));
+        const streamingData = response.data;
 
         const allLivestreams = {
             LiveStreamsData,

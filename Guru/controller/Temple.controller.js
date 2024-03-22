@@ -19,7 +19,6 @@ const axios = require('axios')
 
 
 
-
 exports.templeLogin = async (req, res) => {
 
     try {
@@ -103,7 +102,6 @@ exports.logout = async (req, res, next) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 }
-
 
 
 exports.getTempleProfile = async (req, res) => {
@@ -256,7 +254,6 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
 
 exports.getAllTempleLiveStream = async (req, res) => {
 
-
     try {
 
         const response = await axios.get(
@@ -272,7 +269,7 @@ exports.getAllTempleLiveStream = async (req, res) => {
         if (!response.data || !response.data.data || response.data.data.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
 
-        const selectFields = ' muxData.plackBackId muxData.stream_key  muxData.LiveStreamId TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time'
+        const selectFields = 'muxData.plackBackId muxData.stream_key  muxData.LiveStreamId TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time'
         const LiveStreamsData = await TempleGuru.find({ user_type: 3 })
             .select(selectFields)
             .sort({ createdAt: -1 })
@@ -281,7 +278,7 @@ exports.getAllTempleLiveStream = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
 
         const LiveStreamingData = LiveStreamsData.map(stream => stream.muxData.LiveStreamId);
-        const streamingData = response.data.data.filter(stream => LiveStreamingData.includes(stream.id));
+        const streamingData = response.data;
 
         const allLivestreams = {
             LiveStreamsData,
