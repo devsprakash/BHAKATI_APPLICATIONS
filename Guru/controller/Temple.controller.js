@@ -110,8 +110,8 @@ exports.getTempleProfile = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
-        
+        const { templeId } = req.body;
+
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         const LiveAratiResponse = await axios.get(
@@ -138,11 +138,11 @@ exports.getTempleProfile = async (req, res) => {
             District: temple.District,
             Location: temple.Location,
             trust_name: temple.trust_name,
-            title:temple.title,
+            title: temple.title,
             description: temple.description,
-            streamKey:temple.muxData.stream_key,
-            plackBackId:temple.muxData.plackBackId,
-            LiveStreamId:temple.muxData.LiveStreamId
+            streamKey: temple.muxData.stream_key,
+            plackBackId: temple.muxData.plackBackId,
+            LiveStreamId: temple.muxData.LiveStreamId
         }
 
         const data = {
@@ -469,3 +469,25 @@ exports.UpdatepanditDetails = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
+
+exports.generate_refresh_tokens = async (req, res, next) => {
+
+    try {
+
+        let temple = await TempleGuru.findOne({ refresh_tokens: req.body.refresh_tokens });
+
+        if (!temple)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
+
+        let newToken = await temple.generateAuthToken();
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', newToken, req.headers.lang);
+
+    } catch (err) {
+        console.log('err(generate_refresh_tokens)', err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
+

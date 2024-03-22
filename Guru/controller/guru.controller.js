@@ -65,11 +65,11 @@ exports.getGuruProfile = async (req, res) => {
 
     try {
 
-        const guruId  = req.Temple._id;
+        const { guruId } = req.body;
         console.log(guruId)
 
         const guru = await TempleGuru.findById(guruId);
-   
+
         const selectFields = '_id GuruName expertise templeId GuruImg';
         const guruList = await TempleGuru.find({ user_type: constants.USER_TYPE.GURU }).select(selectFields).sort().limit(10)
 
