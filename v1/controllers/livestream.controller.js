@@ -126,7 +126,7 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
 
         const LiveStreamingData =  LiveStreamsData.map(stream => stream.muxData.LiveStreamingId);
        
-        const streamingData = response.data.data.filter(stream => LiveStreamingData == stream.id);
+        const streamingData = response.data;
 
         // Combine MUX data and live streams data
         const allLivestreams = {
