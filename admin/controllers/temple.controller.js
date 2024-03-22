@@ -177,7 +177,9 @@ exports.templeDelete = async (req, res) => {
 }
 
 exports.getTempleProfile = async (req, res) => {
+
     try {
+
         const userId = req.user._id;
         const user = await User.findOne({ _id: userId });
 
@@ -186,9 +188,6 @@ exports.getTempleProfile = async (req, res) => {
 
         const templeId = req.body.templeId; // Assuming templeId is passed in the request body
         const temple = await TempleGuru.findOne({ _id: templeId });
-
-        if (!temple)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
 
         const LiveAratiResponse = await axios.get(
             `${MUXURL}/video/v1/live-streams/${temple.muxData.LiveStreamId}`,
@@ -222,6 +221,7 @@ exports.getTempleProfile = async (req, res) => {
         };
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', data, req.headers.lang);
+        
     } catch (err) {
         console.error('Error(getTempleProfile)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);

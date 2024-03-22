@@ -68,15 +68,9 @@ exports.getGuruProfile = async (req, res) => {
         const { guruId } = req.body;
 
         const guru = await TempleGuru.findById(guruId);
-
-        if (!guru)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
-
-        if (guru.user_type !== constants.USER_TYPE.GURU)
-            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
-
+   
         const selectFields = '_id GuruName expertise templeId GuruImg';
-        const guruList = await TempleGuru.find({ user_type: constants.USER_TYPE.GURU }).select(selectFields).sort();
+        const guruList = await TempleGuru.find({ user_type: constants.USER_TYPE.GURU }).select(selectFields).sort().limit(10)
 
         const guruLiveStreamResponse = await axios.get(
             `${MUXURL}/video/v1/live-streams/${guru.muxData.LiveStreamId}`,
@@ -88,7 +82,7 @@ exports.getGuruProfile = async (req, res) => {
             }
         );
 
-        const VideoData = await Video.find({ guruId: guru._id });
+        const VideoData = await Video.find({ guruId: guru._id }).sort().limit(8)
 
         let object = {
             GuruName: guru.GuruName,

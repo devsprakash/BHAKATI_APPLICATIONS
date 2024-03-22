@@ -3,7 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
-
+const path = require('path')
 const cookie = require('cookie-session');
 const flash = require('connect-flash');
 const swaggerUI = require("swagger-ui-express");
@@ -19,7 +19,8 @@ const templeGuruRouter = require('./Guru/routes/Temples');
 const pujaRouter = require('./Guru/routes/puja');
 const GuruRouter = require('./Guru/routes/guru');
 const videoRouter = require('./Guru/routes/video')
-//const path = require('path');
+const bodyParser = require('body-parser');
+const { muxWebhookMiddleware } = require('./middleware/Livestream.webHooks')
 
 var ejs = require('ejs');
 
@@ -45,23 +46,25 @@ app.use(
 //Database connection with mongodb
 const mongoose = require('./config/database');
 
-app.set("view engine", "ejs");
+app.use(express.static(path.join(__dirname, 'public')));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
 app.use('/uploads', express.static('uploads'));
 
-//app.use(cors());
+app.use(cors());
 // CORS configuration
-const allowedOrigins = ['https://3.108.211.160', 'http://13.126.177.227', 'https://13.126.177.227']; // Add your allowed origins here
+// const allowedOrigins = ['https://3.108.211.160', 'http://13.126.177.227', 'https://13.126.177.227' , 'http://localhost:8001']; // Add your allowed origins here
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-}));
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   }
+// }));
 
 
 app.use(logger('dev'));

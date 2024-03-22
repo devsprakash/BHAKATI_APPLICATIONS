@@ -111,13 +111,8 @@ exports.getTempleProfile = async (req, res) => {
     try {
 
         const { templeId } = req.body;
+        
         const temple = await TempleGuru.findOne({ _id: templeId });
-
-        if (!temple)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
-
-        if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
-            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
         const LiveAratiResponse = await axios.get(
             `${MUXURL}/video/v1/live-streams/${temple.muxData.LiveStreamId}`,
@@ -130,9 +125,9 @@ exports.getTempleProfile = async (req, res) => {
         );
 
         const selectFields = 'TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time';
-        const templeList = await TempleGuru.find({ user_type: constants.USER_TYPE.TEMPLEAUTHORITY }).sort().select(selectFields);
+        const templeList = await TempleGuru.find({ user_type: constants.USER_TYPE.TEMPLEAUTHORITY }).sort().select(selectFields).limit(10)
 
-        const VideoData = await Video.find({ _id: temple._id });
+        const VideoData = await Video.find({ _id: temple._id }).sort().limit(8)
 
         const object = {
             TempleName: temple.TempleName,

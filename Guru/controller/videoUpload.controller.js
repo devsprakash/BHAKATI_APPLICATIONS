@@ -16,15 +16,13 @@ exports.uploadNewVideo = async (req, res) => {
 
     const guruId = req.Temple._id;
     const reqBody = req.body;
-    const { videoUrl } = reqBody;
     const guru = await TempleGuru.findById(guruId)
 
-    if (guru.user_type !== constants.USER_TYPE.GURU)
-    return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+    if (!guru || guru.user_type !== constants.USER_TYPE.GURU)
+        return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
-
-    if (!guru)
-        return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
+    const file = req.file;
+    const videoUrl = await `${BASEURL}/uploads/${file.filename}`;
 
     const requestData = {
         "input": videoUrl,
@@ -32,7 +30,6 @@ exports.uploadNewVideo = async (req, res) => {
         "encoding_tier": "smart",
         "max_resolution_tier": "2160p"
     };
-
 
     try {
 
@@ -48,7 +45,6 @@ exports.uploadNewVideo = async (req, res) => {
         );
 
         const ids = response.data.data.playback_ids.map((item) => item.id);
-        console.log(ids[0])
 
         const object = {
             startTime: dateFormat.add_current_time(),
@@ -56,10 +52,7 @@ exports.uploadNewVideo = async (req, res) => {
             updated_at: dateFormat.set_current_timestamp(),
             description: reqBody.description,
             title: reqBody.title,
-            comment: reqBody.comment,
-            tags: reqBody.tags,
             videoUrl: videoUrl,
-            status:reqBody.status,
             guruId: guruId,
             muxData: {
                 playBackId: ids[0],
@@ -85,9 +78,10 @@ exports.uploadNewVideo = async (req, res) => {
 
 exports.getAllVideo = async (req, res) => {
 
-    const { page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'desc' } = req.query;
+    const { page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'desc' } = req.query
 
     try {
+
         // Fetching video data from MUX
         const response = await axios.get(
             `${MUXURL}/video/v1/assets`,

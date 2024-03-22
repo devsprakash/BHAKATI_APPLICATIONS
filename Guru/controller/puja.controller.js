@@ -136,22 +136,18 @@ exports.ListOfPuja = async (req, res) => {
 
 
 exports.addPuja = async (req, res) => {
+    
 
     try {
 
         const reqBody = req.body;
 
         const { pujaId } = req.params;
-
-        const templeId = req.temple._id;
-        console.log(templeId);
-
-        const temple = await Temple.findOne({ _id: templeId });
-        console.log(temple)
+        const templeId = req.Temple._id;
+        const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-
 
         const updatedPuja = await Puja.findByIdAndUpdate(pujaId, {
 

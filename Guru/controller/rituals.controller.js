@@ -14,7 +14,7 @@ exports.addNewRithuals = async (req, res) => {
     try {
 
         const reqBody = req.body;
-        const templeId = req.temple._id;
+        const templeId = req.Temple._id;
 
         const temples = await TempleGuru.findOne({ _id: templeId })
 

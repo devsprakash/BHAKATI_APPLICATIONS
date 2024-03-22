@@ -104,36 +104,6 @@ router.get('/logout' , verifyAccessToken , logout)
  */
 
 router.get('/getAllUsers' , verifyAccessToken , getAllUser )
-
-/**
- * @swagger
- * /admin/deleteUserAccount:
- *   delete:
- *     summary: Delete User Account
- *     description: Deletes a user account.
- *     tags: [ADMIN]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: userId
- *         schema:
- *           type: string
- *         required: true
- *         description: The ID of the user account to be deleted.
- *     responses:
- *       '200':
- *         description: User account deleted successfully
- *         content:
- *           application/json:
- *             example:
- *               message: User account deleted successfully
- *       '401':
- *         description: Unauthorized
- *       '500':
- *         description: Internal Server Error
- */
-
 router.delete('/deleteUserAccount' , verifyAccessToken , deleteProfile);
 router.get('/getProfile' , verifyAccessToken , getUser);
 router.get('/getAllAdmin' , verifyAccessToken , getAllAdmin)
