@@ -73,8 +73,9 @@ exports.getGuruProfile = async (req, res) => {
         const selectFields = '_id GuruName expertise templeId GuruImg';
         const guruList = await TempleGuru.find({ user_type: constants.USER_TYPE.GURU }).select(selectFields).sort().limit(10)
 
-        const guruLiveStreamResponse = await axios.get(
-            `${MUXURL}/video/v1/live-streams/${guru.muxData.LiveStreamId}`,
+
+        const response = await axios.get(
+            `${MUXURL}/video/v1/live-streams`,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -82,6 +83,17 @@ exports.getGuruProfile = async (req, res) => {
                 }
             }
         );
+
+
+        const LiveStreamingId =  guru.muxData.map((stream) => stream.LiveStreamId);
+       
+        const matchedData = [];
+        for (const item of response.data.data) {
+          if (LiveStreamingId.includes(item.id)) {
+            matchedData.push(item);
+          }
+        }
+        
 
         const VideoData = await Video.find({ guruId: guru._id }).sort().limit(8)
 
@@ -93,8 +105,6 @@ exports.getGuruProfile = async (req, res) => {
             expertise: guru.expertise,
             GuruImg: guru.GuruImg,
             muxData: guru.muxData,
-            title: guru.title,
-            description: guru.description
         }
 
         const guruLiveStreaming = guruLiveStreamResponse.data;
@@ -102,7 +112,7 @@ exports.getGuruProfile = async (req, res) => {
         const guruProfileData = {
             guruData: object,
             GuruList: guruList,
-            guruLiveStreaming: guruLiveStreaming,
+            guruLiveStreaming: matchedData,
             VideoData: VideoData
         };
 
@@ -250,6 +260,8 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
         );
 
         templeData.muxData.push({
+            description: reqBody.description,
+            title: reqBody.title,
             stream_key: response.data.data.stream_key,
             status: response.data.data.status,
             reconnect_window: response.data.data.reconnect_window,
@@ -289,7 +301,7 @@ exports.getAllLiveStreamByGuru = async (req, res) => {
         if (!response.data || !response.data.data || response.data.data.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
 
-        const selectedFields = 'GuruName email mobile_number title description expertise GuruImg _id guruId muxData.plackBackId muxData.stream_key  muxData.LiveStreamId created_at';
+        const selectedFields = 'GuruName email mobile_number muxData.title muxData.description expertise GuruImg _id guruId muxData.plackBackId muxData.stream_key  muxData.LiveStreamId';
         const LiveStreamsData = await TempleGuru.find({ user_type: 4 })
             .select(selectedFields)
             .sort({ createdAt: -1 })

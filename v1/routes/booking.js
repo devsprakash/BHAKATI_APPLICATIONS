@@ -1,14 +1,14 @@
 
 const express = require('express');
-const {  getAllBookingSlot, createdNewSlot, bookingSlotDownloaded, BookingRithuals} = require('../controllers/booking.controller');
+const {  getAllBookingSlot, createdNewSlot, bookingSlotDownloaded, BookingPuja} = require('../controllers/booking.controller');
 const router = express.Router();
 const authenticate = require('../../middleware/authenticate');
-const { verifyAccessToken } = require('../../middleware/admin.middleware')
+const TempleAuth = require('../../middleware/guru.auth')
 
 
-router.post('/createNewSlots' , verifyAccessToken , createdNewSlot)
-router.post('/BookingRithuals' , authenticate , BookingRithuals)
-router.get('/getAllBookingSlot' , authenticate  , getAllBookingSlot)
+router.post('/createNewSlots' , TempleAuth , createdNewSlot)
+router.post('/Bookingpuja' , authenticate , BookingPuja)
+router.get('/getAllBookingSlot'   , getAllBookingSlot)
 router.get('/bookingSlotDownload/:bookingId' , bookingSlotDownloaded)
 
 module.exports = router;

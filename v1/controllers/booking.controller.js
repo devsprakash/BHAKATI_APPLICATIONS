@@ -9,7 +9,8 @@ const { checkAdmin } = require("../services/user.service")
 const { isValid } = require("../../services/blackListMail");
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
-const { v4: uuid } = require('uuid')
+const { v4: uuid } = require('uuid');
+const TempleGuru = require("../../models/guru.model");
 
 
 
@@ -19,13 +20,13 @@ exports.createdNewSlot = async (req, res ) => {
     try {
 
         const reqBody = req.body
-        const userId = req.user._id;
-        const findAdmin = await checkAdmin(userId)
+        const templeId = req.Temple._id;
+        const findAdmin = await TempleGuru.findById(templeId)
 
-        if (findAdmin.user_type !== constants.USER_TYPE.ADMIN)
+        if (findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED , constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const NewSlots = await createBookingSlots(reqBody.startTime, reqBody.endTime, reqBody.slotsCount, reqBody.templeId, reqBody.slotDurationInMinutes);
+        const NewSlots = await createBookingSlots(reqBody.startTime, reqBody.endTime, reqBody.slotsCount, templeId, reqBody.slotDurationInMinutes);
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
         reqBody.slotNumber = reqBody.slotsCount;
@@ -48,58 +49,6 @@ exports.createdNewSlot = async (req, res ) => {
 }
 
 
-
-
-exports.BookingRithuals = async (req, res) => {
-
-    try {
-
-        const reqBody = req.body;
-        const userId = req.user._id;
-        const { ritualId } = reqBody;
-
-        const bookings = await Booking.find({ _id: reqBody.bookingId });
-
-        if (!bookings && bookings.length <= 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang);
-
-        for (const booking of bookings) {
-            if (booking.available === false) {
-                return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.already_booked_slot', booking, req.headers.lang);
-            }
-        }
-
-        const updatedBookings = bookings.map(async (booking) => {
-
-            booking.userId = userId;
-            booking.available = false;
-            booking.ref_no = uuid();
-            booking.Name = reqBody.Name;
-            booking.ritualId = ritualId;
-            booking.email = reqBody.email;
-            booking.mobile_number = reqBody.mobile_number;
-            booking.created_at = dateFormat.set_current_timestamp();
-            booking.updated_at = dateFormat.set_current_timestamp();
-            let slots = await Slot.findOne({ _id: booking.slotId });
-
-            if (!slots)
-                return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.slots_not_found', {}, req.headers.lang);
-
-            slots.slotNumber--;
-            await Promise.all([slots.save(), booking.save()]);
-
-            return booking;
-        });
-
-        const updatedBookingsResult = await Promise.all(updatedBookings);
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_slot', updatedBookingsResult, req.headers.lang);
-
-    } catch (err) {
-        console.log("err(BookingRithuals)....", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
 
 
 exports.BookingPuja = async (req, res) => {
@@ -162,7 +111,6 @@ exports.getAllBookingSlot = async (req, res, next) => {
     try {
 
         const { page = 1, per_page = 10, sort } = req.query;
-        const userId = req.user._id;
 
         const sortOptions = {};
         if (sort) {
@@ -170,7 +118,7 @@ exports.getAllBookingSlot = async (req, res, next) => {
             sortOptions[field] = order === 'desc' ? -1 : 1;
         }
 
-        const bookings = await Booking.find({ userId: userId })
+        const bookings = await Booking.find()
             .populate('templeId')
             .populate('pujaId')
             .populate('ritualId')
@@ -181,7 +129,7 @@ exports.getAllBookingSlot = async (req, res, next) => {
         if (!bookings && bookings.length == 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang)
 
-        const totalBookings = await Booking.countDocuments({ userId: userId });
+        const totalBookings = await Booking.countDocuments();
 
         let data = {
             page: Number(page),
@@ -254,7 +202,6 @@ exports.bookingSlotDownloaded = async (req, res) => {
         console.log("err(BookingDownloaded)....", err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
-
 }
 
 

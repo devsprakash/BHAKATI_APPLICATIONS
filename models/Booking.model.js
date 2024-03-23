@@ -14,7 +14,7 @@ const bookingSchema = new Schema({
     },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'temples'
+        ref: 'Guru'
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,

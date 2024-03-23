@@ -112,7 +112,7 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
 
         // Fetch live streams data from database
         const LiveStreamsData = await LiveStream.find(query)
-            .select('_id status startTime muxData title description')
+            .select('_id status startTime muxData.stream_key muxData.LiveStreamingId muxData.playBackId title description')
             .populate('templeId', 'TempleName TempleImg Location State District Desc Temple_Open_time Closing_time _id templeId user_type')
             .populate('pujaId', 'pujaName pujaImage _id')
             .sort({ startTime: -1 }) // Sort by startTime in descending order
@@ -125,8 +125,12 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
         }
 
         const LiveStreamingData =  LiveStreamsData.map(stream => stream.muxData.LiveStreamingId);
-       
-        const streamingData = response.data;
+        const streamingData = [];
+        for (const item of response.data.data) {
+          if (LiveStreamingData.includes(item.id)) {
+            streamingData.push(item);
+          }
+        }
 
         // Combine MUX data and live streams data
         const allLivestreams = {

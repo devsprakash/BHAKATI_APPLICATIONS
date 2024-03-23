@@ -68,6 +68,14 @@ const templeGuruSchema = new mongoose.Schema({
         default: null
     },
     muxData: [{
+        title: {
+            type: String,
+            default: null
+        },
+        description: {
+            type: String,
+            default: null
+        },
         stream_key: {
             type: String,
             default: null
@@ -101,10 +109,6 @@ const templeGuruSchema = new mongoose.Schema({
             default: null
         },
     }],
-    description: {
-        type: String,
-        default: null
-    },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Guru',
@@ -113,10 +117,6 @@ const templeGuruSchema = new mongoose.Schema({
     guruId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Guru',
-        default: null
-    },
-    title: {
-        type: String,
         default: null
     },
     TempleName: {
