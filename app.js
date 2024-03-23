@@ -45,12 +45,9 @@ app.use(
 
 //Database connection with mongodb
 const mongoose = require('./config/database');
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.set('views', path.join(__dirname, 'views'));
+app.use('/uploads', express.static('uploads'));
 app.set('view engine', 'ejs');
 
-app.use('/uploads', express.static('uploads'));
 
 app.use(cors());
 // CORS configuration
