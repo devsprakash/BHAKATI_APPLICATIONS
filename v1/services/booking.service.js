@@ -5,13 +5,13 @@ const Booking = require("../../models/Booking.model");
 exports.createBookingSlots = async (startTimeString, endTimeString, slotsCount, templeId, slotDurationInMinutes) => {
 
     const startTime = parseTimeString(startTimeString);
-    const endTime = parseTimeString(endTimeString);
+    
     let slots = []
 
     for (let i = 0; i < slotsCount; i++) {
         const newSlot = new Booking({
-            StartTime: startTime,
-            EndTime: new Date(startTime.getTime() + slotDurationInMinutes * 60000),
+            StartTime: startTimeString,
+            EndTime: endTimeString,
             templeId: templeId,
             date: new Date()
         });

@@ -15,7 +15,7 @@ const TempleGuru = require("../../models/guru.model");
 
 
 
-exports.createdNewSlot = async (req, res ) => {
+exports.createdNewSlot = async (req, res) => {
 
     try {
 
@@ -24,16 +24,18 @@ exports.createdNewSlot = async (req, res ) => {
         const findAdmin = await TempleGuru.findById(templeId)
 
         if (findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
-            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED , constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const NewSlots = await createBookingSlots(reqBody.startTime, reqBody.endTime, reqBody.slotsCount, templeId, reqBody.slotDurationInMinutes);
-        reqBody.created_at = dateFormat.set_current_timestamp();
-        reqBody.updated_at = dateFormat.set_current_timestamp();
+        const NewSlots = await createBookingSlots(reqBody.startTime, reqBody.endTime, reqBody.slotsCount, reqBody.slotDurationInMinutes);
         reqBody.slotNumber = reqBody.slotsCount;
         let slot = await Slot.create(reqBody);
 
         const updatedBookings = NewSlots.map(async (booking) => {
             booking.slotId = slot._id;
+            booking.created_at = dateFormat.set_current_timestamp();
+            booking.updated_at = dateFormat.set_current_timestamp();
+            booking.date = new Date()
+            booking.templeId = templeId
             await booking.save();
             return booking;
         });
@@ -50,6 +52,33 @@ exports.createdNewSlot = async (req, res ) => {
 
 
 
+async function bookPujaSlots(pujaId, slotsCount, email, Name, mobile_number, userId) {
+
+    const availableSlots = await Booking.find().limit(slotsCount);
+
+    if (availableSlots.length < slotsCount) {
+        throw new Error('Not enough available slots for this puja.');
+    }
+
+    const bookedSlots = [];
+    for (let i = 0; i < slotsCount; i++) {
+        const slot = availableSlots[i];
+        slot.slotKey = pujaId;
+        slot.available = false;
+        slot.email = email
+        slot.mobile_number = mobile_number,
+        slot.Name = Name,
+        slot.userId = userId,
+        slot.available = false,
+        await slot.save();
+        bookedSlots.push(slot);
+    }
+
+    console.log(`${slotsCount} puja slots booked for Puja ID: ${pujaId}.`);
+    return bookedSlots;
+}
+
+
 
 exports.BookingPuja = async (req, res) => {
 
@@ -57,46 +86,20 @@ exports.BookingPuja = async (req, res) => {
 
         const reqBody = req.body;
         const userId = req.user._id;
-        const { pujaId , bookingId} = reqBody;
+        const { pujaId, slotsCount, email, Name, mobile_number } = reqBody;
 
-        const bookings = await Booking.find({ _id: bookingId });
+        let bookings = await bookPujaSlots(pujaId, slotsCount, email, Name, mobile_number, userId);
 
-        if (!bookings && bookings.length <= 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang);
+        let slots = bookings.map((bookings) => bookings.slotId);
 
-        for (const booking of bookings) {
-            if (booking.available === false) {
-                return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.already_booked_slot', booking, req.headers.lang);
-            }
-        }
+        const slotData = await Slot.find({ _id: { $in: slots } });
 
-        let slots = await Slot.findOne({ _id: bookings.slotId });
+        await Promise.all(slotData.map(async slot => {
+            slot.slotNumber -= slotsCount; 
+            await slot.save();
+        }));
 
-        if (!slots)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.slots_not_found', {}, req.headers.lang);
-
-
-        const updatedBookings = bookings.map(async (booking) => {
-
-            booking.userId = userId;
-            booking.available = false;
-            booking.ref_no = uuid();
-            booking.Name = reqBody.Name;
-            booking.pujaId = pujaId;
-            booking.email = reqBody.email;
-            booking.mobile_number = reqBody.mobile_number;
-            booking.created_at = dateFormat.set_current_timestamp();
-            booking.updated_at = dateFormat.set_current_timestamp();
-
-            slots.slotNumber--;
-            await Promise.all([slots.save(), booking.save()]);
-
-            return booking;
-        });
-
-        const updatedBookingsResult = await Promise.all(updatedBookings);
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_slot', updatedBookingsResult, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_slot', bookings, req.headers.lang);
 
     } catch (err) {
         console.log("err(BookingPuja)....", err)
@@ -110,7 +113,7 @@ exports.getAllBookingSlot = async (req, res, next) => {
 
     try {
 
-        const { page = 1, per_page = 10, sort } = req.query;
+        const { sort, date } = req.query;
 
         const sortOptions = {};
         if (sort) {
@@ -118,34 +121,34 @@ exports.getAllBookingSlot = async (req, res, next) => {
             sortOptions[field] = order === 'desc' ? -1 : 1;
         }
 
-        const bookings = await Booking.find()
-            .populate('templeId')
-            .populate('pujaId')
-            .populate('ritualId')
-            .sort(sortOptions)
-            .skip((page - 1) * per_page)
-            .limit(Number(per_page));
+        let query = Booking.find();
 
-        if (!bookings && bookings.length == 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang)
+        if (date) {
 
-        const totalBookings = await Booking.countDocuments();
-
-        let data = {
-            page: Number(page),
-            total_pages: Math.ceil(totalBookings / per_page),
-            total_booking: totalBookings,
-            bookings
+            const formattedDate = new Date(date).toISOString().split('T')[0];
+            query = query.where('date').gte(formattedDate).lt(new Date(formattedDate).setDate(new Date(formattedDate).getDate() + 1));
         }
 
+        const bookings = await query.sort(sortOptions);
+
+        if (!bookings || bookings.length === 0) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang);
+        }
+
+        const totalBookings = await Booking.countDocuments(query);
+
+        let data = {
+            total_booking: totalBookings,
+            bookings
+        };
+
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.get_all_booking', data, req.headers.lang);
-
     } catch (err) {
-
-        console.log("err(getAllBookingSlot)....", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.log("err(getAllBookingSlot)....", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-}
+};
+
 
 
 

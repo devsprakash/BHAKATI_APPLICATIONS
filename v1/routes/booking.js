@@ -11,4 +11,6 @@ router.post('/Bookingpuja' , authenticate , BookingPuja)
 router.get('/getAllBookingSlot'   , getAllBookingSlot)
 router.get('/bookingSlotDownload/:bookingId' , bookingSlotDownloaded)
 
+
+
 module.exports = router;

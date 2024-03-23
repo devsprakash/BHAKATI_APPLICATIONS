@@ -12,53 +12,47 @@ const bookingSchema = new Schema({
     EndTime: {
         type: String
     },
-    templeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Guru'
-    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
-        default:null
+        default: null
     },
     slotId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'slots',
-        default:null
-    },
-    ritualId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'rituals',
         default: null
     },
     pujaId: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'pujas', 
+        type: mongoose.Schema.Types.ObjectId, ref: 'pujas',
         default: null
     },
-    Name:{
-        type:String,
-        default:null
+    Name: {
+        type: String,
+        default: null
     },
-    email:{
-        type:String,
-        default:null
+    email: {
+        type: String,
+        default: null
     },
-    mobile_number:{
-        type:String,
-        default:null
+    mobile_number: {
+        type: String,
+        default: null
     },
-    ref_no:{
-        type:String,
-        default:null
+    ref_no: {
+        type: String,
+        default: null
     },
-    available: { type: Boolean, default:true },
+    available: { type: Boolean, default: true },
+    date: {
+        type: String
+    },
     created_at: {
         type: String,
-        default:null
+        default: null
     },
     updated_at: {
         type: String,
-        default:null
+        default: null
     },
     deleted_at: {
         type: String,

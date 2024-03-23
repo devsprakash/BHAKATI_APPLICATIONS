@@ -63,7 +63,9 @@ exports.logout = async (req, res) => {
 
 // this api access only admin and integrate this api in the admin panel
 exports.getAllUser = async (req, res) => {
+
     try {
+        
         const userId = req.user._id;
         const findAdmin = await checkAdmin(userId);
 
