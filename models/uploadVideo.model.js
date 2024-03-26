@@ -29,6 +29,9 @@ const videoSchema = new mongoose.Schema({
         assetId: String,
         created_at: String
     },
+    views: {
+        type: String
+    },
     created_at: {
         type: String
     },

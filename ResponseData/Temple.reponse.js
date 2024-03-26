@@ -14,6 +14,7 @@ exports.TempleReponse = (temple) => {
         Desc: temple.Desc,
         mobile_number: temple.mobile_number,
         email: temple.email,
+        backgroundImage:temple.backgroundImage,
         templeId: temple.templeId,
         created_at: temple.created_at,
         updated_at: temple.updated_at,
@@ -29,6 +30,7 @@ exports.TempleLoginReponse = (temple) => {
 
         TempleName: temple.TempleName,
         TempleImg: temple.TempleImg,
+        backgroundImage:temple.backgroundImage,
         category:temple.category,
         user_type: temple.user_type,
         tokens:temple.tokens,
@@ -57,6 +59,7 @@ exports.TempleLiveStreamingReponse = (temple) => {
 
         TempleName: temple.TempleName,
         TempleImg: temple.TempleImg,
+        backgroundImage:temple.backgroundImage,
         user_type: temple.user_type,
         _id: temple._id,
         Location: temple.Location,

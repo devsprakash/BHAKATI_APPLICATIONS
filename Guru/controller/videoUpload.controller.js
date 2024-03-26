@@ -99,7 +99,7 @@ exports.getAllVideo = async (req, res) => {
 
         const assetsId = response.data.data.map(assetId => assetId.id);
 
-        const videoData = await Video.find({ 'muxData.assetId': { $in: assetsId } }, { totalViews: 0, totalWatchingTime: 0 })
+        const videoData = await Video.find({ 'muxData.assetId': { $in: assetsId } })
             .populate('guruId', 'GuruName email mobile_number _id')
             .sort({ [sortBy]: sortOrder })
             .skip((page - 1) * limit)

@@ -32,17 +32,15 @@ exports.addTemple = async (req, res) => {
         if (user.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        if (!req.file)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.no_image_upload', {}, req.headers.lang);
+        let files = req.files;
+        reqBody.TempleImg = `${BASEURL}/uploads/${files[0].filename}`;
+        reqBody.backgroundImage = `${BASEURL}/uploads/${files[1].filename}`;
 
         const templesEmailExist = await TempleGuru.findOne({ email: reqBody.email });
 
         if (templesEmailExist)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.email_already_exist', {}, req.headers.lang);
 
-        let files = req.file;
-        const TempleImageUrl = `${BASEURL}/uploads/${files.filename}`;
-        reqBody.TempleImg = TempleImageUrl;
         reqBody.templeId = uuidv4()
         if (reqBody.password)
             reqBody.password = await bcrypt.hash(reqBody.password, 10)

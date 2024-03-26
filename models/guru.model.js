@@ -67,7 +67,7 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    muxData: [{
+    muxData: {
         title: {
             type: String,
             default: null
@@ -108,7 +108,7 @@ const templeGuruSchema = new mongoose.Schema({
             type: String,
             default: null
         },
-    }],
+    },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Guru',
@@ -127,6 +127,9 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    backgroundImage: {
+        type: String
+    },
     Location: {
         type: String,
         default: null
@@ -143,7 +146,7 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    Desc: {
+    description: {
         type: String,
         default: null
     },
