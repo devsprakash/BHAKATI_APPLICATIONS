@@ -33,15 +33,15 @@ exports.addTemple = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         let files = req.files;
-        reqBody.TempleImg = `${BASEURL}/uploads/${files[0].filename}`;
-        reqBody.backgroundImage = `${BASEURL}/uploads/${files[1].filename}`;
+        reqBody.temple_image = `${BASEURL}/uploads/${files[0].filename}`;
+        reqBody.background_image = `${BASEURL}/uploads/${files[1].filename}`;
 
         const templesEmailExist = await TempleGuru.findOne({ email: reqBody.email });
 
         if (templesEmailExist)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.email_already_exist', {}, req.headers.lang);
-
-        reqBody.templeId = uuidv4()
+        
+         reqBody.temples_id = uuidv4();
         if (reqBody.password)
             reqBody.password = await bcrypt.hash(reqBody.password, 10)
         else {
@@ -79,20 +79,20 @@ exports.SearchAllTemples = async (req, res, next) => {
 
         if (templename) {
             const templeRegex = new RegExp(templename.split(' ').join('|'), 'i');
-            query.TempleName = templeRegex;
+            query.temple_name = templeRegex;
         }
         if (category) {
             const categoryRegex = new RegExp(category.split(' ').join('|'), 'i');
             query.category = categoryRegex;
         }
         if (state) {
-            query.State = state;
+            query.state = state;
         }
         if (location) {
-            query.Location = location;
+            query.location = location;
         }
         if (district) {
-            query.District = district;
+            query.district = district;
         }
         if (email) {
             query.email = email;
@@ -110,13 +110,13 @@ exports.SearchAllTemples = async (req, res, next) => {
 
         if (Object.keys(query).length === 0) {
             temples = await TempleGuru.find({ user_type: 3 })
-                .select('TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time')
+                .select('temple_name category temple_image _id state district location description mobile_number email open_time closing_time')
                 .sort(sortOptions)
 
             countTemples = await TempleGuru.countDocuments({ user_type: 3 });
         } else {
             temples = await TempleGuru.find({ user_type: 3, ...query })
-                .select('TempleName category TempleImg _id State District Location Desc trust_mobile_number guru_name email Open_time Closing_time')
+                .select('temple_name category temple_image _id state district location description mobile_number email open_time closing_time')
                 .sort(sortOptions)
 
             countTemples = await TempleGuru.countDocuments({ user_type: 3, ...query });
@@ -126,12 +126,8 @@ exports.SearchAllTemples = async (req, res, next) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
         }
 
-        let data = {
-            totalTemples: countTemples,
-            templeData: temples,
-        };
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_temples', data, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_temples', temples, req.headers.lang);
 
     } catch (err) {
         console.log("err(SearchAllTemples)....", err);

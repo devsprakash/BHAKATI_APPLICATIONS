@@ -12,11 +12,11 @@ const {
 // Define schema for temple guru
 const templeGuruSchema = new mongoose.Schema({
 
-    GuruName: {
+    guru_name: {
         type: String,
         default: null
     },
-    GuruImg: {
+    guru_image: {
         type: String,
         default: null
     },
@@ -55,15 +55,11 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null,
     },
-    startTime: {
+    start_time: {
         type: String,
         default: null
     },
-    endTime: {
-        type: String,
-        default: null
-    },
-    LiveStreamStatus: {
+    end_time: {
         type: String,
         default: null
     },
@@ -96,11 +92,11 @@ const templeGuruSchema = new mongoose.Schema({
             type: String,
             default: null
         },
-        plackBackId: {
+        plackback_id: {
             type: String,
             default: null
         },
-        LiveStreamId: {
+        live_stream_id: {
             type: String,
             default: null
         },
@@ -109,40 +105,36 @@ const templeGuruSchema = new mongoose.Schema({
             default: null
         },
     },
-    templeId: {
+    temple_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Guru',
         default: null
     },
-    guruId: {
+    guru_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Guru',
         default: null
     },
-    TempleName: {
+    temples_id:{
+        type:String,
+        default:null
+    },
+    temple_name: {
         type: String,
         default: null
     },
-    TempleImg: {
+    temple_image: {
         type: String,
         default: null
     },
-    backgroundImage: {
+    background_image: {
         type: String
     },
-    Location: {
+    location: {
         type: String,
         default: null
     },
-    State: {
-        type: String,
-        default: null
-    },
-    District: {
-        type: String,
-        default: null
-    },
-    templeId: {
+    district: {
         type: String,
         default: null
     },
@@ -150,14 +142,14 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    Open_time: {
+    open_time: {
         type: String,
         default: null
     },
     trust_name: {
         type: String,
     },
-    Closing_time: {
+    closing_time: {
         type: String,
         default: null
     },

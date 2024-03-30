@@ -87,8 +87,8 @@ app.use('/temple/guru', GuruRouter);
 app.use('/guru/video', videoRouter);
 
 
-const options = {
 
+const options = {
   definition: {
     openapi: "3.0.0",
     info: {
