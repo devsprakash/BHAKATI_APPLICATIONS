@@ -156,9 +156,9 @@ exports.getTempleProfile = async (req, res) => {
             published_date: templeData.created_at, 
             views: '',
             suggested_videos: videoData.map(video => ({
-                playback_id: '', 
+                playback_id: video.muxData.plackback_id, 
                 live_stream_id: video.muxData.live_stream_id,
-                temple_id: video.temple_id,
+                temple_id: video.temples_id,
                 temple_name: video.temple_name,
                 temple_image_url: video.temple_image,
                 title: video.muxData.title,
@@ -192,7 +192,7 @@ exports.getTempleProfile = async (req, res) => {
                 videos: videoData.map(video => ({
                     playback_id: video.playback_id,
                     live_stream_id: video.live_stream_id,
-                    temple_id: video.temple_id,
+                    temple_id: video.temples_id,
                     temple_name: video.temple_name,
                     temple_image_url: video.temple_image_url,
                     title: video.title,
@@ -207,6 +207,7 @@ exports.getTempleProfile = async (req, res) => {
                     duration: video.duration,
                     suggested_videos: video.suggested_videos
                 })),
+                
                 suggested_temples: templeList
             }
 
@@ -299,7 +300,9 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
 
 
 exports.getTempleLiveStream = async (req, res) => {
+
     try {
+
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -310,7 +313,11 @@ exports.getTempleLiveStream = async (req, res) => {
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
         const selectFields = 'muxData temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at';
-        const TempleData = await TempleGuru.find({ 'muxData.live_stream_id': { $in: LiveStreamingData } }).select(selectFields);
+        const TempleData = await TempleGuru.find({ 
+            'muxData.live_stream_id': { $in: LiveStreamingData },
+            user_type: 3
+        }).select(selectFields);
+        
 
         const responses = await axios.get(`${MUXURL}/video/v1/assets`, {
             headers: {
@@ -340,9 +347,9 @@ exports.getTempleLiveStream = async (req, res) => {
             published_date: temple.created_at, 
             views: '',
             suggested_videos: videoData.map(video => ({
-                playback_id: '', 
+                playback_id: video.muxData.plackback_id, 
                 live_stream_id: video.muxData.live_stream_id,
-                temple_id: video.temple_id,
+                temple_id: video.temples_id,
                 temple_name: video.temple_name,
                 temple_image_url: video.temple_image,
                 title: video.muxData.title,
@@ -352,7 +359,7 @@ exports.getTempleLiveStream = async (req, res) => {
                 district: video.district,
                 id: video._id,
                 category: video.category,
-                published_date: '', 
+                published_date: temple.created_at, 
                 views: video.views,
                 duration: video.duration,
                 suggested_videos: [] 

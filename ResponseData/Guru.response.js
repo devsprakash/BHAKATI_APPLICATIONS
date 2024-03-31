@@ -3,14 +3,15 @@ exports.guruResponseData = (guru) => {
 
     const response = {
         user_type: guru.user_type,
-        backgroundImage:guru.backgroundImage,
+        background_image:guru.background_image,
         status: guru.status,
-        GuruName: guru.GuruName,
+        guru_name: guru.guru_name,
         email: guru.email,
         mobile_number: guru.mobile_number,
         expertise: guru.expertise,
-        GuruImg: guru.GuruImg,
-        _id: guru._id,
+        guru_image_url: guru.guru_image,
+        id: guru._id,
+        guru_id:guru.gurus_id,
         created_at: guru.created_at,
         updated_at: guru.updated_at
     };
@@ -18,20 +19,23 @@ exports.guruResponseData = (guru) => {
     return response;
 };
 
+
+
 exports.guruLoginResponse = (guru) => {
 
     const response = {
         user_type: guru.user_type,
         status: guru.status,
-        GuruName: guru.GuruName,
+        guru_name: guru.guru_name,
         email: guru.email,
         mobile_number: guru.mobile_number,
         expertise: guru.expertise,
-        GuruImg: guru.GuruImg,
-        backgroundImage:guru.backgroundImage,
+        guru_image_url: guru.guru_image,
+        background_image:guru.background_image,
         tokens: guru.tokens,
         refresh_tokens: guru.refresh_tokens,
-        _id: guru._id,
+        id: guru._id,
+        guru_id:guru.gurus_id,
         created_at: guru.created_at,
         updated_at: guru.updated_at
     };
@@ -45,22 +49,20 @@ exports.guruLiveStreamResponse = (guru) => {
 
         user_type: guru.user_type,
         status: guru.status,
-        GuruName: guru.GuruName,
+        guru_name: guru.guru_name,
         email: guru.email,
         mobile_number: guru.mobile_number,
         expertise: guru.expertise,
-        GuruImg: guru.GuruImg,
-        backgroundImage:guru.backgroundImage,
-        description:guru.description,
-        title:guru.title,
-        _id: guru._id,
-        plackBackId: guru.muxData.plackBackId,
-        stream_key: guru.muxData.stream_key,
-        status: guru.muxData.status,
-        reconnect_window: guru.muxData.reconnect_window,
-        LiveStreamId: guru.muxData.LiveStreamId,
-        updated_at: guru.updated_at,
-        created_at: guru.created_at
+        guru_image_url: guru.guru_image,
+        background_image:guru.background_image,
+        description: guru.description,
+        title: guru.muxData.title,
+        description: guru.muxData.description,
+        plackback_id:guru.muxData.plackback_id,
+        live_stream_id:guru.muxData.live_stream_id,
+        guru_id:guru.gurus_id,
+        created_at: guru.created_at,
+        updated_at: guru.updated_at
     };
 
     return response;

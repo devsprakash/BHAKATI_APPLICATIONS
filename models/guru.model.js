@@ -9,6 +9,7 @@ const {
 
 
 
+
 // Define schema for temple guru
 const templeGuruSchema = new mongoose.Schema({
 
@@ -116,6 +117,10 @@ const templeGuruSchema = new mongoose.Schema({
         default: null
     },
     temples_id:{
+        type:String,
+        default:null
+    },
+    gurus_id:{
         type:String,
         default:null
     },
