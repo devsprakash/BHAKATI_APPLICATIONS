@@ -7,7 +7,6 @@ const Video = require('../../models/uploadVideo.model')
 const { MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET, BASEURL } = require('../../keys/development.keys');
 const axios = require('axios');
 const { getViewerCountsToken } = require('../../services/muxSignInKey');
-const { File } = require('@mux/mux-node/_shims/auto/types');
 
 
 
@@ -16,22 +15,23 @@ exports.uploadNewVideo = async (req, res) => {
 
     const guruId = req.Temple._id;
     const reqBody = req.body;
-    const guru = await TempleGuru.findById(guruId)
-
-    // if (!guru || guru.user_type !== constants.USER_TYPE.GURU )
-    //     return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
-
-    const file = req.file;
-    const videoUrl = await `${BASEURL}/uploads/${file.filename}`;
-
-    const requestData = {
-        "input": `https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4`,
-        "playback_policy": ["public"],
-        "encoding_tier": "smart",
-        "max_resolution_tier": "2160p"
-    };
 
     try {
+
+        const guru = await TempleGuru.findById(guruId);
+
+        if (!guru || ![constants.USER_TYPE.TEMPLEAUTHORITY, constants.USER_TYPE.GURU].includes(guru.user_type))
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const file = req.file;
+        const videoUrl = `${BASEURL}/uploads/${file.filename}`;
+
+        const requestData = {
+            "input": videoUrl,
+            "playback_policy": ["public"],
+            "encoding_tier": "smart",
+            "max_resolution_tier": "2160p"
+        };
 
         const response = await axios.post(
             `${MUXURL}/video/v1/assets`,
@@ -39,129 +39,94 @@ exports.uploadNewVideo = async (req, res) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+                    'Authorization': `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
                 }
             }
         );
 
-        const ids = response.data.data.playback_ids.map((item) => item.id);
+        const muxData = {
+            playback_id: response.data.data.playback_ids[0].id,
+            mp4_support: response.data.mp4_support,
+            master_access: response.data.data.master_access,
+            encoding_tier: response.data.data.encoding_tier,
+            asset_id: response.data.data.id,
+            created_at: response.data.data.created_at
+        };
 
-        const object = {
-            startTime: dateFormat.add_current_time(),
+        const videoObject = {
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp(),
             description: reqBody.description,
             title: reqBody.title,
             videoUrl: videoUrl,
             guruId: guruId,
-            muxData: {
-                playBackId: ids[0],
-                mp4_support: response.data.mp4_support,
-                master_access: response.data.data.master_access,
-                encoding_tier: response.data.data.encoding_tier,
-                assetId: response.data.data.id,
-                created_at: response.data.data.created_at
-            },
-        }
+            muxData: muxData
+        };
 
-        const videoData = await Video.create(object)
+        const videoData = await Video.create(videoObject);
 
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.guru_successfully_upload_new_video', videoData, req.headers.lang);
 
     } catch (err) {
-        console.log("err(uploadNewVideo)....", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+        console.log("Error in uploadNewVideo:", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 }
 
 
-
 exports.getAllVideo = async (req, res) => {
 
-    const { page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'desc' } = req.query
+    const { sortBy = 'created_at', sortOrder = 'desc' } = req.query;
 
     try {
 
-        // Fetching video data from MUX
         const response = await axios.get(
             `${MUXURL}/video/v1/assets`,
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+                    'Authorization': `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
                 }
             }
         );
 
-        if (!response.data || response.data.length === 0)
-            return sendResponse(res, WEB_STATUS_CODE.NOT_FOUND, STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+        if (!response.data || !response.data.data || response.data.data.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
 
+        const assetsId = response.data.data.map(asset => asset.id);
 
-        const assetsId = response.data.data.map(assetId => assetId.id);
-
-        const videoData = await Video.find({ 'muxData.assetId': { $in: assetsId } })
-            .populate('guruId', 'GuruName email mobile_number _id')
+        const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId } })
             .sort({ [sortBy]: sortOrder })
-            .skip((page - 1) * limit)
-            .limit(Number(limit));
+            .populate([
+                { path: 'guruId', select: ' _id' },
+                { path: 'guruId', select: '_id' }
+            ]);
+
+        const matchedData = response.data.data.filter(user => {
+            return videoData.some(muxData => muxData.muxData.asset_id === user.id);
+        });
 
         if (!videoData || videoData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
-
-        let videos = {
-            videoData: videoData,
-            muxData: response.data
-        }
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_videos', videos, req.headers.lang);
-
-    } catch (err) {
-        console.log("err(getAllVideo)....", err);
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
-    }
-};
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.not_found', {}, req.headers.lang);
 
 
-exports.getVideo = async (req, res) => {
+        const responseData = videoData.map(video => ({
+            plackback_id: video.muxData.playback_id,
+            asset_id: video.muxData.asset_id,
+            description: video.description,
+            title: video.title,
+            video_url: video.videoUrl,
+            id: video._id,
+            duration: video.duration,
+            views: video.views,
+            duration: matchedData[0].duration,
+            temple_or_guru_id: video.guruId
+        }))
 
-    const { assetId } = req.params;
-
-    try {
-
-        const response = await axios.get(
-            `${MUXURL}/video/v1/assets/${assetId}/input-info`,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
-                }
-            }
-        );
-
-
-        if (!response.data)
-            return sendResponse(res, WEB_STATUS_CODE.NOT_FOUND, STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
-
-
-        const videoData = await Video.findOne({ 'muxData.assetId': assetId })
-            .populate('guruId', 'GuruName email mobile_number _id')
-
-        if (!videoData)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
-
-
-        videoData.totalViews = undefined;
-        videoData.totalWatchingTime = undefined;
-
-        let videos = {
-            videoData: videoData,
-            muxData: response.data
-        }
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_videos', videos, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_videos', responseData, req.headers.lang);
 
     } catch (err) {
-        console.log("err(getVideo)....", err);
+        console.log("Error in getAllVideo:", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
@@ -182,15 +147,25 @@ exports.getCountTotalViews = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
         }
 
-        const videoData = await Video.findOneAndUpdate({ 'muxData.assetId': assetId });
+        const videoData = await Video.findOneAndUpdate({ 'muxData.asse_id': assetId });
 
         if (!videoData) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', {}, req.headers.lang);
         }
 
+        const { views, viewers } = response.data.data[0];
+        videoData.views = views;
+        await videoData.save();
+
         const videos = {
-            videoData: videoData,
-            TotalViews: response.data
+
+            plackback_id: videoData.muxData.playback_id,
+            asset_id: videoData.muxData.asset_id,
+            title: videoData.title,
+            description: videoData.description,
+            video_url: videoData.videoUrl,
+            views: views,
+            viewers: viewers
         };
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_total_views', videos, req.headers.lang);

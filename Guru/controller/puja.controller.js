@@ -109,7 +109,7 @@ exports.ListOfPuja = async (req, res) => {
         }
 
         const pujas = await Puja.find(filterCondition).select('pujaImage pujaName description duration price status')
-            .populate('templeId', 'TempleName TempleImg')
+            .populate('templeId', 'temple_name temple_image _id')
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit));
@@ -119,13 +119,19 @@ exports.ListOfPuja = async (req, res) => {
         if (!pujas || pujas.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
 
-        const data = {
-            page: parseInt(page),
-            total_pujas: totalPujas,
-            pujas
-        };
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', data, req.headers.lang);
+        const responseData = pujas.map(puja => ({
+            total_pujas: totalPujas,
+            puja_id: puja._id,
+            puja_name: puja.pujaName,
+            puja_image_url: puja.pujaImage,
+            duration: puja.duration,
+            cost: puja.price,
+            description: puja.description,
+            temple_id: puja.templeId
+        }))
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', responseData, req.headers.lang);
 
     } catch (err) {
         console.error('Error(ListOfPuja)....', err);
@@ -136,7 +142,6 @@ exports.ListOfPuja = async (req, res) => {
 
 
 exports.addPuja = async (req, res) => {
-    
 
     try {
 
@@ -172,6 +177,43 @@ exports.addPuja = async (req, res) => {
 
     } catch (err) {
         console.log('err(updatePuja).....', err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
+
+
+exports.pujs_by_temple = async (req, res) => {
+
+    try {
+
+        const { limit, templeId } = req.query;
+        const templeData = await TempleGuru.findById(templeId);
+
+        if (!templeData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
+
+        const pujsList = await Puja.find({ templeId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
+
+        if (!pujsList || pujsList.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
+
+        const responseData = {
+            temple_name: templeData.temple_name,
+            temple_id: templeData.temples_id,
+            id: templeData._id,
+            puja: pujsList.map(puja => ({
+                puja_id: puja._id,
+                puja_name: puja.pujaName,
+                puja_image_url: puja.pujaImage,
+                duration: puja.duration,
+                cost: puja.price,
+            }))
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.temple_under_pujaList', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.log('err(pujs_by_temple).....', err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }

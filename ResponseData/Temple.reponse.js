@@ -53,6 +53,7 @@ exports.TempleLoginReponse = (temple) => {
     return TempleResponse;
 }
 
+
 exports.TempleLiveStreamingReponse = (temple) => {
 
     const TempleResponse = {

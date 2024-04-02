@@ -1,5 +1,5 @@
 const express = require('express');
-const { addNewPuja, getAllPuja, addPuja, ListOfPuja } = require('../controller/puja.controller');
+const { addNewPuja, getAllPuja, addPuja, ListOfPuja , pujs_by_temple } = require('../controller/puja.controller');
 const router = express.Router();
 const TempleAuth = require('../../middleware/guru.auth')
 const upload  = require('../../middleware/multer');
@@ -12,8 +12,10 @@ router.post('/addNewPuja', upload.array('pujaImage'), verifyAccessToken , addNew
 router.get('/pujaList', ListOfPuja)
 router.get('/getAllpuja', getAllPuja);
 router.post('/addpuja/:pujaId', TempleAuth, addPuja);
+router.get('/TempleUnderAllpujaList' , pujs_by_temple)
 router.post('/addNewRithuals', TempleAuth, addNewRithuals);
 router.get('/getAllRithuals', getAllRithuals);
+
 
 
 

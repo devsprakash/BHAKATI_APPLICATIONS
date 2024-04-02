@@ -8,7 +8,6 @@ const TempleAuth = require('../../middleware/guru.auth');
 
 router.post('/addNewVideo' , upload.single('video') , TempleAuth , uploadNewVideo );
 router.get('/getAllVideos' , getAllVideo);
-router.get('/getVideo/:assetId' , getVideo)
 router.get('/totalViews' , getCountTotalViews)
 
 

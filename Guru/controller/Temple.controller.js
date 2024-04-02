@@ -13,70 +13,54 @@ const Pandit = require('../../models/pandit.model');
 const Puja = require('../../models/puja.model');
 const LiveStream = require('../../models/liveStreaming.model');
 const Video = require('../../models/uploadVideo.model');
-const axios = require('axios')
+const axios = require('axios');
+const { getData } = require('../services/views.services')
 
 
 
 
 
 exports.templeLogin = async (req, res) => {
-
     try {
         const reqBody = req.body;
+        const { email, password } = reqBody;
 
-        const checkMail = await isValid(reqBody.email);
-
-        if (checkMail === false) {
+        const checkMail = await isValid(email);
+        if (!checkMail)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
-        }
 
-        let user = await TempleGuru.findOne({ email: reqBody.email });
-
-        if (!user) {
+        const user = await TempleGuru.findOne({ email });
+        if (!user)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
-        }
 
-        const matchPassword = await bcrypt.compare(reqBody.password, user.password);
-
-        if (matchPassword === false) {
+        const matchPassword = await bcrypt.compare(password, user.password);
+        if (!matchPassword)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
+
+        if (user.status === 0 || user.status === 2 || user.deleted_at !== null) {
+            let errorMsg;
+            if (user.status === 0) errorMsg = 'USER.inactive_account';
+            else if (user.status === 2) errorMsg = 'USER.deactive_account';
+            else errorMsg = 'USER.inactive_account';
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, errorMsg, {}, req.headers.lang);
         }
 
-        if (user.status === 0) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
-        }
-
-        if (user.status === 2) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
-        }
-
-        if (user.deleted_at !== null) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.inactive_account', {}, req.headers.lang);
-        }
-
-        let newToken = await user.generateAuthToken();
-        let refreshToken = await user.generateRefreshToken();
+        const newToken = await user.generateAuthToken();
+        const refreshToken = await user.generateRefreshToken();
 
         user.refresh_tokens = refreshToken;
         user.tokens = newToken;
         await user.save();
 
-        let responseData
-
-        if (user.user_type === constants.USER_TYPE.TEMPLEAUTHORITY) {
-            responseData = TempleLoginReponse(user);
-        } else {
-            responseData = guruLoginResponse(user);
-        }
+        const responseData = user.user_type === constants.USER_TYPE.TEMPLEAUTHORITY ? TempleLoginReponse(user) : guruLoginResponse(user);
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_login', responseData, req.headers.lang);
 
     } catch (err) {
-        console.log(`err(TempleLoginOrGuruLogin).....`, err);
+        console.log(`Error in templeLogin: `, err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 }
-
 
 exports.logout = async (req, res, next) => {
 
@@ -138,9 +122,10 @@ exports.getTempleProfile = async (req, res) => {
         const selectFields = 'temple_name category temple_image _id state district location mobile_number email open_time closing_time';
         const templeList = await TempleGuru.find({ user_type: constants.USER_TYPE.TEMPLEAUTHORITY }).sort().select(selectFields).limit(10)
 
-        const ids = response.data.data.playback_ids.map((item) => item.id)
+        const ids = response.data.data.playback_ids.map((item) => item.id);
+
         const datas = {
-            playback_id: ids[0], 
+            playback_id: ids[0],
             live_stream_id: response.data.data.id,
             stream_key: response.data.data.stream_key,
             temple_id: templeData.temples_id,
@@ -153,10 +138,10 @@ exports.getTempleProfile = async (req, res) => {
             district: templeData.district,
             id: templeData._id,
             category: templeData.category,
-            published_date: templeData.created_at, 
+            published_date: templeData.created_at,
             views: '',
             suggested_videos: videoData.map(video => ({
-                playback_id: video.muxData.plackback_id, 
+                playback_id: video.muxData.plackback_id,
                 live_stream_id: video.muxData.live_stream_id,
                 temple_id: video.temples_id,
                 temple_name: video.temple_name,
@@ -168,48 +153,55 @@ exports.getTempleProfile = async (req, res) => {
                 district: video.district,
                 id: video._id,
                 category: video.category,
-                published_date: '', 
+                published_date: '',
                 views: video.views,
                 duration: video.duration,
-                suggested_videos: [] 
+                suggested_videos: videoData.map(subVideo => ({
+                    plackback_id: subVideo.muxData.playback_id,
+                    asset_id: subVideo.muxData.asset_id,
+                    title: subVideo.title,
+                    description: subVideo.description,
+                    id: subVideo._id,
+                    video_url: subVideo.videoUrl,
+                }))
             }))
         };
 
         const responseData = {
-                temple_data: {
-                    temple_id: templeData._id,
-                    temple_name: templeData.temple_name,
-                    temple_image_url: templeData.temple_image_url,
-                    feature_image_url: templeData.background_image,
-                    description: templeData.description,
-                    location: templeData.location,
-                    state: templeData.state,
-                    district: templeData.district,
-                    category: templeData.category,
-                    date_of_joining: templeData.created_at
-                },
-                live_aarti: datas,
-                videos: videoData.map(video => ({
-                    playback_id: video.playback_id,
-                    live_stream_id: video.live_stream_id,
-                    temple_id: video.temples_id,
-                    temple_name: video.temple_name,
-                    temple_image_url: video.temple_image_url,
-                    title: video.title,
-                    description: video.description,
-                    location: video.location,
-                    state: video.state,
-                    district: video.district,
-                    id: video._id,
-                    category: video.category,
-                    published_date: video.published_date,
-                    views: video.views,
-                    duration: video.duration,
-                    suggested_videos: video.suggested_videos
-                })),
-                
-                suggested_temples: templeList
-            }
+            temple_data: {
+                temple_id: templeData._id,
+                temple_name: templeData.temple_name,
+                temple_image_url: templeData.temple_image_url,
+                feature_image_url: templeData.background_image,
+                description: templeData.description,
+                location: templeData.location,
+                state: templeData.state,
+                district: templeData.district,
+                category: templeData.category,
+                date_of_joining: templeData.created_at
+            },
+            live_aarti: datas,
+            videos: TempleData.map(temple => ({
+                plackback_id: temple.muxData.plackback_id,
+                live_stream_id: temple.muxData.live_stream_id,
+                stream_key: temple.muxData.stream_key,
+                temple_id: temple.temples_id,
+                temple_name: temple.temple_name,
+                temple_image_url: temple.temple_image,
+                background_image_url: temple.background_image,
+                title: temple.muxData.title,
+                description: temple.muxData.description,
+                location: temple.location,
+                state: temple.state,
+                district: temple.district,
+                id: temple._id,
+                category: temple.category,
+                published_date: temple.created_at,
+                views: '',
+                duration: ''
+            })),
+            suggested_temples: templeList
+        }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
     } catch (err) {
@@ -313,11 +305,11 @@ exports.getTempleLiveStream = async (req, res) => {
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
         const selectFields = 'muxData temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at';
-        const TempleData = await TempleGuru.find({ 
+        const TempleData = await TempleGuru.find({
             'muxData.live_stream_id': { $in: LiveStreamingData },
             user_type: 3
         }).select(selectFields);
-        
+
 
         const responses = await axios.get(`${MUXURL}/video/v1/assets`, {
             headers: {
@@ -327,16 +319,16 @@ exports.getTempleLiveStream = async (req, res) => {
         });
 
         const assetsId = responses.data.data.map(asset => asset.id);
-        const videoData = await Video.find({ 'muxData.assetId': { $in: assetsId } });
+        const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId } });
 
         const responseData = TempleData.map(temple => ({
-            plackback_id: temple.muxData.plackback_id, 
+            plackback_id: temple.muxData.plackback_id,
             live_stream_id: temple.muxData.live_stream_id,
             stream_key: temple.muxData.stream_key,
             temple_id: temple.temples_id,
             temple_name: temple.temple_name,
             temple_image_url: temple.temple_image,
-            background_image_url:temple.background_image,
+            background_image_url: temple.background_image,
             title: temple.muxData.title,
             description: temple.muxData.description,
             location: temple.location,
@@ -344,14 +336,16 @@ exports.getTempleLiveStream = async (req, res) => {
             district: temple.district,
             id: temple._id,
             category: temple.category,
-            published_date: temple.created_at, 
+            published_date: temple.created_at,
             views: '',
-            suggested_videos: videoData.map(video => ({
-                playback_id: video.muxData.plackback_id, 
+            suggested_videos: TempleData.map(video => ({
+                plackback_id: video.muxData.plackback_id,
                 live_stream_id: video.muxData.live_stream_id,
+                stream_key: video.muxData.stream_key,
                 temple_id: video.temples_id,
                 temple_name: video.temple_name,
                 temple_image_url: video.temple_image,
+                background_image_url: video.background_image,
                 title: video.muxData.title,
                 description: video.muxData.description,
                 location: video.location,
@@ -359,12 +353,20 @@ exports.getTempleLiveStream = async (req, res) => {
                 district: video.district,
                 id: video._id,
                 category: video.category,
-                published_date: temple.created_at, 
-                views: video.views,
-                duration: video.duration,
-                suggested_videos: [] 
+                published_date: video.created_at,
+                views: '',
+                duration: '',
+                suggested_videos: videoData.map(subVideo => ({
+                    plackback_id: subVideo.muxData.playback_id,
+                    asset_id: subVideo.muxData.asset_id,
+                    title: subVideo.title,
+                    description: subVideo.description,
+                    id: subVideo._id,
+                    video_url: subVideo.videoUrl,
+                }))
             }))
         }));
+
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
 
@@ -374,6 +376,63 @@ exports.getTempleLiveStream = async (req, res) => {
     }
 };
 
+
+
+exports.temple_suggested_videos = async (req, res) => {
+
+    try {
+
+        const { templeId, limit } = req.query;
+
+        const response = await axios.get(
+            `${MUXURL}/video/v1/assets`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+                }
+            }
+        );
+
+        if (!response.data || !response.data.data || response.data.data.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+
+        const assetsId = response.data.data.map(asset => asset.id);
+
+        const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId }, guruId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
+
+        if (!videoData || videoData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.not_found', {}, req.headers.lang);
+
+        const matchedData = response.data.data.filter(user => {
+            return videoData.some(muxData => muxData.muxData.asset_id === user.id);
+        });
+
+        const datas = videoData.map((video) => {
+            getData(video.muxData.asset_id).then((data) => {
+                console.log("1111", data)
+                return data
+            })
+        })
+
+        const responseData = videoData.map(video => ({
+            plackback_id: video.muxData.playback_id,
+            asset_id: video.muxData.asset_id,
+            description: video.description,
+            title: video.title,
+            video_url: video.videoUrl,
+            id: video._id,
+            views: 0,
+            duration: matchedData[0].duration
+        }));
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(temple_suggested_videos)....", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
 
 
 

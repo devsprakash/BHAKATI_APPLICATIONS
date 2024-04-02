@@ -17,20 +17,21 @@ const videoSchema = new mongoose.Schema({
     videoUrl: {
         type: String,
     },
-    status: {
-        type: String,
-        enum: ['live', 'end', 'upcoming']
-    },
     muxData: {
-        playBackId: String,
+        playback_id: String,
         mp4_support: String,
         master_access: String,
         encoding_tier: String,
-        assetId: String,
+        asset_id: String,
         created_at: String
     },
     views: {
-        type: String
+        type: Number,
+        default:null
+    },
+    duration:{
+        type:Number,
+        default:null
     },
     created_at: {
         type: String
