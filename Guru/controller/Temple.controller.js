@@ -15,12 +15,13 @@ const LiveStream = require('../../models/liveStreaming.model');
 const Video = require('../../models/uploadVideo.model');
 const axios = require('axios');
 const { getData } = require('../services/views.services')
-
+const LiveStreaming = require('../../models/templeGuruLiveStream.model')
 
 
 
 
 exports.templeLogin = async (req, res) => {
+
     try {
         const reqBody = req.body;
         const { email, password } = reqBody;
@@ -92,83 +93,32 @@ exports.getTempleProfile = async (req, res) => {
     try {
 
         const { templeId } = req.body;
-
+        const { limit } = req.query;
         const templeData = await TempleGuru.findOne({ _id: templeId });
 
-        const response = await axios.get(
-            `${MUXURL}/video/v1/live-streams/${templeData.muxData.live_stream_id}`,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
-                }
+        const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
             }
-        );
+        });
 
-        const responses = await axios.get(
-            `${MUXURL}/video/v1/assets`,
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
-                }
-            }
-        );
+        const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const assetsId = responses.data.data.map(asset => asset.id);
+        const TempleData = await LiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
+            .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
-        const videoData = await Video.find({ 'muxData.assetId': { $in: assetsId } }).sort().limit(8)
+        if (!TempleData || TempleData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
-        const selectFields = 'temple_name category temple_image _id state district location mobile_number email open_time closing_time';
-        const templeList = await TempleGuru.find({ user_type: constants.USER_TYPE.TEMPLEAUTHORITY }).sort().select(selectFields).limit(10)
+        const templeList = await TempleGuru.find({ user_type: 3 }).sort().limit(limit)
 
-        const ids = response.data.data.playback_ids.map((item) => item.id);
-
-        const datas = {
-            playback_id: ids[0],
-            live_stream_id: response.data.data.id,
-            stream_key: response.data.data.stream_key,
-            temple_id: templeData.temples_id,
-            temple_name: templeData.temple_name,
-            temple_image_url: templeData.temple_image,
-            title: templeData.muxData.title,
-            description: templeData.muxData.description,
-            location: templeData.location,
-            state: templeData.state,
-            district: templeData.district,
-            id: templeData._id,
-            category: templeData.category,
-            published_date: templeData.created_at,
-            views: '',
-            suggested_videos: videoData.map(video => ({
-                playback_id: video.muxData.plackback_id,
-                live_stream_id: video.muxData.live_stream_id,
-                temple_id: video.temples_id,
-                temple_name: video.temple_name,
-                temple_image_url: video.temple_image,
-                title: video.muxData.title,
-                description: video.muxData.description,
-                location: video.location,
-                state: video.state,
-                district: video.district,
-                id: video._id,
-                category: video.category,
-                published_date: '',
-                views: video.views,
-                duration: video.duration,
-                suggested_videos: videoData.map(subVideo => ({
-                    plackback_id: subVideo.muxData.playback_id,
-                    asset_id: subVideo.muxData.asset_id,
-                    title: subVideo.title,
-                    description: subVideo.description,
-                    id: subVideo._id,
-                    video_url: subVideo.videoUrl,
-                }))
-            }))
-        };
+        if (!templeList || templeList.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', [], req.headers.lang);
 
         const responseData = {
             temple_data: {
+                id: templeData._id,
                 temple_id: templeData._id,
                 temple_name: templeData.temple_name,
                 temple_image_url: templeData.temple_image_url,
@@ -180,27 +130,31 @@ exports.getTempleProfile = async (req, res) => {
                 category: templeData.category,
                 date_of_joining: templeData.created_at
             },
-            live_aarti: datas,
-            videos: TempleData.map(temple => ({
-                plackback_id: temple.muxData.plackback_id,
-                live_stream_id: temple.muxData.live_stream_id,
-                stream_key: temple.muxData.stream_key,
+            live_aarti: TempleData.map(temple => ({
+                plackback_id: temple.plackback_id,
+                live_stream_id: temple.live_stream_id,
+                stream_key: temple.stream_key,
+                temple_id: temple.templeId.temples_id,
+                temple_name: temple.templeId.temple_name,
+                temple_image_url: temple.templeId.temple_image,
+                background_image_url: temple.templeId.background_image,
+                title: temple.title,
+                description: temple.description,
+                location: temple.templeId.location,
+                state: temple.templeId.state,
+                district: temple.templeId.district,
+                id: temple._id,
+                category: temple.templeId.category,
+                published_date: temple.created_at,
+                views: '',
+                templeId: temple.templeId._id
+            })),
+            suggested_temples: templeList.map(temple => ({
                 temple_id: temple.temples_id,
                 temple_name: temple.temple_name,
                 temple_image_url: temple.temple_image,
-                background_image_url: temple.background_image,
-                title: temple.muxData.title,
-                description: temple.muxData.description,
-                location: temple.location,
-                state: temple.state,
-                district: temple.district,
-                id: temple._id,
-                category: temple.category,
-                published_date: temple.created_at,
-                views: '',
-                duration: ''
-            })),
-            suggested_temples: templeList
+                id: temple._id
+            }))
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
@@ -251,33 +205,25 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
                 }
             }
         );
+        console.log("templeId", templeId)
 
         const ids = response.data.data.playback_ids.map((item) => item.id);
 
         const liveStreamData = {
-            start_time: dateFormat.add_current_time(),
-            created_at: dateFormat.set_current_timestamp(),
-            updated_at: dateFormat.set_current_timestamp(),
-            guruId: templeId,
-            muxData: {
-                description: reqBody.description,
-                title: reqBody.title,
-                stream_key: response.data.data.stream_key,
-                status: response.data.data.status,
-                reconnect_window: response.data.data.reconnect_window,
-                max_continuous_duration: response.data.data.max_continuous_duration,
-                latency_mode: response.data.data.latency_mode,
-                live_stream_id: response.data.data.id,
-                plackback_id: ids[0],
-                created_at: response.data.data.created_at,
-            }
-        };
+            description: reqBody.description,
+            title: reqBody.title,
+            stream_key: response.data.data.stream_key,
+            status: response.data.data.status,
+            reconnect_window: response.data.data.reconnect_window,
+            max_continuous_duration: response.data.data.max_continuous_duration,
+            latency_mode: response.data.data.latency_mode,
+            live_stream_id: response.data.data.id,
+            plackback_id: ids[0],
+            created_at: response.data.data.created_at,
+            templeId: templeId
+        }
 
-        const templeData = await TempleGuru.findOneAndUpdate(
-            { _id: templeId },
-            { $set: liveStreamData },
-            { new: true }
-        );
+        const templeData = await LiveStreaming.create(liveStreamData)
 
         const responseData = TempleLiveStreamingReponse(templeData);
 
@@ -295,6 +241,9 @@ exports.getTempleLiveStream = async (req, res) => {
 
     try {
 
+        const { templeId } = req.body;
+        const { limit } = req.query;
+
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -304,69 +253,32 @@ exports.getTempleLiveStream = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const selectFields = 'muxData temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at';
-        const TempleData = await TempleGuru.find({
-            'muxData.live_stream_id': { $in: LiveStreamingData },
-            user_type: 3
-        }).select(selectFields);
+        const TempleData = await LiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
+            .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
 
-        const responses = await axios.get(`${MUXURL}/video/v1/assets`, {
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
-            }
-        });
-
-        const assetsId = responses.data.data.map(asset => asset.id);
-        const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId } });
+        if (!TempleData || TempleData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
         const responseData = TempleData.map(temple => ({
-            plackback_id: temple.muxData.plackback_id,
-            live_stream_id: temple.muxData.live_stream_id,
-            stream_key: temple.muxData.stream_key,
-            temple_id: temple.temples_id,
-            temple_name: temple.temple_name,
-            temple_image_url: temple.temple_image,
-            background_image_url: temple.background_image,
-            title: temple.muxData.title,
-            description: temple.muxData.description,
-            location: temple.location,
-            state: temple.state,
-            district: temple.district,
+            plackback_id: temple.plackback_id,
+            live_stream_id: temple.live_stream_id,
+            stream_key: temple.stream_key,
+            temple_id: temple.templeId.temples_id,
+            temple_name: temple.templeId.temple_name,
+            temple_image_url: temple.templeId.temple_image,
+            background_image_url: temple.templeId.background_image,
+            title: temple.title,
+            description: temple.description,
+            location: temple.templeId.location,
+            state: temple.templeId.state,
+            district: temple.templeId.district,
             id: temple._id,
-            category: temple.category,
-            published_date: temple.created_at,
+            category: temple.templeId.category,
+            published_date: new Date(),
             views: '',
-            suggested_videos: TempleData.map(video => ({
-                plackback_id: video.muxData.plackback_id,
-                live_stream_id: video.muxData.live_stream_id,
-                stream_key: video.muxData.stream_key,
-                temple_id: video.temples_id,
-                temple_name: video.temple_name,
-                temple_image_url: video.temple_image,
-                background_image_url: video.background_image,
-                title: video.muxData.title,
-                description: video.muxData.description,
-                location: video.location,
-                state: video.state,
-                district: video.district,
-                id: video._id,
-                category: video.category,
-                published_date: video.created_at,
-                views: '',
-                duration: '',
-                suggested_videos: videoData.map(subVideo => ({
-                    plackback_id: subVideo.muxData.playback_id,
-                    asset_id: subVideo.muxData.asset_id,
-                    title: subVideo.title,
-                    description: subVideo.description,
-                    id: subVideo._id,
-                    video_url: subVideo.videoUrl,
-                }))
-            }))
-        }));
-
+            templeId: temple.templeId._id
+        }))
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
 
@@ -394,26 +306,16 @@ exports.temple_suggested_videos = async (req, res) => {
             }
         );
 
-        if (!response.data || !response.data.data || response.data.data.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
-
         const assetsId = response.data.data.map(asset => asset.id);
 
         const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId }, guruId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
 
         if (!videoData || videoData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.not_found', [], req.headers.lang);
 
         const matchedData = response.data.data.filter(user => {
             return videoData.some(muxData => muxData.muxData.asset_id === user.id);
         });
-
-        const datas = videoData.map((video) => {
-            getData(video.muxData.asset_id).then((data) => {
-                console.log("1111", data)
-                return data
-            })
-        })
 
         const responseData = videoData.map(video => ({
             plackback_id: video.muxData.playback_id,
@@ -422,11 +324,11 @@ exports.temple_suggested_videos = async (req, res) => {
             title: video.title,
             video_url: video.videoUrl,
             id: video._id,
-            views: 0,
-            duration: matchedData[0].duration
+            duration: matchedData[0].duration,
+            templeId:video.guruId,
         }));
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_the_suggested_videos', responseData, req.headers.lang);
 
     } catch (err) {
         console.log("err(temple_suggested_videos)....", err);

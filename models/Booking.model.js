@@ -6,27 +6,25 @@ const Schema = mongoose.Schema;
 //Define user schema
 const bookingSchema = new Schema({
 
-    StartTime: {
+    start_time: {
         type: String
     },
-    EndTime: {
+    end_time: {
         type: String
+    },
+    slot_duration:{
+        type:String
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
         default: null
     },
-    slotId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'slots',
-        default: null
-    },
     pujaId: {
         type: mongoose.Schema.Types.ObjectId, ref: 'pujas',
         default: null
     },
-    Name: {
+    name: {
         type: String,
         default: null
     },
@@ -35,10 +33,6 @@ const bookingSchema = new Schema({
         default: null
     },
     mobile_number: {
-        type: String,
-        default: null
-    },
-    ref_no: {
         type: String,
         default: null
     },

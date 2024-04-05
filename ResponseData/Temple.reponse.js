@@ -57,24 +57,13 @@ exports.TempleLoginReponse = (temple) => {
 exports.TempleLiveStreamingReponse = (temple) => {
 
     const TempleResponse = {
-
-        temple_name: temple.temple_name,
-        temple_image: temple.temple_image,
-        background_image: temple.background_image,
-        user_type: temple.user_type,
         id: temple._id,
-        location: temple.location,
-        temple_id: temple.temples_id,
-        state: temple.state,
-        district: temple.district,
         description: temple.description,
-        title: temple.muxData.title,
-        description: temple.muxData.description,
-        plackback_id:temple.muxData.plackback_id,
-        live_stream_id:temple.muxData.live_stream_id,
+        title: temple.title,
+        stream_key:temple.stream_key,
+        plackback_id: temple.plackback_id,
+        live_stream_id: temple.live_stream_id,
         created_at: temple.created_at,
-        updated_at: temple.updated_at,
-        __v: 0
     }
 
     return TempleResponse;

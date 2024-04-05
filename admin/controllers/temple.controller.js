@@ -123,7 +123,7 @@ exports.SearchAllTemples = async (req, res, next) => {
         }
 
         if (!temples || temples.length === 0) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', [], req.headers.lang);
         }
 
 
@@ -163,7 +163,6 @@ exports.templeDelete = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.delete_temples', responseData, req.headers.lang);
 
     } catch (err) {
-
         console.log("err(templeDelete)....", err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }

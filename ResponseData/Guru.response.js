@@ -46,23 +46,14 @@ exports.guruLoginResponse = (guru) => {
 exports.guruLiveStreamResponse = (guru) => {
 
     const response = {
-
-        user_type: guru.user_type,
-        status: guru.status,
-        guru_name: guru.guru_name,
-        email: guru.email,
-        mobile_number: guru.mobile_number,
-        expertise: guru.expertise,
-        guru_image_url: guru.guru_image,
-        background_image:guru.background_image,
+        id: guru._id,
+        stream_key:guru.stream_key,
         description: guru.description,
-        title: guru.muxData.title,
-        description: guru.muxData.description,
-        plackback_id:guru.muxData.plackback_id,
-        live_stream_id:guru.muxData.live_stream_id,
-        guru_id:guru.gurus_id,
+        title: guru.title,
+        description: guru.description,
+        plackback_id: guru.plackback_id,
+        live_stream_id: guru.live_stream_id,
         created_at: guru.created_at,
-        updated_at: guru.updated_at
     };
 
     return response;

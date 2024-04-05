@@ -70,7 +70,7 @@ module.exports = {
         token_expired:'this token is invalid or expired'
     },
     'BOOKING': {
-        create_new_slot: 'admin successfully created all the slots',
+        create_new_slot: 'successfully created the slots',
         booking_slot: 'user successfully booking',
         not_found: 'bookings data not found',
         get_all_booking: 'successfully get all booking slots',
@@ -96,7 +96,8 @@ module.exports = {
         email_already_exist: 'this email already exists',
         not_found_pandit: 'pandit details are not found',
         get_pandit_details: 'successfully get the pandit details',
-        update_pandit_details: 'successfully update the pandit details'
+        update_pandit_details: 'successfully update the pandit details',
+        Live_stream_not_found:'This temple was not live'
     },
 
     'LIVESTREAM': {
@@ -126,13 +127,14 @@ module.exports = {
         guru_logout: 'guru logout successfully',
         get_all_gurus: 'successfully get all the gurus information',
         get_guru_profile: 'successfully get the guru profile',
-        guru_live_stream_created: 'guru successfully create a new live stream',
+        guru_live_stream_created: 'successfully create a new live stream',
         get_all_LiveStream: 'successfully get all the Live Stream',
         get_Live_Stream_By_Guru: 'successfully get all the Live stream',
         guru_successfully_upload_new_video: 'successfully upload a new video',
         get_all_videos: 'successfylly get all the videos',
         not_found: 'videos data was not found',
         get_videos: 'successfully get this video',
-        get_total_views: 'successfully get all the views'
+        get_total_views: 'successfully get all the views',
+        get_all_the_suggested_videos: 'successfully get all the suggested videos'
     }
 }

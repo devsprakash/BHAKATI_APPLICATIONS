@@ -64,58 +64,6 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    muxData: {
-        title: {
-            type: String,
-            default: null
-        },
-        description: {
-            type: String,
-            default: null
-        },
-        stream_key: {
-            type: String,
-            default: null
-        },
-        status: {
-            type: String,
-            default: null
-        },
-        reconnect_window: {
-            type: String,
-            default: null
-        },
-        max_continuous_duration: {
-            type: String,
-            default: null
-        },
-        latency_mode: {
-            type: String,
-            default: null
-        },
-        plackback_id: {
-            type: String,
-            default: null
-        },
-        live_stream_id: {
-            type: String,
-            default: null
-        },
-        created_at: {
-            type: String,
-            default: null
-        },
-    },
-    temple_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Guru',
-        default: null
-    },
-    guru_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Guru',
-        default: null
-    },
     temples_id:{
         type:String,
         default:null

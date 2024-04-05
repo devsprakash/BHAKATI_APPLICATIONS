@@ -16,138 +16,38 @@ const TempleGuru = require("../../models/guru.model");
 
 
 exports.createdNewSlot = async (req, res) => {
-
     try {
-
-        const reqBody = req.body
-        const templeId = req.Temple._id;
-        const findAdmin = await TempleGuru.findById(templeId)
-
-        if (findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
-            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-
-        const NewSlots = await createBookingSlots(reqBody.startTime, reqBody.endTime, reqBody.slotsCount, reqBody.slotDurationInMinutes);
-        reqBody.slotNumber = reqBody.slotsCount;
-        let slot = await Slot.create(reqBody);
-
-        const updatedBookings = NewSlots.map(async (booking) => {
-            booking.slotId = slot._id;
-            booking.created_at = dateFormat.set_current_timestamp();
-            booking.updated_at = dateFormat.set_current_timestamp();
-            booking.date = new Date()
-            booking.templeId = templeId
-            await booking.save();
-            return booking;
-        });
-
-        const updatedBookingsResult = await Promise.all(updatedBookings);
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.create_new_slot', updatedBookingsResult, req.headers.lang);
-
-    } catch (err) {
-        console.log("err(createdNewSlot)....", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
-
-
-
-async function bookPujaSlots(pujaId, slotsCount, email, Name, mobile_number, userId) {
-
-    const availableSlots = await Booking.find().limit(slotsCount);
-
-    if (availableSlots.length < slotsCount) {
-        throw new Error('Not enough available slots for this puja.');
-    }
-
-    const bookedSlots = [];
-    for (let i = 0; i < slotsCount; i++) {
-        const slot = availableSlots[i];
-        slot.slotKey = pujaId;
-        slot.available = false;
-        slot.email = email
-        slot.mobile_number = mobile_number,
-        slot.Name = Name,
-        slot.userId = userId,
-        slot.available = false,
-        await slot.save();
-        bookedSlots.push(slot);
-    }
-
-    console.log(`${slotsCount} puja slots booked for Puja ID: ${pujaId}.`);
-    return bookedSlots;
-}
-
-
-
-exports.BookingPuja = async (req, res) => {
-
-    try {
-
         const reqBody = req.body;
-        const userId = req.user._id;
-        const { pujaId, slotsCount, email, Name, mobile_number } = reqBody;
+        const templeId = req.Temple._id;
+        
+        // Assuming TempleGuru is a Mongoose model
+        const findAdmin = await TempleGuru.findById(templeId);
 
-        let bookings = await bookPujaSlots(pujaId, slotsCount, email, Name, mobile_number, userId);
-
-        let slots = bookings.map((bookings) => bookings.slotId);
-
-        const slotData = await Slot.find({ _id: { $in: slots } });
-
-        await Promise.all(slotData.map(async slot => {
-            slot.slotNumber -= slotsCount; 
-            await slot.save();
-        }));
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.booking_slot', bookings, req.headers.lang);
-
-    } catch (err) {
-        console.log("err(BookingPuja)....", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
-
-
-
-exports.getAllBookingSlot = async (req, res, next) => {
-
-    try {
-
-        const { sort, date } = req.query;
-
-        const sortOptions = {};
-        if (sort) {
-            const [field, order] = sort.split(':');
-            sortOptions[field] = order === 'desc' ? -1 : 1;
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
         }
 
-        let query = Booking.find();
+        reqBody.created_at = dateFormat.set_current_timestamp();
+        reqBody.updated_at = dateFormat.set_current_timestamp();
+        reqBody.date = new Date();
 
-        if (date) {
+        const newSlot = await Booking.create(reqBody);
 
-            const formattedDate = new Date(date).toISOString().split('T')[0];
-            query = query.where('date').gte(formattedDate).lt(new Date(formattedDate).setDate(new Date(formattedDate).getDate() + 1));
-        }
-
-        const bookings = await query.sort(sortOptions);
-
-        if (!bookings || bookings.length === 0) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang);
-        }
-
-        const totalBookings = await Booking.countDocuments(query);
-
-        let data = {
-            total_booking: totalBookings,
-            bookings
+        const data = {
+            start_time: newSlot.start_time,
+            end_time: newSlot.end_time,
+            slot_duration: newSlot.slot_duration,
+            date: newSlot.date,
         };
+ 
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.create_new_slot', data, req.headers.lang);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.get_all_booking', data, req.headers.lang);
     } catch (err) {
-        console.log("err(getAllBookingSlot)....", err);
+        console.error("Error in createdNewSlot:", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
 
 
 

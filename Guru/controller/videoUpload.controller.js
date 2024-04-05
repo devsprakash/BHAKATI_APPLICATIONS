@@ -27,7 +27,7 @@ exports.uploadNewVideo = async (req, res) => {
         const videoUrl = `${BASEURL}/uploads/${file.filename}`;
 
         const requestData = {
-            "input": videoUrl,
+            "input": 'https://filesamples.com/samples/video/mp4/sample_1920x1080.mp4',
             "playback_policy": ["public"],
             "encoding_tier": "smart",
             "max_resolution_tier": "2160p"
