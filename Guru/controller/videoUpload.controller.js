@@ -27,7 +27,7 @@ exports.uploadNewVideo = async (req, res) => {
         const videoUrl = `${BASEURL}/uploads/${file.filename}`;
 
         const requestData = {
-            "input": 'https://filesamples.com/samples/video/mp4/sample_1920x1080.mp4',
+            "input": videoUrl,
             "playback_policy": ["public"],
             "encoding_tier": "smart",
             "max_resolution_tier": "2160p"
@@ -91,7 +91,7 @@ exports.getAllVideo = async (req, res) => {
         );
 
         if (!response.data || !response.data.data || response.data.data.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
 
         const assetsId = response.data.data.map(asset => asset.id);
 
