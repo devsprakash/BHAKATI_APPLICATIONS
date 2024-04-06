@@ -123,7 +123,7 @@ exports.SearchAllTemples = async (req, res, next) => {
         }
 
         if (!temples || temples.length === 0) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', [], req.headers.lang);
         }
 
 

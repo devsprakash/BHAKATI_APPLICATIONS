@@ -14,7 +14,9 @@ const { guruResponseData, guruLiveStreamResponse, guruLoginResponse } = require(
 const Video = require('../../models/uploadVideo.model');
 const User = require('../../models/user.model');
 const { v4: uuidv4 } = require('uuid');
-const LiveStreaming = require('../../models/templeGuruLiveStream.model')
+const GuruLiveStreaming = require('../../models/GuruLiveStreaming.model')
+
+
 
 
 
@@ -79,16 +81,16 @@ exports.getGuruProfile = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const GuruData = await LiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
+        const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
             .populate('guruId', 'guru_name guru_image _id email mobile_number gurus_id expertise created_at');
 
         if (!GuruData || GuruData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
         const guruList = await TempleGuru.find({ user_type: 4 }).sort().limit(limit)
 
         if (!guruList || guruList.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', [], req.headers.lang);
 
 
         const responseData = {
@@ -197,7 +199,7 @@ exports.SearchAllGuru = async (req, res) => {
         ]);
 
         if (!guruData || guruData.length === 0) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', [], req.headers.lang);
         }
 
         const responseData = guruData.map(guru => ({
@@ -277,7 +279,7 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
             guruId: guruId
         }
 
-        const guruData = await LiveStreaming.create(liveStreamData)
+        const guruData = await GuruLiveStreaming.create(liveStreamData)
 
         const responseData = guruLiveStreamResponse(guruData)
 
@@ -307,12 +309,12 @@ exports.getLiveStreamByGuru = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const GuruData = await LiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
+        const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
             .populate('guruId', '_id guru_name email mobile_number expertise gurus_id guru_image background_image created_at updated_at');
 
 
         if (!GuruData || GuruData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
         const responseData = GuruData.map(guru => ({
             plackback_id: guru.plackback_id,
@@ -364,7 +366,7 @@ exports.guru_suggested_videos = async (req, res) => {
         const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId }, guruId: guruId }).sort({ created_at: -1 }).limit(parseInt(limit));
 
         if (!videoData || videoData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', [], req.headers.lang);
 
         const matchedData = response.data.data.filter(user => {
             return videoData.some(muxData => muxData.muxData.asset_id === user.id);

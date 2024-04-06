@@ -15,7 +15,7 @@ const LiveStream = require('../../models/liveStreaming.model');
 const Video = require('../../models/uploadVideo.model');
 const axios = require('axios');
 const { getData } = require('../services/views.services')
-const LiveStreaming = require('../../models/templeGuruLiveStream.model')
+const TempleLiveStreaming = require('../../models/templeLiveStream.model')
 
 
 
@@ -105,16 +105,16 @@ exports.getTempleProfile = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const TempleData = await LiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
+        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
             .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
         if (!TempleData || TempleData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
         const templeList = await TempleGuru.find({ user_type: 3 }).sort().limit(limit)
 
         if (!templeList || templeList.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', [], req.headers.lang);
 
         const responseData = {
             temple_data: {
@@ -223,7 +223,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
             templeId: templeId
         }
 
-        const templeData = await LiveStreaming.create(liveStreamData)
+        const templeData = await TempleLiveStreaming.create(liveStreamData)
 
         const responseData = TempleLiveStreamingReponse(templeData);
 
@@ -253,12 +253,12 @@ exports.getTempleLiveStream = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const TempleData = await LiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
+        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
             .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
 
         if (!TempleData || TempleData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
         const responseData = TempleData.map(temple => ({
             plackback_id: temple.plackback_id,
@@ -311,7 +311,7 @@ exports.temple_suggested_videos = async (req, res) => {
         const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId }, guruId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
 
         if (!videoData || videoData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.not_found', [], req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', [], req.headers.lang);
 
         const matchedData = response.data.data.filter(user => {
             return videoData.some(muxData => muxData.muxData.asset_id === user.id);
