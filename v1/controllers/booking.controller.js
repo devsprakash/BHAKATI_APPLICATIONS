@@ -15,8 +15,11 @@ const TempleGuru = require("../../models/guru.model");
 
 
 
+
 exports.createdNewSlot = async (req, res) => {
+
     try {
+
         const reqBody = req.body;
         const templeId = req.Temple._id;
         
@@ -39,6 +42,25 @@ exports.createdNewSlot = async (req, res) => {
             slot_duration: newSlot.slot_duration,
             date: newSlot.date,
         };
+ 
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.create_new_slot', data, req.headers.lang);
+
+    } catch (err) {
+        console.error("Error in createdNewSlot:", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
+
+
+exports.createdNewSlot = async (req, res) => {
+
+    try {
+        
+        const reqBody = req.body;
+        const { pujaId, start_time , end_time } = reqBody;
+        
+    
  
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.create_new_slot', data, req.headers.lang);
 

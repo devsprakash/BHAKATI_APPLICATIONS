@@ -24,7 +24,7 @@ exports.uploadNewVideo = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const file = req.file;
-        const videoUrl = `${BASEURL}/uploads/${file.filename}`;
+         const videoUrl = `${BASEURL}/uploads/${file.filename}`;
 
         const requestData = {
             "input": videoUrl,

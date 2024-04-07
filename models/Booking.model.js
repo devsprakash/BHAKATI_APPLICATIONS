@@ -12,8 +12,8 @@ const bookingSchema = new Schema({
     end_time: {
         type: String
     },
-    slot_duration:{
-        type:String
+    slot_duration: {
+        type: String
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -40,6 +40,10 @@ const bookingSchema = new Schema({
     date: {
         type: String
     },
+    bookings: [{
+        start_time: { type: String, default: null },
+        end_time: { type: String, default: null }
+    }],
     created_at: {
         type: String,
         default: null

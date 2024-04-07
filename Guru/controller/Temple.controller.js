@@ -241,7 +241,6 @@ exports.getTempleLiveStream = async (req, res) => {
 
     try {
 
-        const { templeId } = req.body;
         const { limit } = req.query;
 
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
@@ -253,7 +252,7 @@ exports.getTempleLiveStream = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
+        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }}).limit(limit)
             .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
 

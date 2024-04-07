@@ -297,7 +297,6 @@ exports.getLiveStreamByGuru = async (req, res) => {
 
     try {
 
-        const { guruId } = req.body;
         const { limit } = req.query;
 
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
@@ -309,7 +308,7 @@ exports.getLiveStreamByGuru = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
+        const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }}).limit(limit)
             .populate('guruId', '_id guru_name email mobile_number expertise gurus_id guru_image background_image created_at updated_at');
 
 
