@@ -131,7 +131,9 @@ exports.ListOfPuja = async (req, res) => {
             duration: puja.duration,
             cost: puja.price,
             description: puja.description,
-            temple_id: puja.templeId
+            templeId: puja.templeId.temple_name,
+            temple_image_url: puja.templeId.temple_image,
+            temple_id: puja.templeId._id
         }))
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', responseData, req.headers.lang);
