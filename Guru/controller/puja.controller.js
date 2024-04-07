@@ -24,7 +24,7 @@ exports.addNewPuja = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const file = req.files
-        let pujaImageUrls = `${BASEURL}/uploads/${file.filename}`
+        let pujaImageUrls = `${BASEURL}/uploads/${file[0].filename}`
 
         reqBody.pujaImage = pujaImageUrls;
 
@@ -146,7 +146,6 @@ exports.addPuja = async (req, res) => {
     try {
 
         const reqBody = req.body;
-
         const { pujaId } = req.params;
         const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
@@ -162,7 +161,6 @@ exports.addPuja = async (req, res) => {
                 price: reqBody.price,
                 updated_at: dateFormat.set_current_timestamp(),
             }
-
         }, { new: true });
 
         if (!updatedPuja)

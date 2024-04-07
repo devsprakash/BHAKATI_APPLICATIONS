@@ -119,7 +119,7 @@ exports.getTempleProfile = async (req, res) => {
         const responseData = {
             temple_data: {
                 id: templeData._id,
-                temple_id: templeData._id,
+                temple_id: templeData.temples_id,
                 temple_name: templeData.temple_name,
                 temple_image_url: templeData.temple_image_url,
                 feature_image_url: templeData.background_image,
@@ -169,7 +169,6 @@ exports.getTempleProfile = async (req, res) => {
 
 
 exports.CreateNewLiveStreamByTemple = async (req, res) => {
-
 
     const templeId = req.Temple._id;
     const reqBody = req.body;

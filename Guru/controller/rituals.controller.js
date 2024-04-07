@@ -9,6 +9,7 @@ const Rituals = require('../../models/Rituals.model')
 
 
 
+
 exports.addNewRithuals = async (req, res) => {
 
     try {
