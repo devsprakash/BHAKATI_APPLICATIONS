@@ -53,7 +53,7 @@ exports.getAllRithuals = async (req, res) => {
         sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
 
         const rithuals = await Rituals.find()
-            .populate('templeId', 'TempleName TempleImg Location')
+            .populate('templeId', 'TempleName TempleImg Location _id')
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit));
@@ -63,13 +63,18 @@ exports.getAllRithuals = async (req, res) => {
         if (!rithuals || rithuals.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
 
-        const data = {
-            page: parseInt(page),
-            total_rithuals: totalRithuals,
-            rithuals
-        };
+        const responseData = rithuals.map(data => ({
+               totalRithuals:totalRithuals,
+                rithual_id: data._id,
+                ritual_name: data.ritual_name,
+                start_time: data.StartTime,
+                end_time: data.EndTime,
+                temple_id: data.templeId
+        }))
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', data, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', responseData, req.headers.lang);
+
+        
     } catch (err) {
         console.error('Error(getAllRithuals)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
@@ -95,7 +100,7 @@ exports.getRithualsByTemples = async (req, res) => {
         sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
 
         const rithuals = await Rituals.find({ templeId: templeId })
-            .populate('templeId', 'TempleName TempleImg Location')
+            .populate('templeId', 'TempleName TempleImg Location _id')
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit));
@@ -105,13 +110,16 @@ exports.getRithualsByTemples = async (req, res) => {
         if (!rithuals || rithuals.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
 
-        const data = {
-            page: parseInt(page),
-            total_rithuals: totalRithuals,
-            rithuals
-        };
+            const responseData = rithuals.map(data => ({
+                totalRithuals:totalRithuals,
+                rithual_id: data._id,
+                ritual_name: data.ritual_name,
+                start_time: data.StartTime,
+                end_time: data.EndTime,
+                temple_id: data.templeId._id
+        }))
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', data, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', responseData, req.headers.lang);
 
 
     } catch (err) {

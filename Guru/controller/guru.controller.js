@@ -95,7 +95,7 @@ exports.getGuruProfile = async (req, res) => {
 
         const responseData = {
             guru_data: {
-                guru_id: guru._id,
+                guru_id: guruData._id,
                 guru_name: guruData.guru_name,
                 guru_image_url: guruData.guru_image,
                 feature_image_url: guruData.background_image,
