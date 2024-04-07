@@ -126,8 +126,21 @@ exports.SearchAllTemples = async (req, res, next) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', [], req.headers.lang);
         }
 
+        const responseData = temples.map(data => ({
+            mobile_number: data.mobile_number,
+            email: data.email,
+            temple_name: data.temple_name,
+            temple_image: data.temple_image,
+            location: data.location,
+            district: data.district,
+            description: data.description,
+            open_time: data.open_time,
+            closing_time: data.closing_time,
+            temple_id: data._id,
+            category: data.category
+        }))
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_temples', temples, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_temples', responseData, req.headers.lang);
 
     } catch (err) {
         console.log("err(SearchAllTemples)....", err);
