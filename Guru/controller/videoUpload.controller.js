@@ -91,7 +91,7 @@ exports.getAllVideo = async (req, res) => {
         );
 
         if (!response.data || !response.data.data || response.data.data.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.not_found_streams', [], req.headers.lang);
 
         const assetsId = response.data.data.map(asset => asset.id);
 

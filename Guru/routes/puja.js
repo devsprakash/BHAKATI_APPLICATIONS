@@ -4,7 +4,7 @@ const router = express.Router();
 const TempleAuth = require('../../middleware/guru.auth')
 const upload  = require('../../middleware/multer');
 const { verifyAccessToken } = require('../../middleware/admin.middleware');
-const { addNewRithuals, getAllRithuals } = require('../controller/rituals.controller');
+const { addNewRithuals, getAllRithuals , getRithualsByTemples } = require('../controller/rituals.controller');
 
 
 
@@ -15,6 +15,8 @@ router.post('/addpuja/:pujaId', TempleAuth, addPuja);
 router.get('/TempleUnderAllpujaList' , pujs_by_temple)
 router.post('/addNewRithuals', TempleAuth, addNewRithuals);
 router.get('/getAllRithuals', getAllRithuals);
+router.get('/getRithualsByTemples' , getRithualsByTemples)
+
 
 
 

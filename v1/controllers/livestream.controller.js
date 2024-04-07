@@ -103,7 +103,7 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
 
         // Check if live streams are not found
         if (!response.data || response.data.length === 0) {
-            return sendResponse(res, WEB_STATUS_CODE.NOT_FOUND, STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+            return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'LIVESTREAM.not_found_streams', [], req.headers.lang);
         }
 
 
@@ -121,7 +121,7 @@ exports.getAllLiveStreamByPuja = async (req, res) => {
 
         // Check if live streams data is not found
         if (!LiveStreamsData || LiveStreamsData.length === 0) {
-            return sendResponse(res, WEB_STATUS_CODE.NOT_FOUND, STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
+            return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'LIVESTREAM.not_found', [], req.headers.lang);
         }
 
         const LiveStreamingData =  LiveStreamsData.map(stream => stream.muxData.LiveStreamingId);
@@ -210,7 +210,7 @@ exports.LiveStreamingEnd = async (req, res) => {
 
         // Check if live stream is not found
         if (!response.data) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
         }
 
         // Update live stream status in database
@@ -222,7 +222,7 @@ exports.LiveStreamingEnd = async (req, res) => {
 
         // Check if live stream is not found
         if (!endLiveStream) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'LIVESTREAM.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.SUCCESS, constants.STATUS_CODE.OK, 'LIVESTREAM.not_found', {}, req.headers.lang);
         }
 
         // Send success response
@@ -234,3 +234,4 @@ exports.LiveStreamingEnd = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+

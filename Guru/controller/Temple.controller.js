@@ -118,7 +118,7 @@ exports.getTempleProfile = async (req, res) => {
 
         const responseData = {
             temple_data: {
-                id: templeData._id,
+                temple_id: templeData._id,
                 temple_id: templeData.temples_id,
                 temple_name: templeData.temple_name,
                 temple_image_url: templeData.temple_image_url,
@@ -134,7 +134,6 @@ exports.getTempleProfile = async (req, res) => {
                 plackback_id: temple.plackback_id,
                 live_stream_id: temple.live_stream_id,
                 stream_key: temple.stream_key,
-                temple_id: temple.templeId.temples_id,
                 temple_name: temple.templeId.temple_name,
                 temple_image_url: temple.templeId.temple_image,
                 background_image_url: temple.templeId.background_image,
@@ -143,17 +142,17 @@ exports.getTempleProfile = async (req, res) => {
                 location: temple.templeId.location,
                 state: temple.templeId.state,
                 district: temple.templeId.district,
-                id: temple._id,
+                temple_id: temple._id,
                 category: temple.templeId.category,
                 published_date: temple.created_at,
                 views: '',
-                templeId: temple.templeId._id
+                temple_id: temple.templeId._id
             })),
             suggested_temples: templeList.map(temple => ({
                 temple_id: temple.temples_id,
                 temple_name: temple.temple_name,
                 temple_image_url: temple.temple_image,
-                id: temple._id
+                temple_id: temple._id
             }))
         }
 
@@ -219,7 +218,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
             live_stream_id: response.data.data.id,
             plackback_id: ids[0],
             created_at: response.data.data.created_at,
-            templeId: templeId
+            temple_id: templeId
         }
 
         const templeData = await TempleLiveStreaming.create(liveStreamData)
@@ -271,11 +270,11 @@ exports.getTempleLiveStream = async (req, res) => {
             location: temple.templeId.location,
             state: temple.templeId.state,
             district: temple.templeId.district,
-            id: temple._id,
+            temple_id: temple._id,
             category: temple.templeId.category,
             published_date: new Date(),
             views: '',
-            templeId: temple.templeId._id
+            temple_id: temple.templeId._id
         }))
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
@@ -323,7 +322,7 @@ exports.temple_suggested_videos = async (req, res) => {
             video_url: video.videoUrl,
             id: video._id,
             duration: matchedData[0].duration,
-            templeId:video.guruId,
+            temple_id:video.guruId,
         }));
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_the_suggested_videos', responseData, req.headers.lang);

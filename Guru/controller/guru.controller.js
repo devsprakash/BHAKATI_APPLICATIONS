@@ -95,8 +95,7 @@ exports.getGuruProfile = async (req, res) => {
 
         const responseData = {
             guru_data: {
-                id: guruData._id,
-                guru_id: guruData.gurus_id,
+                guru_id: guru._id,
                 guru_name: guruData.guru_name,
                 guru_image_url: guruData.guru_image,
                 feature_image_url: guruData.background_image,
@@ -109,25 +108,23 @@ exports.getGuruProfile = async (req, res) => {
                 plackback_id: guru.plackback_id,
                 live_stream_id: guru.live_stream_id,
                 stream_key: guru.stream_key,
-                guru_id: guru.guruId.gurus_id,
                 guru_name: guru.guruId.guru_name,
                 guru_image_url: guru.guruId.guru_image,
                 background_image_url: guru.guruId.background_image,
                 title: guru.title,
                 description: guru.description,
-                id: guru._id,
+                guru_id: guru._id,
                 expertise: guru.guruId.expertise,
                 email: guru.guruId.email,
                 mobile_number: guru.guruId.mobile_number,
                 published_date: new Date(),
                 views: '',
-                guruId: guru.guruId._id
+                guru_id: guru.guruId._id
             })),
             suggested_gurus: guruList.map(guru => ({
                 guru_name: guru.guru_name,
                 guru_image_url: guru.guru_image,
-                guru_id: guru.gurus_id,
-                id: guru._id,
+                guru_id: guru._id,
                 created_at: guru.created_at
             }))
         }
@@ -209,8 +206,7 @@ exports.SearchAllGuru = async (req, res) => {
             mobile_number: guru.mobile_number,
             email: guru.email,
             expertise: guru.expertise,
-            guru_id: guru.gurus_id,
-            id: guru._id,
+            guru_id: guru._id,
             background_image: guru.background_image,
             created_at: guru.created_at,
             updated_at: guru.updated_at
@@ -276,7 +272,7 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
             live_stream_id: response.data.data.id,
             plackback_id: ids[0],
             created_at: response.data.data.created_at,
-            guruId: guruId
+            guru_id: guruId,
         }
 
         const guruData = await GuruLiveStreaming.create(liveStreamData)
@@ -319,19 +315,18 @@ exports.getLiveStreamByGuru = async (req, res) => {
             plackback_id: guru.plackback_id,
             live_stream_id: guru.live_stream_id,
             stream_key: guru.stream_key,
-            guru_id: guru.guruId.gurus_id,
             guru_name: guru.guruId.guru_name,
             guru_image_url: guru.guruId.guru_image,
             background_image_url: guru.guruId.background_image,
             title: guru.title,
             description: guru.description,
-            id: guru._id,
+            guru_id: guru._id,
             expertise: guru.guruId.expertise,
             email: guru.guruId.email,
             mobile_number: guru.guruId.mobile_number,
             published_date: new Date(),
             views: '',
-            guruId: guru.guruId._id
+            guru_id: guru.guruId._id
         }))
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
@@ -379,7 +374,7 @@ exports.guru_suggested_videos = async (req, res) => {
             video_url: video.videoUrl,
             id: video._id,
             duration: matchedData[0].duration,
-            guruId:video.guruId,
+            guru_id:video.guruId,
         }));
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_the_suggested_videos', responseData, req.headers.lang);

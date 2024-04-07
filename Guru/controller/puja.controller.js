@@ -70,7 +70,7 @@ exports.getAllPuja = async (req, res) => {
         const totalPujas = await Puja.countDocuments();
 
         if (!pujas || pujas.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
 
         const data = {
             page: parseInt(page),
@@ -117,7 +117,7 @@ exports.ListOfPuja = async (req, res) => {
         const totalPujas = await Puja.countDocuments(filterCondition);
 
         if (!pujas || pujas.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
 
 
         const responseData = pujas.map(puja => ({
@@ -164,7 +164,7 @@ exports.addPuja = async (req, res) => {
         }, { new: true });
 
         if (!updatedPuja)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
 
         updatedPuja.description = undefined;
         updatedPuja.pujaImage = undefined;
@@ -174,7 +174,7 @@ exports.addPuja = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.update_puja ', updatedPuja, req.headers.lang);
 
     } catch (err) {
-        console.log('err(updatePuja).....', err)
+        console.log('err(addPuja).....', err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
@@ -193,7 +193,7 @@ exports.pujs_by_temple = async (req, res) => {
         const pujsList = await Puja.find({ templeId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
 
         if (!pujsList || pujsList.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
 
         const responseData = {
             temple_name: templeData.temple_name,

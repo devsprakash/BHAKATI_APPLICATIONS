@@ -19,7 +19,7 @@ exports.addNewRithuals = async (req, res) => {
 
         const temples = await TempleGuru.findOne({ _id: templeId })
 
-        if (!temples || ( temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
+        if (!temples || (temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         reqBody.created_at = dateFormat.set_current_timestamp();
@@ -38,7 +38,6 @@ exports.addNewRithuals = async (req, res) => {
 
 
 
-
 exports.getAllRithuals = async (req, res) => {
 
     try {
@@ -54,7 +53,7 @@ exports.getAllRithuals = async (req, res) => {
         sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
 
         const rithuals = await Rituals.find()
-            .populate('templeId' , 'TempleName TempleImg Location')
+            .populate('templeId', 'TempleName TempleImg Location')
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit));
@@ -62,7 +61,7 @@ exports.getAllRithuals = async (req, res) => {
         const totalRithuals = await Rituals.countDocuments();
 
         if (!rithuals || rithuals.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
 
         const data = {
             page: parseInt(page),
@@ -79,3 +78,44 @@ exports.getAllRithuals = async (req, res) => {
 
 
 
+exports.getRithualsByTemples = async (req, res) => {
+
+    try {
+
+        const { templeId } = req.body;
+
+        const { page = 1, limit = 10, sortField = 'rithualName', sortOrder = 'asc' } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        if (parseInt(page) < 1 || parseInt(limit) < 1) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'PUJA.Invalid_page', {}, req.headers.lang);
+        }
+
+        const sortOptions = {};
+        sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
+
+        const rithuals = await Rituals.find({ templeId: templeId })
+            .populate('templeId', 'TempleName TempleImg Location')
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const totalRithuals = await Rituals.countDocuments({ templeId: templeId });
+
+        if (!rithuals || rithuals.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
+
+        const data = {
+            page: parseInt(page),
+            total_rithuals: totalRithuals,
+            rithuals
+        };
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', data, req.headers.lang);
+
+
+    } catch (err) {
+        console.error('Error(getRithualsByTemples)....', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
