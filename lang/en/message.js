@@ -77,7 +77,10 @@ module.exports = {
         get_all_temples: 'successfully get all booking temples',
         booking_downlod: 'successfully downloading this booking slot',
         slots_not_found: 'currently no slots are available',
-        already_booked_slot: 'This slot already booked please booked another slot'
+        already_booked_slot: 'This slot already booked please booked another slot',
+        update_slots:'successfully update this slot',
+        slot_not_found:'slot data found',
+        booked_list:"successfully get all the booked list"
     },
     'TEMPLE': {
         addTemple: 'successfully add a new temple',

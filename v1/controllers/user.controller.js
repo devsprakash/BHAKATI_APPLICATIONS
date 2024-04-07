@@ -19,7 +19,6 @@ const { JWT_SECRET } = require('../../keys/development.keys')
 
 
 
-
 exports.signUp = async (req, res, next) => {
 
     try {

@@ -6,15 +6,6 @@ const Schema = mongoose.Schema;
 //Define user schema
 const bookingSchema = new Schema({
 
-    start_time: {
-        type: String
-    },
-    end_time: {
-        type: String
-    },
-    slot_duration: {
-        type: Number
-    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
@@ -32,6 +23,7 @@ const bookingSchema = new Schema({
         type: String,
         default: null
     },
+    date:String,
     email: {
         type: String,
         default: null
@@ -41,13 +33,8 @@ const bookingSchema = new Schema({
         default: null
     },
     available: { type: Boolean, default: true },
-    date: {
-        type: String
-    },
-    bookings: [{
-        start_time: { type: String, default: null },
-        end_time: { type: String, default: null }
-    }],
+    start_time: { type: String, default: null },
+    end_time: { type: String, default: null },
     created_at: {
         type: String,
         default: null

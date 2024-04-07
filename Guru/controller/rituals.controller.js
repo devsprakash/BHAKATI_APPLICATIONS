@@ -66,7 +66,7 @@ exports.getAllRithuals = async (req, res) => {
         const responseData = rithuals.map(data => ({
                totalRithuals:totalRithuals,
                 rithual_id: data._id,
-                ritual_name: data.ritual_name,
+                ritual_name: data.ritualName,
                 start_time: data.StartTime,
                 end_time: data.EndTime,
                 temple_id: data.templeId
@@ -113,7 +113,7 @@ exports.getRithualsByTemples = async (req, res) => {
             const responseData = rithuals.map(data => ({
                 totalRithuals:totalRithuals,
                 rithual_id: data._id,
-                ritual_name: data.ritual_name,
+                ritual_name: data.ritualName,
                 start_time: data.StartTime,
                 end_time: data.EndTime,
                 temple_id: data.templeId._id
