@@ -72,13 +72,16 @@ exports.getAllPuja = async (req, res) => {
         if (!pujas || pujas.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
 
-        const data = {
-            page: parseInt(page),
+        const responseData = pujas.map(data => ({
             total_pujas: totalPujas,
-            pujas
-        };
+            puja_name:data.puja_name,
+            puja_image_url:data.pujaImage,
+            description:data.description,
+            puja_id: data._id,
+            temple_id:data.templeId._id,
+        }))
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', data, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', responseData, req.headers.lang);
 
     } catch (err) {
         console.error('Error(getAllPuja)....', err);
@@ -197,8 +200,7 @@ exports.pujs_by_temple = async (req, res) => {
 
         const responseData = {
             temple_name: templeData.temple_name,
-            temple_id: templeData.temples_id,
-            id: templeData._id,
+            temple_id: templeData._id,
             puja: pujsList.map(puja => ({
                 puja_id: puja._id,
                 puja_name: puja.pujaName,
