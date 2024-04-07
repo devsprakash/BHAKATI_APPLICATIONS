@@ -13,7 +13,7 @@ const bookingSchema = new Schema({
         type: String
     },
     slot_duration: {
-        type: String
+        type: Number
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -22,6 +22,10 @@ const bookingSchema = new Schema({
     },
     pujaId: {
         type: mongoose.Schema.Types.ObjectId, ref: 'pujas',
+        default: null
+    },
+    templeId: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'Guru',
         default: null
     },
     name: {

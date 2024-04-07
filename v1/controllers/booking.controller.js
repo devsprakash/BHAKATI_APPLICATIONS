@@ -22,7 +22,7 @@ exports.createdNewSlot = async (req, res) => {
 
         const reqBody = req.body;
         const templeId = req.Temple._id;
-        
+
         // Assuming TempleGuru is a Mongoose model
         const findAdmin = await TempleGuru.findById(templeId);
 
@@ -32,37 +32,18 @@ exports.createdNewSlot = async (req, res) => {
 
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
+        reqBody.templeId = templeId;
         reqBody.date = new Date();
-
         const newSlot = await Booking.create(reqBody);
-
-        const data = {
+        const slotData = {
             start_time: newSlot.start_time,
             end_time: newSlot.end_time,
             slot_duration: newSlot.slot_duration,
             date: newSlot.date,
+            temple_id: templeId
         };
- 
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.create_new_slot', data, req.headers.lang);
 
-    } catch (err) {
-        console.error("Error in createdNewSlot:", err);
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
-    }
-};
-
-
-
-exports.createdNewSlot = async (req, res) => {
-
-    try {
-        
-        const reqBody = req.body;
-        const { pujaId, start_time , end_time } = reqBody;
-        
-    
- 
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.create_new_slot', data, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.create_new_slot', slotData, req.headers.lang);
 
     } catch (err) {
         console.error("Error in createdNewSlot:", err);
