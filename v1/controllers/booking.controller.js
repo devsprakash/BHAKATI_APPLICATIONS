@@ -226,7 +226,7 @@ exports.bookedList = async (req, res) => {
         if (!bookedListData || bookedListData.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.not_found', [], req.headers.lang)
 
-            const slotData = await Slot.findOne({ _id: "66124631f3ffa808e0386539" , date: date});
+            const slotData = await Slot.findOne({templeId: temple_id, date: date});
 
         if (!slotData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.slot_not_found', {}, req.headers.lang)
