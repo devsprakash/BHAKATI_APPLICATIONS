@@ -158,7 +158,7 @@ templeGuruSchema.methods.generateAuthToken = async function () {
 
     templeGuru.tokens = token
     templeGuru.updated_at = await dateFormat.set_current_timestamp();
-    templeGuru.refresh_tokens_expires = await dateFormat.add_time_current_date(1, 'days')
+    templeGuru.refresh_tokens_expires = await dateFormat.add_time_current_date(3, 'days')
     await templeGuru.save()
     return token
 }

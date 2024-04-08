@@ -38,7 +38,7 @@ const LiveStreamSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    plackback_id: {
+    playback_id: {
         type: String,
         default: null
     },

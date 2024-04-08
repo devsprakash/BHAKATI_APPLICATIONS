@@ -105,7 +105,7 @@ exports.getGuruProfile = async (req, res) => {
                 date_of_joining: guruData.created_at
             },
             live_aarti: GuruData.map(guru => ({
-                plackback_id: guru.plackback_id,
+                playback_id: guru.playback_id,
                 live_stream_id: guru.live_stream_id,
                 stream_key: guru.stream_key,
                 guru_name: guru.guruId.guru_name,
@@ -270,7 +270,7 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
             max_continuous_duration: response.data.data.max_continuous_duration,
             latency_mode: response.data.data.latency_mode,
             live_stream_id: response.data.data.id,
-            plackback_id: ids[0],
+            playback_id: ids[0],
             created_at: response.data.data.created_at,
             guru_id: guruId,
         }
@@ -312,7 +312,7 @@ exports.getLiveStreamByGuru = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
         const responseData = GuruData.map(guru => ({
-            plackback_id: guru.plackback_id,
+            playback_id: guru.playback_id,
             live_stream_id: guru.live_stream_id,
             stream_key: guru.stream_key,
             guru_name: guru.guruId.guru_name,

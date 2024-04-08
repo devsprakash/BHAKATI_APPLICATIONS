@@ -130,7 +130,7 @@ exports.getTempleProfile = async (req, res) => {
                 date_of_joining: templeData.created_at
             },
             live_aarti: TempleData.map(temple => ({
-                plackback_id: temple.plackback_id,
+                playback_id: temple.playback_id,
                 live_stream_id: temple.live_stream_id,
                 stream_key: temple.stream_key,
                 temple_name: temple.templeId.temple_name,
@@ -214,7 +214,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
             max_continuous_duration: response.data.data.max_continuous_duration,
             latency_mode: response.data.data.latency_mode,
             live_stream_id: response.data.data.id,
-            plackback_id: ids[0],
+            playback_id: ids[0],
             created_at: response.data.data.created_at,
             templeId: templeId
         }
@@ -256,7 +256,7 @@ exports.getTempleLiveStream = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
         const responseData = TempleData.map(temple => ({
-            plackback_id: temple.plackback_id,
+            playback_id: temple.playback_id,
             live_stream_id: temple.live_stream_id,
             stream_key: temple.stream_key,
             temple_id: temple.templeId._id || null,
