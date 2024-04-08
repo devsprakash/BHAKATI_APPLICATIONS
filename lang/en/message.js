@@ -120,7 +120,9 @@ module.exports = {
         add_new_rithuals: 'successfully add new rithuals',
         Invalid_page: 'Invalid page or limit values.',
         get_all_rithuals: 'successfully get all rithuals',
-        temple_under_pujaList:'temple under all the puja list'
+        temple_under_pujaList:'temple under all the puja list',
+        delete_rihuals:'successfully delete the rihuals',
+        delete_puja:'successfully delete the puja'
     },
     'GURU': {
         add_new_guru: 'successfully add new guru',

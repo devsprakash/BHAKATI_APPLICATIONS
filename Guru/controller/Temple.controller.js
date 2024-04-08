@@ -165,7 +165,6 @@ exports.getTempleProfile = async (req, res) => {
 
 
 
-
 exports.CreateNewLiveStreamByTemple = async (req, res) => {
 
     const templeId = req.Temple._id;
@@ -249,7 +248,7 @@ exports.getTempleLiveStream = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }}).limit(limit)
+        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData } }).limit(limit)
             .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
 
@@ -260,17 +259,17 @@ exports.getTempleLiveStream = async (req, res) => {
             plackback_id: temple.plackback_id,
             live_stream_id: temple.live_stream_id,
             stream_key: temple.stream_key,
-            temple_id: temple.templeId.temples_id,
-            temple_name: temple.templeId.temple_name,
-            temple_image_url: temple.templeId.temple_image,
-            background_image_url: temple.templeId.background_image,
+            temple_id: temple.templeId._id || null,
+            temple_name: temple.templeId.temple_name || null,
+            temple_image_url: temple.templeId.temple_image || null,
+            background_image_url: temple.templeId.background_image || null,
             title: temple.title,
             description: temple.description,
-            location: temple.templeId.location,
-            state: temple.templeId.state,
-            district: temple.templeId.district,
+            location: temple.templeId.location || null,
+            state: temple.templeId.state || null,
+            district: temple.templeId.district || null,
             temple_id: temple._id,
-            category: temple.templeId.category,
+            category: temple.templeId.category || null,
             published_date: new Date(),
             views: '',
             temple_id: temple.templeId._id
@@ -321,7 +320,7 @@ exports.temple_suggested_videos = async (req, res) => {
             video_url: video.videoUrl,
             id: video._id,
             duration: matchedData[0].duration,
-            temple_id:video.guruId,
+            temple_id: video.guruId,
         }));
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_the_suggested_videos', responseData, req.headers.lang);

@@ -9,7 +9,6 @@ const Rituals = require('../../models/Rituals.model')
 
 
 
-
 exports.addNewRithuals = async (req, res) => {
 
     try {
@@ -64,17 +63,17 @@ exports.getAllRithuals = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
 
         const responseData = rithuals.map(data => ({
-               totalRithuals:totalRithuals,
-                rithual_id: data._id,
-                ritual_name: data.ritualName,
-                start_time: data.StartTime,
-                end_time: data.EndTime,
-                temple_id: data.templeId
+            totalRithuals: totalRithuals,
+            rithual_id: data._id,
+            ritual_name: data.ritualName,
+            start_time: data.StartTime,
+            end_time: data.EndTime,
+            temple_id: data.templeId
         }))
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', responseData, req.headers.lang);
 
-        
+
     } catch (err) {
         console.error('Error(getAllRithuals)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
@@ -110,13 +109,13 @@ exports.getRithualsByTemples = async (req, res) => {
         if (!rithuals || rithuals.length === 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
 
-            const responseData = rithuals.map(data => ({
-                totalRithuals:totalRithuals,
-                rithual_id: data._id,
-                ritual_name: data.ritualName,
-                start_time: data.StartTime,
-                end_time: data.EndTime,
-                temple_id: data.templeId._id
+        const responseData = rithuals.map(data => ({
+            totalRithuals: totalRithuals,
+            rithual_id: data._id,
+            ritual_name: data.ritualName,
+            start_time: data.StartTime,
+            end_time: data.EndTime,
+            temple_id: data.templeId._id
         }))
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', responseData, req.headers.lang);
@@ -127,3 +126,32 @@ exports.getRithualsByTemples = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
+
+exports.deleteRithuals = async (req, res) => {
+
+    try {
+
+        const templeId = req.Temple._id;
+        const { rithualId } = req.params
+
+        const temples = await TempleGuru.findOne({ _id: templeId })
+
+
+        if (!temples || (temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temples.user_type !== constants.USER_TYPE.ADMIN))
+        return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+    
+        const newRithuals = await Rituals.findOneAndDelete({ _id: rithualId })
+
+        if (!newRithuals)
+          return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
+
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_rihuals', {}, req.headers.lang);
+
+    } catch (err) {
+        console.log('err(deleteRithuals).....', err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}

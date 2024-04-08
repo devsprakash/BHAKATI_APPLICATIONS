@@ -219,3 +219,30 @@ exports.pujs_by_temple = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
+
+exports.deletePuja = async (req, res) => {
+
+    try {
+
+        const templeId = req.Temple._id;
+        const { pujaId } = req.params
+
+        const temples = await TempleGuru.findOne({ _id: templeId })
+
+
+        if (!temples || (temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temples.user_type !== constants.USER_TYPE.ADMIN))
+        return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+    
+        const newpuja = await Puja.findOneAndDelete({ _id: pujaId })
+
+        if (!newpuja)
+          return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_puja', {}, req.headers.lang);
+
+    } catch (err) {
+        console.log('err(deletePuja).....', err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
