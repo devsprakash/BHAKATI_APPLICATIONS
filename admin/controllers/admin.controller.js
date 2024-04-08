@@ -7,7 +7,7 @@ const {
     checkAdmin,
     getUser
 } = require("../../v1/services/user.service");
-const { LoginResponseData  , userResponse} = require('../../ResponseData/user.reponse')
+const { LoginResponseData, userResponse } = require('../../ResponseData/user.reponse')
 const bcrypt = require('bcryptjs')
 
 
@@ -65,7 +65,7 @@ exports.logout = async (req, res) => {
 exports.getAllUser = async (req, res) => {
 
     try {
-        
+
         const userId = req.user._id;
         const findAdmin = await checkAdmin(userId);
 
@@ -101,7 +101,7 @@ exports.getAllUser = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
 
         const totalUsers = await User.countDocuments({ user_type: 2 });
-        const activeUser = await User.countDocuments({ status: 1 });
+        const activeUser = await User.countDocuments({ status: 1, user_type: 2 });
 
         let data = {
             total_users: totalUsers,
@@ -198,7 +198,7 @@ exports.getUser = async (req, res) => {
 
     } catch (err) {
         console.error('Error in getUser:', err);
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR , constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
 
