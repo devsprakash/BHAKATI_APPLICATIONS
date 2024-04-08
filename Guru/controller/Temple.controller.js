@@ -170,6 +170,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
     const templeId = req.Temple._id;
     const reqBody = req.body;
     const temple = await TempleGuru.findById(templeId)
+   
 
     if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
         return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
@@ -201,7 +202,6 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
                 }
             }
         );
-        console.log("templeId", templeId)
 
         const ids = response.data.data.playback_ids.map((item) => item.id);
 
@@ -216,7 +216,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
             live_stream_id: response.data.data.id,
             plackback_id: ids[0],
             created_at: response.data.data.created_at,
-            temple_id: templeId
+            templeId: templeId
         }
 
         const templeData = await TempleLiveStreaming.create(liveStreamData)

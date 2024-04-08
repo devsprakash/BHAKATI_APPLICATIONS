@@ -326,7 +326,7 @@ exports.getLiveStreamByGuru = async (req, res) => {
             mobile_number: guru.guruId.mobile_number,
             published_date: new Date(),
             views: '',
-            guru_id: guru.guruId._id
+            guruId: guru.guruId._id
         }))
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
