@@ -127,6 +127,7 @@ exports.SearchAllTemples = async (req, res, next) => {
         }
 
         const responseData = temples.map(data => ({
+            totalTemples:countTemples,
             mobile_number: data.mobile_number,
             email: data.email,
             temple_name: data.temple_name,
