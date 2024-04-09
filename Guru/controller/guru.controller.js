@@ -137,6 +137,80 @@ exports.getGuruProfile = async (req, res) => {
     }
 };
 
+exports.getGuruProfileByAdmin = async (req, res) => {
+
+    try {
+
+        const { guruId } = req.body;
+        const { limit } = req.query;
+        const guruData = await TempleGuru.findOne({ _id: guruId });
+        
+
+        const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+            }
+        });
+
+        const LiveStreamingData = response.data.data.map(stream => stream.id);
+
+        const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
+            .populate('guruId', 'guru_name guru_image _id email mobile_number gurus_id expertise created_at');
+
+        if (!GuruData || GuruData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
+
+        const guruList = await TempleGuru.find({ user_type: 4 }).sort().limit(limit)
+
+        if (!guruList || guruList.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', [], req.headers.lang);
+
+
+        const responseData = {
+            guru_data: {
+                guru_id: guruData._id,
+                guru_name: guruData.guru_name,
+                guru_image_url: guruData.guru_image,
+                feature_image_url: guruData.background_image,
+                description: guruData.description,
+                email:guruData.email,
+                expertise:guruData.expertise,
+                date_of_joining: guruData.created_at
+            },
+            live_aarti: GuruData.map(guru => ({
+                playback_id: guru.playback_id,
+                live_stream_id: guru.live_stream_id,
+                stream_key: guru.stream_key,
+                guru_name: guru.guruId.guru_name,
+                guru_image_url: guru.guruId.guru_image,
+                background_image_url: guru.guruId.background_image,
+                title: guru.title,
+                description: guru.description,
+                guru_id: guru._id,
+                expertise: guru.guruId.expertise,
+                email: guru.guruId.email,
+                mobile_number: guru.guruId.mobile_number,
+                published_date: new Date(),
+                views: '',
+                guru_id: guru.guruId._id
+            })),
+            suggested_gurus: guruList.map(guru => ({
+                guru_name: guru.guru_name,
+                guru_image_url: guru.guru_image,
+                guru_id: guru._id,
+                created_at: guru.created_at
+            }))
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_guru_profile', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error('Error(getGuruProfileByAdmin)....', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
 
 
 
@@ -272,7 +346,7 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
             live_stream_id: response.data.data.id,
             playback_id: ids[0],
             created_at: response.data.data.created_at,
-            guru_id: guruId,
+            guruId: guruId,
         }
 
         const guruData = await GuruLiveStreaming.create(liveStreamData)

@@ -88,6 +88,9 @@ exports.logout = async (req, res, next) => {
     }
 }
 
+
+
+
 exports.getTempleProfile = async (req, res) => {
 
     try {
@@ -158,6 +161,81 @@ exports.getTempleProfile = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
     } catch (err) {
         console.error('Error(getTempleProfile)....', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
+
+exports.getTempleProfileByAdmin = async (req, res) => {
+
+    try {
+
+        const { templeId } = req.body;
+        const { limit } = req.query;
+        const templeData = await TempleGuru.findOne({ _id: templeId });
+
+        const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Basic ${Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')}`
+            }
+        });
+
+        const LiveStreamingData = response.data.data.map(stream => stream.id);
+
+        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
+            .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
+
+        if (!TempleData || TempleData.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
+
+        const templeList = await TempleGuru.find({ user_type: 3 }).sort().limit(limit)
+
+        if (!templeList || templeList.length === 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', [], req.headers.lang);
+
+        const responseData = {
+            temple_data: {
+                temple_id: templeData._id,
+                temple_name: templeData.temple_name,
+                temple_image_url: templeData.temple_image_url,
+                feature_image_url: templeData.background_image,
+                description: templeData.description,
+                location: templeData.location,
+                state: templeData.state,
+                district: templeData.district,
+                category: templeData.category,
+                date_of_joining: templeData.created_at
+            },
+            live_aarti: TempleData.map(temple => ({
+                playback_id: temple.playback_id,
+                live_stream_id: temple.live_stream_id,
+                stream_key: temple.stream_key,
+                temple_name: temple.templeId.temple_name,
+                temple_image_url: temple.templeId.temple_image,
+                background_image_url: temple.templeId.background_image,
+                title: temple.title,
+                description: temple.description,
+                location: temple.templeId.location,
+                state: temple.templeId.state,
+                district: temple.templeId.district,
+                temple_id: temple._id,
+                category: temple.templeId.category,
+                published_date: temple.created_at,
+                views: '',
+                temple_id: temple.templeId._id
+            })),
+            suggested_temples: templeList.map(temple => ({
+                temple_id: temple.temples_id,
+                temple_name: temple.temple_name,
+                temple_image_url: temple.temple_image,
+                temple_id: temple._id
+            }))
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
+    } catch (err) {
+        console.error('Error(getTempleProfileByAdmin)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
