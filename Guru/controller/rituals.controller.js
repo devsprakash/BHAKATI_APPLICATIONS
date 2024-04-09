@@ -69,7 +69,7 @@ exports.getAllRithuals = async (req, res) => {
             start_time: data.StartTime,
             end_time: data.EndTime,
             temple_id: data.templeId
-        }))
+        })) || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', responseData, req.headers.lang);
 
@@ -116,7 +116,7 @@ exports.getRithualsByTemples = async (req, res) => {
             start_time: data.StartTime,
             end_time: data.EndTime,
             temple_id: data.templeId._id
-        }))
+        })) || {};
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_rithuals', responseData, req.headers.lang);
 

@@ -166,7 +166,7 @@ exports.getCountTotalViews = async (req, res) => {
             video_url: videoData.videoUrl,
             views: views,
             viewers: viewers
-        };
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_total_views', videos, req.headers.lang);
 
