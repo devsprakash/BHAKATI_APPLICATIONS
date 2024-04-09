@@ -138,8 +138,9 @@ exports.SearchAllTemples = async (req, res, next) => {
             open_time: data.open_time,
             closing_time: data.closing_time,
             temple_id: data._id,
+            state:data.state,
             category: data.category
-        }))
+        })) || []
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_temples', responseData, req.headers.lang);
 

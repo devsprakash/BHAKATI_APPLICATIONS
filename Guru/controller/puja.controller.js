@@ -79,7 +79,7 @@ exports.getAllPuja = async (req, res) => {
             description:data.description,
             puja_id: data._id,
             temple_id:data.templeId._id,
-        }))
+        })) || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', responseData, req.headers.lang);
 

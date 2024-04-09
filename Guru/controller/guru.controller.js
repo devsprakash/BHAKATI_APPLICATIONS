@@ -20,6 +20,8 @@ const GuruLiveStreaming = require('../../models/GuruLiveStreaming.model')
 
 
 
+
+
 exports.addNewGuru = async (req, res) => {
 
     try {
@@ -61,6 +63,8 @@ exports.addNewGuru = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', error.message, req.headers.lang);
     }
 };
+
+
 
 
 
