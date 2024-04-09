@@ -205,6 +205,9 @@ exports.getTempleProfileByAdmin = async (req, res) => {
                 state: templeData.state,
                 district: templeData.district,
                 category: templeData.category,
+                mobile_number:templeData.mobile_number,
+                open_time:templeData.open_time,
+                close_time:templeData.close_time,
                 date_of_joining: templeData.created_at
             },
             live_aarti: TempleData.map(temple => ({
@@ -239,7 +242,6 @@ exports.getTempleProfileByAdmin = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
-
 
 
 

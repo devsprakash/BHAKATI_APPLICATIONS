@@ -176,6 +176,7 @@ exports.getGuruProfileByAdmin = async (req, res) => {
                 description: guruData.description,
                 email:guruData.email,
                 expertise:guruData.expertise,
+                mobile_number:guruData.mobile_number,
                 date_of_joining: guruData.created_at
             },
             live_aarti: GuruData.map(guru => ({
