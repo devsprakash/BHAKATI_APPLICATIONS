@@ -15,7 +15,7 @@ router.get('/getTempleProfile', getTempleProfile);
 router.post('/createLiveStreamingByTemple', TempleAuth, CreateNewLiveStreamByTemple);
 router.get('/getTempleLiveStream', getTempleLiveStream)
 router.post('/addBankDetails', TempleAuth, addBankDetails)
-router.get('/getBankDetails/:bankId', TempleAuth, getBankDetails)
+router.post('/getBankDetails', getBankDetails)
 router.post('/addPanditDetails', TempleAuth, addpanditDetails)
 router.get('/getpanditDetails/:panditId', TempleAuth, getpanditDetails);
 router.put('/updatepanditDetails/:panditId', TempleAuth, UpdatepanditDetails)

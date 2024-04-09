@@ -205,9 +205,9 @@ exports.getTempleProfileByAdmin = async (req, res) => {
                 state: templeData.state,
                 district: templeData.district,
                 category: templeData.category,
-                mobile_number:templeData.mobile_number,
-                open_time:templeData.open_time,
-                closing_time:templeData.closing_time,
+                mobile_number: templeData.mobile_number,
+                open_time: templeData.open_time,
+                closing_time: templeData.closing_time,
                 date_of_joining: templeData.created_at
             },
             live_aarti: TempleData.map(temple => ({
@@ -250,7 +250,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
     const templeId = req.Temple._id;
     const reqBody = req.body;
     const temple = await TempleGuru.findById(templeId)
-   
+
 
     if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
         return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
@@ -444,12 +444,12 @@ exports.addBankDetails = async (req, res) => {
 };
 
 
+
 exports.getBankDetails = async (req, res) => {
 
     try {
 
-        const { bankId } = req.params;
-        const templeId = req.Temple._id;
+        const { templeId } = req.body;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple)
@@ -458,7 +458,7 @@ exports.getBankDetails = async (req, res) => {
         if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
-        const banks = await Bank.findById(bankId)
+        const banks = await Bank.findOne({ templeId: templeId })
             .populate('templeId', 'TempleName TempleImg _id')
 
         if (!banks) {
