@@ -207,7 +207,7 @@ exports.getTempleProfileByAdmin = async (req, res) => {
                 category: templeData.category,
                 mobile_number:templeData.mobile_number,
                 open_time:templeData.open_time,
-                close_time:templeData.close_time,
+                closing_time:templeData.closing_time,
                 date_of_joining: templeData.created_at
             },
             live_aarti: TempleData.map(temple => ({
