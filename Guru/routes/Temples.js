@@ -17,7 +17,7 @@ router.get('/getTempleLiveStream', getTempleLiveStream)
 router.post('/addBankDetails', TempleAuth, addBankDetails)
 router.post('/getBankDetails', getBankDetails)
 router.post('/addPanditDetails', TempleAuth, addpanditDetails)
-router.get('/getpanditDetails/:panditId', TempleAuth, getpanditDetails);
+router.post('/getpanditDetails',  getpanditDetails);
 router.put('/updatepanditDetails/:panditId', TempleAuth, UpdatepanditDetails)
 router.post('/generatedNewToken' , generate_refresh_tokens);
 router.get('/templeSuggestedVideos' , temple_suggested_videos);

@@ -103,7 +103,7 @@ exports.getGuruProfile = async (req, res) => {
                 email:guruData.email,
                 expertise:guruData.expertise,
                 date_of_joining: guruData.created_at
-            },
+            } || {},
             live_aarti: GuruData.map(guru => ({
                 playback_id: guru.playback_id,
                 live_stream_id: guru.live_stream_id,
@@ -120,13 +120,13 @@ exports.getGuruProfile = async (req, res) => {
                 published_date: new Date(),
                 views: '',
                 guru_id: guru.guruId._id
-            })),
+            })) || [],
             suggested_gurus: guruList.map(guru => ({
                 guru_name: guru.guru_name,
                 guru_image_url: guru.guru_image,
                 guru_id: guru._id,
                 created_at: guru.created_at
-            }))
+            })) || []
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_guru_profile', responseData, req.headers.lang);
@@ -178,7 +178,7 @@ exports.getGuruProfileByAdmin = async (req, res) => {
                 expertise:guruData.expertise,
                 mobile_number:guruData.mobile_number,
                 date_of_joining: guruData.created_at
-            },
+            } || {},
             live_aarti: GuruData.map(guru => ({
                 playback_id: guru.playback_id,
                 live_stream_id: guru.live_stream_id,
@@ -195,13 +195,13 @@ exports.getGuruProfileByAdmin = async (req, res) => {
                 published_date: new Date(),
                 views: '',
                 guru_id: guru.guruId._id
-            })),
+            })) || [],
             suggested_gurus: guruList.map(guru => ({
                 guru_name: guru.guru_name,
                 guru_image_url: guru.guru_image,
                 guru_id: guru._id,
                 created_at: guru.created_at
-            }))
+            })) || []
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_guru_profile', responseData, req.headers.lang);
@@ -285,7 +285,7 @@ exports.SearchAllGuru = async (req, res) => {
             background_image: guru.background_image,
             created_at: guru.created_at,
             updated_at: guru.updated_at
-        }));
+        }))  || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_gurus', responseData, req.headers.lang);
 
@@ -402,7 +402,7 @@ exports.getLiveStreamByGuru = async (req, res) => {
             published_date: new Date(),
             views: '',
             guruId: guru.guruId._id
-        }))
+        })) || []
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
 
@@ -450,7 +450,7 @@ exports.guru_suggested_videos = async (req, res) => {
             id: video._id,
             duration: matchedData[0].duration,
             guru_id:video.guruId,
-        }));
+        })) || []
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_the_suggested_videos', responseData, req.headers.lang);
 

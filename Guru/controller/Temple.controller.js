@@ -111,13 +111,7 @@ exports.getTempleProfile = async (req, res) => {
         const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
             .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
-        if (!TempleData || TempleData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
-
         const templeList = await TempleGuru.find({ user_type: 3 }).sort().limit(limit)
-
-        if (!templeList || templeList.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', [], req.headers.lang);
 
         const responseData = {
             temple_data: {
@@ -130,8 +124,9 @@ exports.getTempleProfile = async (req, res) => {
                 state: templeData.state,
                 district: templeData.district,
                 category: templeData.category,
+                state: templeData.state,
                 date_of_joining: templeData.created_at
-            },
+            } || {},
             live_aarti: TempleData.map(temple => ({
                 playback_id: temple.playback_id,
                 live_stream_id: temple.live_stream_id,
@@ -149,13 +144,13 @@ exports.getTempleProfile = async (req, res) => {
                 published_date: temple.created_at,
                 views: '',
                 temple_id: temple.templeId._id
-            })),
+            })) || [],
             suggested_temples: templeList.map(temple => ({
                 temple_id: temple.temples_id,
                 temple_name: temple.temple_name,
                 temple_image_url: temple.temple_image,
                 temple_id: temple._id
-            }))
+            })) || []
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
@@ -186,13 +181,8 @@ exports.getTempleProfileByAdmin = async (req, res) => {
         const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
             .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
-        if (!TempleData || TempleData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
 
         const templeList = await TempleGuru.find({ user_type: 3 }).sort().limit(limit)
-
-        if (!templeList || templeList.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', [], req.headers.lang);
 
         const responseData = {
             temple_data: {
@@ -208,8 +198,9 @@ exports.getTempleProfileByAdmin = async (req, res) => {
                 mobile_number: templeData.mobile_number,
                 open_time: templeData.open_time,
                 closing_time: templeData.closing_time,
+                email: templeData.email,
                 date_of_joining: templeData.created_at
-            },
+            } || {},
             live_aarti: TempleData.map(temple => ({
                 playback_id: temple.playback_id,
                 live_stream_id: temple.live_stream_id,
@@ -227,13 +218,13 @@ exports.getTempleProfileByAdmin = async (req, res) => {
                 published_date: temple.created_at,
                 views: '',
                 temple_id: temple.templeId._id
-            })),
+            })) || [],
             suggested_temples: templeList.map(temple => ({
                 temple_id: temple.temples_id,
                 temple_name: temple.temple_name,
                 temple_image_url: temple.temple_image,
                 temple_id: temple._id
-            }))
+            })) || []
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
@@ -297,7 +288,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
             playback_id: ids[0],
             created_at: response.data.data.created_at,
             templeId: templeId
-        }
+        } || {}
 
         const templeData = await TempleLiveStreaming.create(liveStreamData)
 
@@ -353,7 +344,7 @@ exports.getTempleLiveStream = async (req, res) => {
             published_date: new Date(),
             views: '',
             temple_id: temple.templeId._id
-        }))
+        })) || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
 
@@ -401,7 +392,7 @@ exports.temple_suggested_videos = async (req, res) => {
             id: video._id,
             duration: matchedData[0].duration,
             temple_id: video.guruId,
-        }));
+        })) || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_the_suggested_videos', responseData, req.headers.lang);
 
@@ -459,7 +450,7 @@ exports.getBankDetails = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
         const banks = await Bank.findOne({ templeId: templeId })
-            .populate('templeId', 'TempleName TempleImg _id')
+            .populate('templeId', 'temple_name temple_image _id')
 
         if (!banks) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.bank_details_not_found', {}, req.headers.lang);
@@ -515,8 +506,7 @@ exports.getpanditDetails = async (req, res) => {
 
     try {
 
-        const { panditId } = req.params;
-        const templeId = req.Temple._id;
+        const { templeId } = req.body;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple)
@@ -525,8 +515,8 @@ exports.getpanditDetails = async (req, res) => {
         if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
-        const pandit = await Pandit.findById(panditId)
-            .populate('templeId', 'TempleName TempleImg _id')
+        const pandit = await Pandit.findOne({ templeId: templeId })
+            .populate('templeId', 'temple_name temple_iamge _id')
 
         if (!pandit) {
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found_pandit', {}, req.headers.lang);

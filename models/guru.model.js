@@ -64,13 +64,13 @@ const templeGuruSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    temples_id:{
-        type:String,
-        default:null
+    temples_id: {
+        type: String,
+        default: null
     },
-    gurus_id:{
-        type:String,
-        default:null
+    gurus_id: {
+        type: String,
+        default: null
     },
     temple_name: {
         type: String,
@@ -90,6 +90,9 @@ const templeGuruSchema = new mongoose.Schema({
     district: {
         type: String,
         default: null
+    },
+    state: {
+        type: String
     },
     description: {
         type: String,
