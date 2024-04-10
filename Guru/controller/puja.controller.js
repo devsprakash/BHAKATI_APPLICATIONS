@@ -61,7 +61,7 @@ exports.getAllPuja = async (req, res) => {
         const sortOptions = {};
         sortOptions[sortField] = sortOrder === 'asc' ? 1 : -1;
 
-        const pujas = await Puja.find().select('pujaImage pujaName description')
+        const pujas = await Puja.find().select('pujaImage pujaName description category status _id')
             .populate('templeId', 'TempleName TempleImg')
             .sort(sortOptions)
             .skip(skip)
@@ -78,7 +78,7 @@ exports.getAllPuja = async (req, res) => {
             puja_image_url: data.pujaImage,
             description: data.description,
             category: data.category,
-            status:data.status,
+            status: data.status,
             puja_id: data._id
         })) || [];
 
@@ -112,13 +112,11 @@ exports.ListOfPuja = async (req, res) => {
             filterCondition["someField"] = filter;
         }
 
-        const pujas = await Puja.find(filterCondition).select('pujaImage pujaName description duration price status')
+        const pujas = await Puja.find(filterCondition).select('pujaImage pujaName description duration price status category')
             .populate('templeId', 'temple_name temple_image _id')
             .sort(sortOptions)
             .skip(skip)
             .limit(parseInt(limit));
-
-        console.log(pujas)
 
 
         const totalPujas = await Puja.countDocuments(filterCondition);
@@ -133,6 +131,8 @@ exports.ListOfPuja = async (req, res) => {
             description: puja.description,
             temple_name: puja.templeId.temple_name,
             temple_image_url: puja.templeId.temple_image,
+            category: puja.category,
+            status: puja.status,
             temple_id: puja.templeId._id
 
         })) || [];
@@ -167,6 +167,7 @@ exports.addPuja = async (req, res) => {
                 pujaName: reqBody.pujaName,
                 duration: reqBody.duration,
                 price: reqBody.price,
+                templeId: templeId,
                 updated_at: dateFormat.set_current_timestamp(),
             }
         }, { new: true });
@@ -212,6 +213,8 @@ exports.pujs_by_temple = async (req, res) => {
                 puja_image_url: puja.pujaImage,
                 duration: puja.duration,
                 cost: puja.price,
+                category: puja.category,
+                status: puja.status
             }))
         }
 
@@ -228,11 +231,9 @@ exports.deletePuja = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
-        const { pujaId } = req.params
+        const { pujaId, templeId } = req.params
 
         const temples = await TempleGuru.findOne({ _id: templeId })
-
 
         if (!temples || (temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temples.user_type !== constants.USER_TYPE.ADMIN))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
@@ -242,7 +243,7 @@ exports.deletePuja = async (req, res) => {
         if (!newpuja)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_puja', {}, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_puja', newpuja, req.headers.lang);
 
     } catch (err) {
         console.log('err(deletePuja).....', err)

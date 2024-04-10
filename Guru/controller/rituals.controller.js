@@ -133,22 +133,21 @@ exports.deleteRithuals = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
-        const { rithualId } = req.params
+        const { rithualId, templeId } = req.params
 
         const temples = await TempleGuru.findOne({ _id: templeId })
 
 
         if (!temples || (temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temples.user_type !== constants.USER_TYPE.ADMIN))
-        return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-    
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
         const newRithuals = await Rituals.findOneAndDelete({ _id: rithualId })
 
         if (!newRithuals)
-          return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
 
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_rihuals', {}, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_rihuals', newRithuals, req.headers.lang);
 
     } catch (err) {
         console.log('err(deleteRithuals).....', err)
