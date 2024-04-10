@@ -104,8 +104,8 @@ exports.getGuruProfile = async (req, res) => {
                 guru_image_url: guruData.guru_image,
                 feature_image_url: guruData.background_image,
                 description: guruData.description,
-                email:guruData.email,
-                expertise:guruData.expertise,
+                email: guruData.email,
+                expertise: guruData.expertise,
                 date_of_joining: guruData.created_at
             } || {},
             live_aarti: GuruData.map(guru => ({
@@ -148,7 +148,7 @@ exports.getGuruProfileByAdmin = async (req, res) => {
         const { guruId } = req.body;
         const { limit } = req.query;
         const guruData = await TempleGuru.findOne({ _id: guruId });
-        
+
 
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
             headers: {
@@ -178,9 +178,9 @@ exports.getGuruProfileByAdmin = async (req, res) => {
                 guru_image_url: guruData.guru_image,
                 feature_image_url: guruData.background_image,
                 description: guruData.description,
-                email:guruData.email,
-                expertise:guruData.expertise,
-                mobile_number:guruData.mobile_number,
+                email: guruData.email,
+                expertise: guruData.expertise,
+                mobile_number: guruData.mobile_number,
                 date_of_joining: guruData.created_at
             } || {},
             live_aarti: GuruData.map(guru => ({
@@ -289,7 +289,7 @@ exports.SearchAllGuru = async (req, res) => {
             background_image: guru.background_image,
             created_at: guru.created_at,
             updated_at: guru.updated_at
-        }))  || [];
+        })) || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_gurus', responseData, req.headers.lang);
 
@@ -383,7 +383,7 @@ exports.getLiveStreamByGuru = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }}).limit(limit)
+        const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData } }).limit(limit)
             .populate('guruId', '_id guru_name email mobile_number expertise gurus_id guru_image background_image created_at updated_at');
 
 
@@ -453,7 +453,7 @@ exports.guru_suggested_videos = async (req, res) => {
             video_url: video.videoUrl,
             id: video._id,
             duration: matchedData[0].duration,
-            guru_id:video.guruId,
+            guru_id: video.guruId,
         })) || []
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_the_suggested_videos', responseData, req.headers.lang);
@@ -463,3 +463,34 @@ exports.guru_suggested_videos = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
+exports.guruDelete = async (req, res) => {
+
+
+    try {
+
+        const { guruId } = req.query;
+
+        const userId = req.user._id;
+        console.log(userId)
+
+        const user = await checkAdmin(userId);
+
+        if (user.user_type !== constants.USER_TYPE.ADMIN)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const guruData = await TempleGuru.findOneAndDelete({ _id: guruId });
+
+        if (!guruData) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.delete_guru', guruData, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(guruDelete)....", err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+
+}

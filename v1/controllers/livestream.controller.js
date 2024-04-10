@@ -192,6 +192,7 @@ exports.deleteLiveStream = async (req, res) => {
 
 
 exports.LiveStreamingEnd = async (req, res) => {
+
     const { LIVE_STREAM_ID, id } = req.params;
     const reqBody = req.body;
 
@@ -208,10 +209,6 @@ exports.LiveStreamingEnd = async (req, res) => {
             }
         );
 
-        // Check if live stream is not found
-        if (!response.data) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'LIVESTREAM.not_found_streams', {}, req.headers.lang);
-        }
 
         // Update live stream status in database
         const endLiveStream = await LiveStream.findOneAndUpdate(
@@ -219,11 +216,6 @@ exports.LiveStreamingEnd = async (req, res) => {
             { $set: { status: 'END', endTime: dateFormat.add_current_time(), updated_at: dateFormat.set_current_timestamp() } },
             { new: true }
         );
-
-        // Check if live stream is not found
-        if (!endLiveStream) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.SUCCESS, constants.STATUS_CODE.OK, 'LIVESTREAM.not_found', {}, req.headers.lang);
-        }
 
         // Send success response
         const endLiveStreams = LiveStreamingResponse(endLiveStream);

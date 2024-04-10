@@ -449,7 +449,7 @@ exports.getBankDetails = async (req, res) => {
         if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
-        const banks = await Bank.findOne({ templeId: templeId })
+        const banks = await Bank.find({ templeId: templeId })
             .populate('templeId', 'temple_name temple_image _id')
 
         if (!banks) {

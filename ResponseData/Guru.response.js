@@ -34,8 +34,7 @@ exports.guruLoginResponse = (guru) => {
         background_image:guru.background_image,
         tokens: guru.tokens,
         refresh_tokens: guru.refresh_tokens,
-        id: guru._id,
-        guru_id:guru.gurus_id,
+        guru_id: guru._id,
         created_at: guru.created_at,
         updated_at: guru.updated_at
     };

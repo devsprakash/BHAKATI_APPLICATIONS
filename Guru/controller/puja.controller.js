@@ -74,11 +74,12 @@ exports.getAllPuja = async (req, res) => {
 
         const responseData = pujas.map(data => ({
             total_pujas: totalPujas,
-            puja_name:data.puja_name,
-            puja_image_url:data.pujaImage,
-            description:data.description,
-            puja_id: data._id,
-            temple_id:data.templeId._id,
+            puja_name: data.pujaName,
+            puja_image_url: data.pujaImage,
+            description: data.description,
+            category: data.category,
+            status:data.status,
+            puja_id: data._id
         })) || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', responseData, req.headers.lang);
@@ -117,11 +118,10 @@ exports.ListOfPuja = async (req, res) => {
             .skip(skip)
             .limit(parseInt(limit));
 
+        console.log(pujas)
+
+
         const totalPujas = await Puja.countDocuments(filterCondition);
-
-        if (!pujas || pujas.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
-
 
         const responseData = pujas.map(puja => ({
             total_pujas: totalPujas,
@@ -131,10 +131,13 @@ exports.ListOfPuja = async (req, res) => {
             duration: puja.duration,
             cost: puja.price,
             description: puja.description,
-            templeId: puja.templeId.temple_name,
+            temple_name: puja.templeId.temple_name,
             temple_image_url: puja.templeId.temple_image,
             temple_id: puja.templeId._id
-        }))
+
+        })) || [];
+
+        console.log(responseData)
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', responseData, req.headers.lang);
 
@@ -232,12 +235,12 @@ exports.deletePuja = async (req, res) => {
 
 
         if (!temples || (temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temples.user_type !== constants.USER_TYPE.ADMIN))
-        return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-    
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
         const newpuja = await Puja.findOneAndDelete({ _id: pujaId })
 
         if (!newpuja)
-          return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_puja', {}, req.headers.lang);
 

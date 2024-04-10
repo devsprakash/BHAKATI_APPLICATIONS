@@ -127,7 +127,7 @@ exports.temple_under_list_of_slots = async (req, res) => {
             date: data.date,
             slot_id: data._id,
             temple_id: data.templeId
-        }))
+        })) || []
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.update_slots', responseData, req.headers.lang);
 

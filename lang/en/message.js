@@ -67,7 +67,7 @@ module.exports = {
         invalid_user: 'You are not authorized to do this operation.',
         invalid_login: 'You are not authorized.',
         blackList_mail: `Please enter a valid email, we don't allow dummy emails.`,
-        token_expired:'this token is invalid or expired'
+        token_expired: 'this token is invalid or expired'
     },
     'BOOKING': {
         create_new_slot: 'successfully created the slots',
@@ -78,9 +78,9 @@ module.exports = {
         booking_downlod: 'successfully downloading this booking slot',
         slots_not_found: 'currently no slots are available',
         already_booked_slot: 'This slot already booked please booked another slot',
-        update_slots:'successfully update this slot',
-        slot_not_found:'slot data found',
-        booked_list:"successfully get all the booked list"
+        update_slots: 'successfully update this slot',
+        slot_not_found: 'slot data found',
+        booked_list: "successfully get all the booked list"
     },
     'TEMPLE': {
         addTemple: 'successfully add a new temple',
@@ -100,7 +100,7 @@ module.exports = {
         not_found_pandit: 'pandit details are not found',
         get_pandit_details: 'successfully get the pandit details',
         update_pandit_details: 'successfully update the pandit details',
-        Live_stream_not_found:'This temple was not live'
+        Live_stream_not_found: 'This temple was not live'
     },
 
     'LIVESTREAM': {
@@ -120,9 +120,9 @@ module.exports = {
         add_new_rithuals: 'successfully add new rithuals',
         Invalid_page: 'Invalid page or limit values.',
         get_all_rithuals: 'successfully get all rithuals',
-        temple_under_pujaList:'temple under all the puja list',
-        delete_rihuals:'successfully delete the rihuals',
-        delete_puja:'successfully delete the puja'
+        temple_under_pujaList: 'temple under all the puja list',
+        delete_rihuals: 'successfully delete the rihuals',
+        delete_puja: 'successfully delete the puja'
     },
     'GURU': {
         add_new_guru: 'successfully add new guru',
@@ -140,6 +140,7 @@ module.exports = {
         not_found: 'videos data was not found',
         get_videos: 'successfully get this video',
         get_total_views: 'successfully get all the views',
-        get_all_the_suggested_videos: 'successfully get all the suggested videos'
+        get_all_the_suggested_videos: 'successfully get all the suggested videos',
+        delete_guru: 'successfully delete the guru'
     }
 }

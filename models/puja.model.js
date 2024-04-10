@@ -7,9 +7,9 @@ const pujaSchema = new mongoose.Schema({
     pujaImage: {
         type: String
     },
-    pujaName:{
-        type:String,
-        default:null
+    pujaName: {
+        type: String,
+        default: null
     },
     description: {
         type: String
@@ -21,9 +21,12 @@ const pujaSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    price:{
-        type:Number,
-        default:null
+    price: {
+        type: Number,
+        default: null
+    },
+    category: {
+        type: String
     },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
