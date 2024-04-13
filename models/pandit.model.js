@@ -9,7 +9,7 @@ const panditSchema = new mongoose.Schema({
     full_name: {
         type: String,
     },
-    mobileNumber: {
+    mobile_number: {
         type: String
     },
     email: {

@@ -11,7 +11,7 @@ router.get('/bookingSlotDownload/:bookingId' , bookingSlotDownloaded)
 router.put('/updateSlot/:slotId' , TempleAuth , updateSlot)
 router.post('/bookedPuja' , authenticate , bookedPuja)
 router.get('/temple_under_list_of_slots' , TempleAuth , temple_under_list_of_slots);
-router.get('/bookedList' , bookedList)
+router.post('/bookedList' , bookedList)
 
 
 

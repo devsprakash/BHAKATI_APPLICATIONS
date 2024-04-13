@@ -18,7 +18,7 @@ const pujaSchema = new mongoose.Schema({
         type: String
     },
     duration: {
-        type: String,
+        type: Number,
         default: null
     },
     price: {

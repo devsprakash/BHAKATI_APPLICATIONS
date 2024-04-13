@@ -100,7 +100,12 @@ module.exports = {
         not_found_pandit: 'pandit details are not found',
         get_pandit_details: 'successfully get the pandit details',
         update_pandit_details: 'successfully update the pandit details',
-        Live_stream_not_found: 'This temple was not live'
+        delete_pandit_details: 'successfully delete the pandit details',
+        Live_stream_not_found: 'This temple was not live',
+        update_bank_details: 'successfully update the bank details',
+        delete_bank_details: 'successfully delete the bank details',
+        temple_under_pandit_data_not_found: 'this temple under pandit was not registered',
+        already_added_bank_details: 'Your bank details already exist can not be added another bank details'
     },
 
     'LIVESTREAM': {

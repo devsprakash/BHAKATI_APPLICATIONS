@@ -69,9 +69,6 @@ exports.getAllPuja = async (req, res) => {
 
         const totalPujas = await Puja.countDocuments();
 
-        if (!pujas || pujas.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', [], req.headers.lang);
-
         const responseData = pujas.map(data => ({
             total_pujas: totalPujas,
             puja_name: data.pujaName,
@@ -129,15 +126,14 @@ exports.ListOfPuja = async (req, res) => {
             duration: puja.duration,
             cost: puja.price,
             description: puja.description,
-            temple_name: puja.templeId.temple_name,
-            temple_image_url: puja.templeId.temple_image,
+            temple_name: puja.templeId.temple_name || null,
+            temple_image_url: puja.templeId.temple_image || null,
             category: puja.category,
             status: puja.status,
             temple_id: puja.templeId._id
 
         })) || [];
 
-        console.log(responseData)
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.get_all_puja', responseData, req.headers.lang);
 
@@ -205,8 +201,8 @@ exports.pujs_by_temple = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
 
         const responseData = {
-            temple_name: templeData.temple_name,
-            temple_id: templeData._id,
+            temple_name: templeData.temple_name || null,
+            temple_id: templeData._id || null,
             puja: pujsList.map(puja => ({
                 puja_id: puja._id,
                 puja_name: puja.pujaName,
@@ -231,12 +227,38 @@ exports.deletePuja = async (req, res) => {
 
     try {
 
-        const { pujaId, templeId } = req.params
+        const { pujaId } = req.params
+        const templeId = req.Temple._id;
+        const temple = await TempleGuru.findOne({ _id: templeId });
 
-        const temples = await TempleGuru.findOne({ _id: templeId })
-
-        if (!temples || (temples.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temples.user_type !== constants.USER_TYPE.ADMIN))
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const newpuja = await Puja.findOneAndDelete({ _id: pujaId, templeId: templeId })
+
+        if (!newpuja)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_puja', newpuja, req.headers.lang);
+
+    } catch (err) {
+        console.log('err(deletePuja).....', err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
+
+
+exports.deletePujaByAdmin = async (req, res) => {
+
+    try {
+
+        const { pujaId } = req.params
+        const userId = req.user._id;
+        console.log("111", userId)
+        const user = await User.findOne({ _id: userId });
+
+        if (!user || (user.user_type !== constants.USER_TYPE.ADMIN))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const newpuja = await Puja.findOneAndDelete({ _id: pujaId })
 
@@ -246,7 +268,7 @@ exports.deletePuja = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_puja', newpuja, req.headers.lang);
 
     } catch (err) {
-        console.log('err(deletePuja).....', err)
+        console.log('err(eletePujaByAdmin).....', err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }

@@ -160,7 +160,6 @@ exports.templeDelete = async (req, res) => {
         const { templeId } = req.query;
 
         const userId = req.user._id;
-        console.log(userId)
 
         const user = await checkAdmin(userId);
 

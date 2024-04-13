@@ -16,8 +16,6 @@ const Slot = require("../../models/slot.model");
 
 
 
-
-
 exports.createdNewSlot = async (req, res) => {
 
     try {
@@ -35,6 +33,7 @@ exports.createdNewSlot = async (req, res) => {
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
         reqBody.templeId = templeId;
+        reqBody.slot_duration = reqBody.slotDurationInMinutes;
         reqBody.date = moment(reqBody.date).format("DD/MM/YYYY");
         const newSlot = await Slot.create(reqBody);
         const slotData = {
@@ -64,12 +63,10 @@ exports.updateSlot = async (req, res) => {
         const templeId = req.Temple._id;
         const { slotId } = req.params;
 
-        // Assuming TempleGuru is a Mongoose model
         const findAdmin = await TempleGuru.findById(templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY) {
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-        }
 
         const updated_at = dateFormat.set_current_timestamp();
 
@@ -82,9 +79,6 @@ exports.updateSlot = async (req, res) => {
             { new: true }
         );
 
-        if (!newSlot)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.slot_not_found', {}, req.headers.lang)
-
         const slotData = {
             slot_id: newSlot._id,
             start_time: newSlot.start_time,
@@ -92,7 +86,7 @@ exports.updateSlot = async (req, res) => {
             slot_duration: newSlot.slot_duration,
             date: newSlot.date,
             temple_id: templeId
-        };
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.update_slots', slotData, req.headers.lang);
 
@@ -116,9 +110,6 @@ exports.temple_under_list_of_slots = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const slotData = await Slot.find({ templeId: templeId });
-
-        if (!slotData || slotData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.slot_not_found', [], req.headers.lang)
 
         const responseData = slotData.map(data => ({
             slot_duration: data.slot_duration,
@@ -202,7 +193,7 @@ exports.bookedPuja = async (req, res) => {
             start_time: bookings.start_time,
             end_time: bookings.end_time,
             date: bookings.date
-        }
+        } || {}
 
 
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.update_slots', responseData, req.headers.lang);
@@ -223,13 +214,7 @@ exports.bookedList = async (req, res) => {
 
         const bookedListData = await Booking.find({ templeId: temple_id, pujaId: puja_id });
 
-        if (!bookedListData || bookedListData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.not_found', [], req.headers.lang)
-
-            const slotData = await Slot.findOne({templeId: temple_id, date: date});
-
-        if (!slotData)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.slot_not_found', {}, req.headers.lang)
+        const slotData = await Slot.findOne({ templeId: temple_id, date: moment(date).format('DD/MM/YYYY') });
 
         const pujaData = await Puja.findOne({ _id: puja_id, templeId: temple_id })
 
@@ -247,8 +232,9 @@ exports.bookedList = async (req, res) => {
             booked_times: bookedListData.map(data => ({
                 start_time: data.start_time,
                 end_time: data.end_time
-            }))
-        }
+            })) || []
+
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.booked_list', data, req.headers.lang);
 

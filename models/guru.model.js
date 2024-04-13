@@ -9,7 +9,6 @@ const {
 
 
 
-
 // Define schema for temple guru
 const templeGuruSchema = new mongoose.Schema({
 
@@ -157,27 +156,23 @@ templeGuruSchema.methods.generateAuthToken = async function () {
     const templeGuru = this;
     const token = await jwt.sign({
         _id: templeGuru._id.toString()
-    }, JWT_SECRET, { expiresIn: '24h' })
-
-    templeGuru.tokens = token
+    }, JWT_SECRET, { expiresIn: '48h' }); // Set expiration to 48 hours
+    templeGuru.tokens = token;
     templeGuru.updated_at = await dateFormat.set_current_timestamp();
-    templeGuru.refresh_tokens_expires = await dateFormat.add_time_current_date(3, 'days')
-    await templeGuru.save()
-    return token
-}
+    await templeGuru.save();
+    return token;
+};
 
 templeGuruSchema.methods.generateRefreshToken = async function () {
     const templeGuru = this;
     const refresh_tokens = await jwt.sign({
         _id: templeGuru._id.toString()
-    }, JWT_SECRET)
-
-    templeGuru.refresh_tokens = refresh_tokens
+    }, JWT_SECRET, { expiresIn: '7d' }); // Set refresh token expiration to 7 days
+    templeGuru.refresh_tokens = refresh_tokens;
     templeGuru.updated_at = await dateFormat.set_current_timestamp();
-    await templeGuru.save()
-    return refresh_tokens
-}
-
+    await templeGuru.save();
+    return refresh_tokens;
+};
 
 
 // Define model for temple guru

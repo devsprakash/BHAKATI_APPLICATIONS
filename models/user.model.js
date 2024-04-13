@@ -142,30 +142,24 @@ userSchema.methods.generateAuthToken = async function () {
     const user = this;
     const token = await jwt.sign({
         _id: user._id.toString()
-    }, JWT_SECRET, { expiresIn: '24h' })
-    // user.tokens = user.tokens.concat({
-    //     token
-    // });
-    user.tokens = token
+    }, JWT_SECRET, { expiresIn: '48h' }); // Set expiration to 48 hours
+    user.tokens = token;
     user.updated_at = await dateFormat.set_current_timestamp();
-    user.refresh_tokens_expires = await dateFormat.add_time_current_date(3, 'days')
-    await user.save()
-    return token
-}
+    await user.save();
+    return token;
+};
 
 userSchema.methods.generateRefreshToken = async function () {
     const user = this;
     const refresh_tokens = await jwt.sign({
         _id: user._id.toString()
-    }, JWT_SECRET)
-    // user.tokens = user.tokens.concat({
-    //     token
-    // });
-    user.refresh_tokens = refresh_tokens
+    }, JWT_SECRET, { expiresIn: '7d' }); // Set refresh token expiration to 7 days
+    user.refresh_tokens = refresh_tokens;
     user.updated_at = await dateFormat.set_current_timestamp();
-    await user.save()
-    return refresh_tokens
-}
+    await user.save();
+    return refresh_tokens;
+};
+
 
 //Define user model
 const User = mongoose.model('users', userSchema);
