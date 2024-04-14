@@ -436,7 +436,7 @@ exports.guru_suggested_videos = async (req, res) => {
             title: video.title,
             video_url: video.videoUrl,
             id: video._id,
-            duration: matchedData[0].duration,
+            duration: secondsToMinutes(matchedData[0].duration),
             created_at: video.created_at,
             guru_id: video.guruId,
         })) || []
@@ -448,6 +448,46 @@ exports.guru_suggested_videos = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
+
+exports.updateGuruProfile = async (req, res) => {
+
+    try {
+
+        const guruId = req.Temple._id;
+        const guru = await TempleGuru.findOne({ _id: guruId});
+
+        if (guru.user_type !== constants.USER_TYPE.GURU)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const guruData = await TempleGuru.findOneAndUpdate({ _id: guruId }, req.body, { new: true });
+        guruData.updated_at = dateFormat.set_current_timestamp()
+        await guruData.save();
+
+        if (!guruData) 
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', {}, req.headers.lang);
+        
+
+        const responseData = {
+            guru_id: guruData._id,
+            guru_name: guruData.guru_name,
+            guru_image_url: guruData.guru_image,
+            feature_image_url: guruData.background_image,
+            description: guruData.description,
+            email: guruData.email,
+            expertise: guruData.expertise,
+            mobile_number: guruData.mobile_number,
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.update_guru', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error('Error(updateGuruProfile)....', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
 
 
 exports.guruDelete = async (req, res) => {
@@ -464,7 +504,7 @@ exports.guruDelete = async (req, res) => {
         const guruData = await TempleGuru.findOneAndDelete({ _id: guruId });
 
         if (!guruData) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'GURU.guru_not_found', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', {}, req.headers.lang);
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.delete_guru', guruData, req.headers.lang);

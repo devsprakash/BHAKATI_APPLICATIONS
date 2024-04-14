@@ -168,9 +168,8 @@ exports.templeDelete = async (req, res) => {
 
         const templeData = await TempleGuru.findOneAndDelete({ _id: templeId });
 
-        if (!templeData) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.already_delete_temples', {}, req.headers.lang);
-        }
+        if (!templeData) 
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_not_found', {}, req.headers.lang);
 
         const responseData = TempleReponse(templeData)
 

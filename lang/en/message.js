@@ -105,7 +105,10 @@ module.exports = {
         update_bank_details: 'successfully update the bank details',
         delete_bank_details: 'successfully delete the bank details',
         temple_under_pandit_data_not_found: 'this temple under pandit was not registered',
-        already_added_bank_details: 'Your bank details already exist can not be added another bank details'
+        already_added_bank_details: 'Your bank details already exist can not be added another bank details',
+        update_temple_profile: 'successfully update the temple profile',
+        temple_not_found:'this temple data was not found',
+        get_all_bank_details: 'successfully get all the bank details'
     },
 
     'LIVESTREAM': {
@@ -146,6 +149,7 @@ module.exports = {
         get_videos: 'successfully get this video',
         get_total_views: 'successfully get all the views',
         get_all_the_suggested_videos: 'successfully get all the suggested videos',
-        delete_guru: 'successfully delete the guru'
+        delete_guru: 'successfully delete the guru',
+        update_guru: 'successfully update the guru profile'
     }
 }

@@ -3,15 +3,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const constants = require('../config/constants');
 const dateFormat = require('../helper/dateformat.helper');
-const {
-    JWT_SECRET
-} = require('../keys/keys')
-
+const { JWT_SECRET} = require('../keys/keys')
 const Schema = mongoose.Schema;
 
 
 
-//Define user schema
+
 const userSchema = new Schema({
 
     email: {
@@ -42,7 +39,7 @@ const userSchema = new Schema({
     },
 
     user_type: {
-        type: Number, //1-admin 2-user
+        type: Number, 
         default: 2
     },
     verify: {
@@ -59,7 +56,7 @@ const userSchema = new Schema({
     },
     signup_status: {
         type: Number,
-        default: 1 //
+        default: 1 
     },
     reset_password_token: {
         type: String,
@@ -101,66 +98,55 @@ const userSchema = new Schema({
     },
 });
 
-userSchema.index({
-    "email": 1
-});
 
-//Checking if password is valid
+
+userSchema.index({ "email": 1 });
+
 userSchema.methods.validPassword = function (password) {
     return bcrypt.compareSync(password, this.password);
 };
 
-//Output data to JSON
+
 userSchema.methods.toJSON = function () {
-    const user = this;
-    const userObject = user.toObject();
-    return userObject;
+    const user = this.toObject();
+    delete user.password; 
+    return user;
 };
 
-//Checking for user credentials
-userSchema.statics.findByCredentials = async function (email, password, user_type) {
 
-    const user = await User.findOne({
+userSchema.statics.findByCredentials = async function (email, password, user_type) {
+    const user = await this.findOne({
         $or: [{ email: email }, { user_name: email }],
         user_type: user_type,
         deleted_at: null
     });
 
-    if (!user) {
-        return 1
-    }
-
-    if (!user.validPassword(password)) {
-        return 2
-    }
+    if (!user) return null;
+    if (!user.validPassword(password)) return null;
 
     return user;
 }
 
-//Generating auth token
+
+
 userSchema.methods.generateAuthToken = async function () {
-    const user = this;
-    const token = await jwt.sign({
-        _id: user._id.toString()
-    }, JWT_SECRET, { expiresIn: '48h' }); // Set expiration to 48 hours
-    user.tokens = token;
-    user.updated_at = await dateFormat.set_current_timestamp();
-    await user.save();
+    const token = jwt.sign({ _id: this._id.toString() }, JWT_SECRET, { expiresIn: '48h' });
+    this.tokens = token;
+    this.updated_at = await dateFormat.set_current_timestamp();
+    await this.save();
     return token;
 };
 
+
 userSchema.methods.generateRefreshToken = async function () {
-    const user = this;
-    const refresh_tokens = await jwt.sign({
-        _id: user._id.toString()
-    }, JWT_SECRET, { expiresIn: '7d' }); // Set refresh token expiration to 7 days
-    user.refresh_tokens = refresh_tokens;
-    user.updated_at = await dateFormat.set_current_timestamp();
-    await user.save();
-    return refresh_tokens;
+    const refresh_token = jwt.sign({ _id: this._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+    this.refresh_tokens = refresh_token;
+    this.updated_at = await dateFormat.set_current_timestamp();
+    await this.save();
+    return refresh_token;
 };
 
 
-//Define user model
+
 const User = mongoose.model('users', userSchema);
 module.exports = User;

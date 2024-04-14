@@ -125,56 +125,48 @@ const templeGuruSchema = new mongoose.Schema({
 });
 
 
-//Output data to JSON
+
+
 templeGuruSchema.methods.toJSON = function () {
-    const templeGuru = this;
-    const templeGuruObject = templeGuru.toObject();
-    return templeGuruObject;
+    const templeGuru = this.toObject();
+    return templeGuru;
 };
 
-//Checking for user credentials
-templeGuruSchema.statics.findByCredentials = async function (email, password) {
 
-    const templeGuru = await templeGuru.findOne({
-        $or: [{ email: email }, { user_name: email }],
+templeGuruSchema.statics.findByCredentials = async function (email, password) {
+    const templeGuru = await this.findOne({
+        email: email,
+        password: password,
         deleted_at: null
     });
 
     if (!templeGuru) {
-        return 1
-    }
-
-    if (!templeGuru.validPassword(password)) {
-        return 2
+        return null; 
     }
 
     return templeGuru;
-}
+};
 
-//Generating auth token
+
 templeGuruSchema.methods.generateAuthToken = async function () {
     const templeGuru = this;
-    const token = await jwt.sign({
-        _id: templeGuru._id.toString()
-    }, JWT_SECRET, { expiresIn: '48h' }); // Set expiration to 48 hours
+    const token = jwt.sign({ _id: templeGuru._id.toString() }, JWT_SECRET, { expiresIn: '48h' });
     templeGuru.tokens = token;
     templeGuru.updated_at = await dateFormat.set_current_timestamp();
     await templeGuru.save();
     return token;
 };
 
+
 templeGuruSchema.methods.generateRefreshToken = async function () {
     const templeGuru = this;
-    const refresh_tokens = await jwt.sign({
-        _id: templeGuru._id.toString()
-    }, JWT_SECRET, { expiresIn: '7d' }); // Set refresh token expiration to 7 days
-    templeGuru.refresh_tokens = refresh_tokens;
+    const refreshToken = jwt.sign({ _id: templeGuru._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+    templeGuru.refresh_tokens = refreshToken;
     templeGuru.updated_at = await dateFormat.set_current_timestamp();
     await templeGuru.save();
-    return refresh_tokens;
+    return refreshToken;
 };
 
 
-// Define model for temple guru
 const TempleGuru = mongoose.model('Guru', templeGuruSchema);
 module.exports = TempleGuru;

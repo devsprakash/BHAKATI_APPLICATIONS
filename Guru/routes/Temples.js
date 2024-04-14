@@ -2,12 +2,15 @@ const express = require('express');
 const { templeLogin, logout, getTempleProfile,
     addBankDetails, getBankDetails, updateBankDetails, addpanditDetails, getpanditDetails, UpdatepanditDetails,
     CreateNewLiveStreamByTemple, getTempleLiveStream, generate_refresh_tokens, temple_suggested_videos, getTempleProfileByAdmin,
-    deleteBankDetails,deletePanditDetails,
-    getAllpanditList } = require('../controller/Temple.controller');
+    deleteBankDetails, deletePanditDetails,
+    getAllpanditList,
+    updateTempleProfile,
+    addBankDetailsByAdmin, 
+    AllBankList} = require('../controller/Temple.controller');
 const router = express.Router();
-const TempleAuth = require('../../middleware/guru.auth')
-const bodyParser = require('body-parser');
-
+const TempleAuth = require('../../middleware/guru.auth');
+const authenticate = require('../../middleware/authenticate')
+const upload = require('../../middleware/multer')
 
 
 
@@ -24,10 +27,14 @@ router.post('/addPanditDetails', TempleAuth, addpanditDetails)
 router.get('/getpanditDetails/:panditId', TempleAuth, getpanditDetails);
 router.get('/getAllpanditList/:templeId', getAllpanditList)
 router.put('/updatepanditDetails/:panditId', TempleAuth, UpdatepanditDetails);
-router.delete('/deletePanditDetails/:panditId' ,TempleAuth , deletePanditDetails)
+router.delete('/deletePanditDetails/:panditId', TempleAuth, deletePanditDetails)
 router.post('/generatedNewToken', generate_refresh_tokens);
 router.get('/templeSuggestedVideos', temple_suggested_videos);
-router.post('/getTempleProfileByAdmin', getTempleProfileByAdmin)
+router.post('/getTempleProfileByAdmin', getTempleProfileByAdmin);
+router.put('/updateTempleProfile', TempleAuth, updateTempleProfile)
+router.post('/addBankDetailsByAdmin', upload.single('logo'), authenticate, addBankDetailsByAdmin);
+router.get('/BankList' , AllBankList)
+
 
 
 module.exports = router;
