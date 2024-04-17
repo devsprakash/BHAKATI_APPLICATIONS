@@ -19,10 +19,7 @@ const templeGuruRouter = require('./Guru/routes/Temples');
 const pujaRouter = require('./Guru/routes/puja');
 const GuruRouter = require('./Guru/routes/guru');
 const videoRouter = require('./Guru/routes/video')
-const bodyParser = require('body-parser');
-const { muxWebhookMiddleware } = require('./middleware/Livestream.webHooks')
-
-var ejs = require('ejs');
+const ejs = require('ejs');
 
 const app = express();
 

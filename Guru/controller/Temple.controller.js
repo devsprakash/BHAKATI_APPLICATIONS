@@ -14,7 +14,7 @@ const Puja = require('../../models/puja.model');
 const LiveStream = require('../../models/liveStreaming.model');
 const Video = require('../../models/uploadVideo.model');
 const axios = require('axios');
-const { getData , secondsToMinutes } = require('../services/views.services')
+const { getData, secondsToMinutes } = require('../services/views.services')
 const TempleLiveStreaming = require('../../models/templeLiveStream.model')
 const User = require('../../models/user.model');
 
@@ -262,12 +262,10 @@ exports.updateTempleProfile = async (req, res) => {
         if (!templeData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_not_found', {}, req.headers.lang);
 
-
         const responseData = {
             temple_id: templeData._id,
             temple_name: templeData.temple_name,
-            temple_image: templeData.temple_image,
-            temple_image_url: templeData.temple_image_url,
+            temple_image_url: templeData.temple_image,
             feature_image_url: templeData.background_image,
             description: templeData.description,
             location: templeData.location,
@@ -288,6 +286,60 @@ exports.updateTempleProfile = async (req, res) => {
     }
 };
 
+
+
+exports.updateProfileImage = async (req, res) => {
+
+    try {
+
+        const templeId = req.Temple._id;
+        const temple = await TempleGuru.findOne({ _id: templeId });
+
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temple.user_type !== constants.USER_TYPE.GURU))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        let files = req.files;
+        const temple_image_url = `${BASEURL}/uploads/${files[0].filename}`;
+        const background_image_url = `${BASEURL}/uploads/${files[1].filename}`;
+
+        const templeData = await TempleGuru.findOneAndUpdate({ _id: templeId }, { $set: 
+            { 
+                background_image: background_image_url ,
+                temple_image:temple_image_url
+            } 
+        }, { new: true });
+        templeData.updated_at = dateFormat.set_current_timestamp()
+        await templeData.save();
+
+        if (!templeData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_not_found', {}, req.headers.lang);
+
+        let responseData
+
+        if (templeData.user_type === constants.USER_TYPE.TEMPLEAUTHORITY) {
+            responseData = {
+                temple_id: templeData._id,
+                temple_name: templeData.temple_name,
+                temple_image_url: templeData.temple_image,
+                feature_image_url: templeData.background_image,
+            };
+        } else if (templeData.user_type === constants.USER_TYPE.GURU) {
+            responseData = {
+                guru_id: templeData._id,
+                guru_name: templeData.guru_name,
+                guru_image_url: templeData.guru_image,
+                feature_image_url: templeData.background_image,
+            };
+        }
+
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.update_temple_profile_image', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error('Error(updateProfileImage)....', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
 
 
 exports.CreateNewLiveStreamByTemple = async (req, res) => {
@@ -528,22 +580,22 @@ exports.addBankDetails = async (req, res) => {
         if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const addBank = await Bank.findOneAndUpdate({ bank_name: req.body.bank_name }, 
-            { 
-                $set: 
+        const addBank = await Bank.findOneAndUpdate({ bank_name: req.body.bank_name },
+            {
+                $set:
                 {
-                   bank_name: req.body.bank_name,
-                   account_number: req.body.account_number,
-                   ifsc_code: req.body.ifsc_code,
-                   templeId: templeId
-                } 
+                    bank_name: req.body.bank_name,
+                    account_number: req.body.account_number,
+                    ifsc_code: req.body.ifsc_code,
+                    templeId: templeId
+                }
             })
 
         let data = {
             bank_id: addBank._id,
             bank_name: addBank.bank_name,
             account_number: addBank.account_number,
-            bank_logo:addBank.bank_logo,
+            bank_logo: addBank.bank_logo,
             ifsc_code: addBank.ifsc_code,
             temple_id: addBank.templeId
         }
@@ -575,7 +627,7 @@ exports.getBankDetails = async (req, res) => {
             bank_name: banks.bank_name,
             account_number: banks.account_number,
             ifsc_code: banks.ifsc_code,
-            bank_logo:banks.bank_logo,
+            bank_logo: banks.bank_logo,
             temple_id: banks.templeId
         }
 
@@ -620,7 +672,7 @@ exports.updateBankDetails = async (req, res) => {
             bank_name: banks.bank_name,
             account_number: banks.account_number,
             ifsc_code: banks.ifsc_code,
-            bank_logo:banks.bank_logo,
+            bank_logo: banks.bank_logo,
             temple_id: banks.templeId
         }
 

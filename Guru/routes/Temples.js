@@ -6,7 +6,7 @@ const { templeLogin, logout, getTempleProfile,
     getAllpanditList,
     updateTempleProfile,
     addBankDetailsByAdmin, 
-    AllBankList} = require('../controller/Temple.controller');
+    AllBankList , updateProfileImage} = require('../controller/Temple.controller');
 const router = express.Router();
 const TempleAuth = require('../../middleware/guru.auth');
 const authenticate = require('../../middleware/authenticate')
@@ -33,7 +33,11 @@ router.get('/templeSuggestedVideos', temple_suggested_videos);
 router.post('/getTempleProfileByAdmin', getTempleProfileByAdmin);
 router.put('/updateTempleProfile', TempleAuth, updateTempleProfile)
 router.post('/addBankDetailsByAdmin', upload.single('logo'), authenticate, addBankDetailsByAdmin);
-router.get('/BankList' , AllBankList)
+router.get('/BankList' , AllBankList);
+router.post('/updateProfileImage' , upload.fields(['image','background_image' , 2]) , TempleAuth , updateProfileImage)
+
+
+
 
 
 

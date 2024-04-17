@@ -108,7 +108,8 @@ module.exports = {
         already_added_bank_details: 'Your bank details already exist can not be added another bank details',
         update_temple_profile: 'successfully update the temple profile',
         temple_not_found:'this temple data was not found',
-        get_all_bank_details: 'successfully get all the bank details'
+        get_all_bank_details: 'successfully get all the bank details',
+        update_temple_profile_image:'successfully update the temple profile image'
     },
 
     'LIVESTREAM': {
