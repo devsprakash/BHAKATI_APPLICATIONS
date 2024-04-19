@@ -78,3 +78,27 @@ exports.userResponse = (user) => {
     return users
 }
 
+
+
+exports.userProfileImageResponse = (user) => {
+
+    const users = {
+        full_name: user.full_name,
+        mobile_number: user.mobile_number,
+        dob: user.dob,
+        gender: user.gender,
+        user_type: user.user_type,
+        status: user.status,
+        isUpdated: user.isUpdated,
+        verify: user.verify,
+        profile_image_url:user.profileImg,
+        signup_status: user.signup_status,
+        deleted_at: user.deleted_at,
+        _id: user._id,
+        email: user.email,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+    }
+
+    return users
+}

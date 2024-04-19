@@ -3,7 +3,7 @@ exports.guruResponseData = (guru) => {
 
     const response = {
         user_type: guru.user_type,
-        background_image:guru.background_image,
+        feature_image_url:guru.background_image,
         status: guru.status,
         guru_name: guru.guru_name,
         email: guru.email,
@@ -31,7 +31,7 @@ exports.guruLoginResponse = (guru) => {
         mobile_number: guru.mobile_number,
         expertise: guru.expertise,
         guru_image_url: guru.guru_image,
-        background_image:guru.background_image,
+        feature_image_url:guru.background_image,
         tokens: guru.tokens,
         refresh_tokens: guru.refresh_tokens,
         guru_id: guru._id,

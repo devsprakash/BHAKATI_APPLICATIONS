@@ -15,6 +15,6 @@ exports.getData = async (assetId) => {
     }
 };
 
-exports.secondsToMinutes = (seconds) => {
-    return Math.round(seconds / 60);
+exports.minutesToSeconds = (minutes) => {
+    return Math.round(minutes * 60);
 }

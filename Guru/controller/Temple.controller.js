@@ -14,9 +14,12 @@ const Puja = require('../../models/puja.model');
 const LiveStream = require('../../models/liveStreaming.model');
 const Video = require('../../models/uploadVideo.model');
 const axios = require('axios');
-const { getData, secondsToMinutes } = require('../services/views.services')
+const { getData, minutesToSeconds } = require('../services/views.services')
 const TempleLiveStreaming = require('../../models/templeLiveStream.model')
 const User = require('../../models/user.model');
+const { sendOTP, resendOTP, verifyOTP } = require('../../services/otp.service')
+
+
 
 
 
@@ -28,10 +31,6 @@ exports.templeLogin = async (req, res) => {
 
         const reqBody = req.body;
         const { email, password } = reqBody;
-
-        const checkMail = await isValid(email);
-        if (!checkMail)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
 
         const user = await TempleGuru.findOne({ email });
         if (!user)
@@ -55,6 +54,7 @@ exports.templeLogin = async (req, res) => {
         user.refresh_tokens = refreshToken;
         user.tokens = newToken;
         await user.save();
+        await sendOTP(user.mobile_number);
 
         const responseData = user.user_type === constants.USER_TYPE.TEMPLEAUTHORITY ? TempleLoginReponse(user) : guruLoginResponse(user);
 
@@ -65,6 +65,8 @@ exports.templeLogin = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 }
+
+
 
 exports.logout = async (req, res, next) => {
 
@@ -123,7 +125,7 @@ exports.getTempleProfile = async (req, res) => {
             temple_data: {
                 temple_id: templeData._id,
                 temple_name: templeData.temple_name,
-                temple_image_url: templeData.temple_image_url,
+                temple_image_url: templeData.temple_image,
                 feature_image_url: templeData.background_image,
                 description: templeData.description,
                 location: templeData.location,
@@ -197,7 +199,7 @@ exports.getTempleProfileByAdmin = async (req, res) => {
             temple_data: {
                 temple_id: templeData._id,
                 temple_name: templeData.temple_name,
-                temple_image_url: templeData.temple_image_url,
+                temple_image_url: templeData.temple_image,
                 feature_image_url: templeData.background_image,
                 description: templeData.description,
                 location: templeData.location,
@@ -256,7 +258,7 @@ exports.updateTempleProfile = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const templeData = await TempleGuru.findOneAndUpdate({ _id: templeId }, req.body, { new: true });
-        templeData.updated_at = dateFormat.set_current_timestamp()
+        templeData.updated_at = dateFormat.set_current_timestamp();
         await templeData.save();
 
         if (!templeData)
@@ -295,18 +297,19 @@ exports.updateProfileImage = async (req, res) => {
         const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temple.user_type !== constants.USER_TYPE.GURU))
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY || temple.user_type !== constants.USER_TYPE.GURU))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         let files = req.files;
         const temple_image_url = `${BASEURL}/uploads/${files[0].filename}`;
         const background_image_url = `${BASEURL}/uploads/${files[1].filename}`;
 
-        const templeData = await TempleGuru.findOneAndUpdate({ _id: templeId }, { $set: 
-            { 
-                background_image: background_image_url ,
-                temple_image:temple_image_url
-            } 
+        const templeData = await TempleGuru.findOneAndUpdate({ _id: templeId }, {
+            $set:
+            {
+                background_image: background_image_url,
+                temple_image: temple_image_url
+            }
         }, { new: true });
         templeData.updated_at = dateFormat.set_current_timestamp()
         await templeData.save();
@@ -332,7 +335,6 @@ exports.updateProfileImage = async (req, res) => {
             };
         }
 
-
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.update_temple_profile_image', responseData, req.headers.lang);
 
     } catch (err) {
@@ -340,6 +342,7 @@ exports.updateProfileImage = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
 
 
 exports.CreateNewLiveStreamByTemple = async (req, res) => {
@@ -498,7 +501,7 @@ exports.temple_suggested_videos = async (req, res) => {
             title: video.title,
             video_url: video.videoUrl,
             id: video._id,
-            duration: secondsToMinutes(matchedData[0].duration),
+            duration: minutesToSeconds(matchedData[0].duration),
             created_at: video.created_at,
             temple_id: video.guruId,
         })) || [];

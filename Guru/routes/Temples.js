@@ -34,7 +34,7 @@ router.post('/getTempleProfileByAdmin', getTempleProfileByAdmin);
 router.put('/updateTempleProfile', TempleAuth, updateTempleProfile)
 router.post('/addBankDetailsByAdmin', upload.single('logo'), authenticate, addBankDetailsByAdmin);
 router.get('/BankList' , AllBankList);
-router.post('/updateProfileImage' , upload.fields(['image','background_image' , 2]) , TempleAuth , updateProfileImage)
+router.post('/updateProfileImage' , upload.fields('image', 2) , TempleAuth , updateProfileImage)
 
 
 

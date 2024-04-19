@@ -40,8 +40,8 @@ exports.addTemple = async (req, res) => {
 
         if (templesEmailExist)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.email_already_exist', {}, req.headers.lang);
-        
-         reqBody.temples_id = uuidv4();
+
+        reqBody.temples_id = uuidv4();
         if (reqBody.password)
             reqBody.password = await bcrypt.hash(reqBody.password, 10)
         else {
@@ -127,18 +127,19 @@ exports.SearchAllTemples = async (req, res, next) => {
         }
 
         const responseData = temples.map(data => ({
-            totalTemples:countTemples,
+            totalTemples: countTemples,
             mobile_number: data.mobile_number,
             email: data.email,
             temple_name: data.temple_name,
-            temple_image: data.temple_image,
+            temple_image_url: data.temple_image,
+            feature_image_url: data.background_image,
             location: data.location,
             district: data.district,
             description: data.description,
             open_time: data.open_time,
             closing_time: data.closing_time,
             temple_id: data._id,
-            state:data.state,
+            state: data.state,
             category: data.category
         })) || []
 
@@ -168,7 +169,7 @@ exports.templeDelete = async (req, res) => {
 
         const templeData = await TempleGuru.findOneAndDelete({ _id: templeId });
 
-        if (!templeData) 
+        if (!templeData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_not_found', {}, req.headers.lang);
 
         const responseData = TempleReponse(templeData)

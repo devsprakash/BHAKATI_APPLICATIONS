@@ -11,7 +11,7 @@ const {
 const { WEB_STATUS_CODE, STATUS_CODE } = require("../../config/constants");
 const { BASEURL } = require("../../keys/keys");
 const { sendMail } = require('../../services/email.services')
-const { LoginResponse, LoginResponseData, VerifyOtpResponse, userResponse } = require('../../ResponseData/user.reponse');
+const { LoginResponse, LoginResponseData, VerifyOtpResponse, userResponse , userProfileImageResponse } = require('../../ResponseData/user.reponse');
 const constants = require("../../config/constants");
 const { JWT_SECRET } = require('../../keys/development.keys')
 
@@ -95,12 +95,6 @@ exports.login = async (req, res) => {
 
         const { email, user_type } = req.body;
 
-        const isEmailValid = await isValid(email);
-
-        if (!isEmailValid) {
-            return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
-        }
-
         let user = await User.findOne({ email, user_type: 2 });
 
         let otp = Math.floor(100000 + Math.random() * 900000);
@@ -113,7 +107,7 @@ exports.login = async (req, res) => {
             return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.login_success', responseData, req.headers.lang);
         }
 
-        if (!user.verify) {
+        if (!user.verify == false) {
             return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.not_verify', user, req.headers.lang);
         }
 
@@ -266,6 +260,41 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
+
+exports.updateProfileImage = async (req, res) => {
+
+    try {
+
+        const userId = req.user._id;
+        const temple = await User.findOne({ _id: userId });
+
+        if (!temple || (temple.user_type !== constants.USER_TYPE.USER))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        let files = req.file;
+        const profile_image_url = `${BASEURL}/uploads/${files.filename}`;
+
+        const userData = await User.findOneAndUpdate({ _id: userId }, {
+            $set:
+            {
+                profileImg: profile_image_url,
+                updated_at:dateFormat.set_current_timestamp()
+            }
+        }, { new: true });
+        
+
+        if (!userData)
+           return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.not_found', {}, req.headers.lang);
+
+        const responseData = userProfileImageResponse(userData);
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.update_user_profile_image', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error('Error(updateProfileImage)....', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
 
 
 

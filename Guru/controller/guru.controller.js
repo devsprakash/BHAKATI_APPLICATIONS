@@ -15,7 +15,7 @@ const Video = require('../../models/uploadVideo.model');
 const User = require('../../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 const GuruLiveStreaming = require('../../models/GuruLiveStreaming.model')
-
+const {minutesToSeconds} = require('../services/views.services')
 
 
 
@@ -28,6 +28,7 @@ exports.addNewGuru = async (req, res) => {
         const { email, password, templeId } = req.body;
 
         const isBlacklisted = await isValid(email);
+
         if (!isBlacklisted) {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
         }
@@ -115,7 +116,7 @@ exports.getGuruProfile = async (req, res) => {
                 stream_key: guru.stream_key,
                 guru_name: guru.guruId.guru_name,
                 guru_image_url: guru.guruId.guru_image,
-                background_image_url: guru.guruId.background_image,
+                feature_image_url: guru.guruId.background_image,
                 title: guru.title,
                 description: guru.description,
                 guru_id: guru._id,
@@ -183,7 +184,7 @@ exports.getGuruProfileByAdmin = async (req, res) => {
                 stream_key: guru.stream_key,
                 guru_name: guru.guruId.guru_name,
                 guru_image_url: guru.guruId.guru_image,
-                background_image_url: guru.guruId.background_image,
+                feature_image_url: guru.guruId.background_image,
                 title: guru.title,
                 description: guru.description,
                 guru_id: guru._id,
@@ -277,7 +278,7 @@ exports.SearchAllGuru = async (req, res) => {
             email: guru.email,
             expertise: guru.expertise,
             guru_id: guru._id,
-            background_image: guru.background_image,
+            feature_image_url: guru.background_image,
             created_at: guru.created_at,
             updated_at: guru.updated_at
         })) || [];
@@ -383,7 +384,7 @@ exports.getLiveStreamByGuru = async (req, res) => {
             stream_key: guru.stream_key,
             guru_name: guru.guruId.guru_name,
             guru_image_url: guru.guruId.guru_image,
-            background_image_url: guru.guruId.background_image,
+            feature_image_url: guru.guruId.background_image,
             title: guru.title,
             description: guru.description,
             guru_id: guru._id,
@@ -436,7 +437,7 @@ exports.guru_suggested_videos = async (req, res) => {
             title: video.title,
             video_url: video.videoUrl,
             id: video._id,
-            duration: secondsToMinutes(matchedData[0].duration),
+            duration: minutesToSeconds(matchedData[0].duration),
             created_at: video.created_at,
             guru_id: video.guruId,
         })) || []

@@ -19,10 +19,11 @@ const templeGuruRouter = require('./Guru/routes/Temples');
 const pujaRouter = require('./Guru/routes/puja');
 const GuruRouter = require('./Guru/routes/guru');
 const videoRouter = require('./Guru/routes/video')
+const bodyParser = require('body-parser');
+const webHooksMiddleWareRouter = require('./middleware/webhooks')
+
 const ejs = require('ejs');
-
 const app = express();
-
 
 
 app.use(flash());
@@ -39,6 +40,9 @@ app.use(
   }),
 );
 
+
+app.use(bodyParser.raw({ type: 'application/json' }));
+app.use('/web', webHooksMiddleWareRouter);
 
 //Database connection with mongodb
 const mongoose = require('./config/database');
@@ -109,7 +113,7 @@ const options = {
 
 const specs = swaggerJsDoc(options);
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs));
-app.use('/admin-panel' , express.static('admin-panel'))
+app.use('/admin-panel', express.static('admin-panel'))
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
