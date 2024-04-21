@@ -19,11 +19,9 @@ const templeGuruRouter = require('./Guru/routes/Temples');
 const pujaRouter = require('./Guru/routes/puja');
 const GuruRouter = require('./Guru/routes/guru');
 const videoRouter = require('./Guru/routes/video')
-const bodyParser = require('body-parser');
-const webHooksMiddleWareRouter = require('./middleware/webhooks')
-
 const ejs = require('ejs');
 const app = express();
+
 
 
 app.use(flash());
@@ -41,8 +39,13 @@ app.use(
 );
 
 
-app.use(bodyParser.raw({ type: 'application/json' }));
-app.use('/web', webHooksMiddleWareRouter);
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({
+  extended: false
+}));
+app.use(cookieParser());
+
 
 //Database connection with mongodb
 const mongoose = require('./config/database');
@@ -68,12 +71,7 @@ app.use(cors());
 // }));
 
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({
-  extended: false
-}));
-app.use(cookieParser());
+
 
 app.use('/v1/', indexRouter);
 app.use('/v1/users', usersRouter);

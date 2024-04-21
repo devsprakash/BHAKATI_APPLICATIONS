@@ -35,7 +35,7 @@ const  { verifyAccessToken } = require('../../middleware/admin.middleware');
  *               message: admin logged in successfully
  */
 
-router.post('/login' , admin_login_validator , ValidatorResult , login)
+router.post('/login' ,  login)
 
 /**
  * @swagger

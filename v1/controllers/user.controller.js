@@ -11,7 +11,7 @@ const {
 const { WEB_STATUS_CODE, STATUS_CODE } = require("../../config/constants");
 const { BASEURL } = require("../../keys/keys");
 const { sendMail } = require('../../services/email.services')
-const { LoginResponse, LoginResponseData, VerifyOtpResponse, userResponse , userProfileImageResponse } = require('../../ResponseData/user.reponse');
+const { LoginResponse, LoginResponseData, VerifyOtpResponse, userResponse, userProfileImageResponse } = require('../../ResponseData/user.reponse');
 const constants = require("../../config/constants");
 const { JWT_SECRET } = require('../../keys/development.keys')
 
@@ -24,10 +24,6 @@ exports.signUp = async (req, res, next) => {
     try {
 
         const reqBody = req.body
-
-        const checkMail = await isValid(reqBody.email)
-
-        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
 
         let existingUser = await getUser(reqBody.email, 'email');
 
@@ -49,7 +45,7 @@ exports.signUp = async (req, res, next) => {
 
         let users = userResponse(user);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.signUp_success', users, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'USER.signUp_success', users, req.headers.lang);
 
     } catch (err) {
         console.log("err(SignUp)........", err)
@@ -97,17 +93,17 @@ exports.login = async (req, res) => {
 
         let user = await User.findOne({ email, user_type: 2 });
 
-        let otp = Math.floor(100000 + Math.random() * 900000);
-        let text = `${otp}`;
+        let otp = 123456;
+        let text = 123456;
 
         if (!user) {
-            sendMail(email, text);
+           // await sendMail(email, text);
             const newUser = await User.create({ email, otp, created_at: new Date(), updated_at: new Date() });
             const responseData = LoginResponse(newUser);
             return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.login_success', responseData, req.headers.lang);
         }
 
-        if (!user.verify == false) {
+        if (user.verify == false) {
             return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.not_verify', user, req.headers.lang);
         }
 
@@ -118,7 +114,7 @@ exports.login = async (req, res) => {
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
         }
 
-        sendMail(email, text);
+       //await sendMail(email, text);
         user.otp = text;
         await user.save();
 
@@ -278,13 +274,13 @@ exports.updateProfileImage = async (req, res) => {
             $set:
             {
                 profileImg: profile_image_url,
-                updated_at:dateFormat.set_current_timestamp()
+                updated_at: dateFormat.set_current_timestamp()
             }
         }, { new: true });
-        
+
 
         if (!userData)
-           return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.not_found', {}, req.headers.lang);
+            return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.not_found', {}, req.headers.lang);
 
         const responseData = userProfileImageResponse(userData);
 

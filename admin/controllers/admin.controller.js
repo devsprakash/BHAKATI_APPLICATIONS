@@ -21,13 +21,11 @@ exports.login = async (req, res) => {
 
         const user = await User.findOne({ email: email, deleted_at: null })
 
-        if (!user) {
+        if (!user) 
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_username_password', {}, req.headers.lang);
-        }
 
-        if (user.user_type !== constants.USER_TYPE.ADMIN) {
+        if (user.user_type !== constants.USER_TYPE.ADMIN) 
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-        }
 
         await user.generateAuthToken();
         await user.generateRefreshToken();
