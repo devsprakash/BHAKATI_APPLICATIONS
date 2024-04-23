@@ -921,8 +921,14 @@ exports.generate_refresh_tokens = async (req, res, next) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
 
         let newToken = await temple.generateAuthToken();
+        let refresh_token = await temple.generateRefreshToken()
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', newToken, req.headers.lang);
+        let data = {
+            token: newToken,
+            refresh_token: refresh_token
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', data, req.headers.lang);
 
     } catch (err) {
         console.log('err(generate_refresh_tokens)', err)

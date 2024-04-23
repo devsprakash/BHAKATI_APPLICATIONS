@@ -27,7 +27,7 @@ let authenticate = async (req, res, next) => {
         } catch (error) {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
         }
-        const user = await User.findOne({ _id: decoded._id, 'tokens': token }).lean();
+        const user = await User.findOne({ _id: decoded._id, 'tokens': token });
 
         if (!user) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang)
 

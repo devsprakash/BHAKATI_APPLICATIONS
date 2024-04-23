@@ -15,7 +15,7 @@ const Video = require('../../models/uploadVideo.model');
 const User = require('../../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 const GuruLiveStreaming = require('../../models/GuruLiveStreaming.model')
-const {minutesToSeconds} = require('../services/views.services')
+const { minutesToSeconds } = require('../services/views.services')
 
 
 
@@ -29,27 +29,28 @@ exports.addNewGuru = async (req, res) => {
 
         const isBlacklisted = await isValid(email);
 
-        if (!isBlacklisted) {
+        if (!isBlacklisted)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
-        }
 
         const existingEmail = await TempleGuru.findOne({ email });
-        if (existingEmail) {
+        if (existingEmail)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.existing_email', {}, req.headers.lang);
-        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        let files = req.files;
+        console.log("1111", req.files)
+
+        if (!req.files['image'] || !req.files['background_image'])
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.upload_image', {}, req.headers.lang);
 
         const newGuru = await TempleGuru.create({
             ...req.body,
-            guru_image: `${BASEURL}/uploads/${files[0].filename}`,
+            guru_image: `${BASEURL}/uploads/${req.files['image'][0].filename}`,
             password: hashedPassword,
             temple_id: templeId,
             user_type: 4,
             gurus_id: uuidv4(),
-            background_image: `${BASEURL}/uploads/${files[1].filename}`,
+            background_image: `${BASEURL}/uploads/${req.files['background_image'][0].filename}`,
             created_at: dateFormat.set_current_timestamp(),
             updated_at: dateFormat.set_current_timestamp()
         });
@@ -71,12 +72,12 @@ exports.getGuruProfile = async (req, res) => {
 
     try {
 
-        const { guruId } = req.body;
+        const guruId = req.Temple._id;
         const { limit } = req.query;
         const guruData = await TempleGuru.findOne({ _id: guruId });
 
         if (!guruData || (guruData.user_type !== constants.USER_TYPE.GURU))
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
             headers: {
@@ -90,14 +91,7 @@ exports.getGuruProfile = async (req, res) => {
         const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
             .populate('guruId', 'guru_name guru_image _id email mobile_number gurus_id expertise created_at');
 
-        if (!GuruData || GuruData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
-
         const guruList = await TempleGuru.find({ user_type: 4 }).sort().limit(limit)
-
-        if (!guruList || guruList.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', [], req.headers.lang);
-
 
         const responseData = {
             guru_data: {
@@ -143,14 +137,22 @@ exports.getGuruProfile = async (req, res) => {
     }
 };
 
+
+
 exports.getGuruProfileByAdmin = async (req, res) => {
 
     try {
 
-        const { guruId } = req.body;
+        const userId = req.user._id;
         const { limit } = req.query;
-        const guruData = await TempleGuru.findOne({ _id: guruId });
+        const { guruId } = req.body;
 
+        const users = await User.findById(userId)
+
+        if (!users || (users.user_type !== constants.USER_TYPE.ADMIN))
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+
+        const guruData = await TempleGuru.findOne({ _id: guruId });
 
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
             headers: {
@@ -457,7 +459,7 @@ exports.updateGuruProfile = async (req, res) => {
     try {
 
         const guruId = req.Temple._id;
-        const guru = await TempleGuru.findOne({ _id: guruId});
+        const guru = await TempleGuru.findOne({ _id: guruId });
 
         if (guru.user_type !== constants.USER_TYPE.GURU)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
@@ -466,9 +468,9 @@ exports.updateGuruProfile = async (req, res) => {
         guruData.updated_at = dateFormat.set_current_timestamp()
         await guruData.save();
 
-        if (!guruData) 
+        if (!guruData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', {}, req.headers.lang);
-        
+
 
         const responseData = {
             guru_id: guruData._id,
