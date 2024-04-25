@@ -23,8 +23,6 @@ const { sendOTP, resendOTP, verifyOTP } = require('../../services/otp.service')
 
 
 
-
-
 exports.templeLogin = async (req, res) => {
 
     try {
@@ -33,6 +31,7 @@ exports.templeLogin = async (req, res) => {
         const { email, password } = reqBody;
 
         const user = await TempleGuru.findOne({ email });
+
         if (!user)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
 
@@ -54,7 +53,6 @@ exports.templeLogin = async (req, res) => {
         user.refresh_tokens = refreshToken;
         user.tokens = newToken;
         await user.save();
-        await sendOTP(user.mobile_number);
 
         const responseData = user.user_type === constants.USER_TYPE.TEMPLEAUTHORITY ? TempleLoginReponse(user) : guruLoginResponse(user);
 
@@ -133,6 +131,8 @@ exports.getTempleProfile = async (req, res) => {
                 district: templeData.district,
                 category: templeData.category,
                 state: templeData.state,
+                open_time: templeData.open_time,
+                closing_time: templeData.closing_time,
                 date_of_joining: templeData.created_at
             } || {},
             live_aarti: TempleData.map(temple => ({
@@ -179,6 +179,8 @@ exports.getTempleProfileByAdmin = async (req, res) => {
         const { limit } = req.query;
 
         const templeData = await TempleGuru.findOne({ _id: templeId });
+
+        console.log("templeData......", templeData)
 
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
             headers: {
@@ -288,8 +290,6 @@ exports.updateTempleProfile = async (req, res) => {
     }
 };
 
-
-
 exports.updateProfileImage = async (req, res) => {
 
     try {
@@ -297,28 +297,47 @@ exports.updateProfileImage = async (req, res) => {
         const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY || temple.user_type !== constants.USER_TYPE.GURU))
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY && temple.user_type !== constants.USER_TYPE.GURU)) {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+        }
 
-        let files = req.files;
-        const temple_image_url = `${BASEURL}/uploads/${files[0].filename}`;
-        const background_image_url = `${BASEURL}/uploads/${files[1].filename}`;
+        if (!req.files || (!req.files['image'] && !req.files['background_image'])) {
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'Image file or background image file is required', {}, req.headers.lang);
+        }
 
-        const templeData = await TempleGuru.findOneAndUpdate({ _id: templeId }, {
-            $set:
-            {
-                background_image: background_image_url,
-                temple_image: temple_image_url
+        let updateData = {};
+
+        if (temple.user_type === constants.USER_TYPE.TEMPLEAUTHORITY) {
+            if (req.files['image']) {
+                const temple_image_url = `${BASEURL}/uploads/${req.files['image'][0].filename}`;
+                updateData.temple_image = temple_image_url;
             }
-        }, { new: true });
-        templeData.updated_at = dateFormat.set_current_timestamp()
+        } else if (temple.user_type === constants.USER_TYPE.GURU) {
+
+            if (req.files['image']) {
+                const guru_image_url = `${BASEURL}/uploads/${req.files['image'][0].filename}`;
+                updateData.guru_image = guru_image_url;
+            }
+        }
+
+        if (req.files['background_image']) {
+            const background_image_url = `${BASEURL}/uploads/${req.files['background_image'][0].filename}`;
+            updateData.background_image = background_image_url;
+        }
+
+        // Update the document in the database with the appropriate fields
+        const templeData = await TempleGuru.findOneAndUpdate(
+            { _id: templeId },
+            { $set: updateData },
+            { new: true }
+        );
+
+        // Update timestamp and save changes
+        templeData.updated_at = dateFormat.set_current_timestamp();
         await templeData.save();
 
-        if (!templeData)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_not_found', {}, req.headers.lang);
-
-        let responseData
-
+        // Prepare response data
+        let responseData;
         if (templeData.user_type === constants.USER_TYPE.TEMPLEAUTHORITY) {
             responseData = {
                 temple_id: templeData._id,
@@ -335,13 +354,14 @@ exports.updateProfileImage = async (req, res) => {
             };
         }
 
+        // Send response
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.update_temple_profile_image', responseData, req.headers.lang);
-
     } catch (err) {
-        console.error('Error(updateProfileImage)....', err);
+        console.error('Error(updateProfileImage):', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
 
 
 
@@ -350,7 +370,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
     const templeId = req.Temple._id;
     const reqBody = req.body;
     const temple = await TempleGuru.findById(templeId)
-
+    console.log("temple", temple)
 
     if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
         return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
@@ -412,13 +432,11 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
 }
 
 
-
 exports.getTempleLiveStream = async (req, res) => {
-
     try {
-
         const { limit } = req.query;
 
+        // Fetch live streaming data from external API
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -428,41 +446,42 @@ exports.getTempleLiveStream = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData } }).limit(limit)
-            .populate('templeId', 'temples_id temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
+        // Fetch temple details from the database based on live streaming IDs
+        const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData } }).limit(parseInt(limit))
+            .populate('templeId', 'temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
+        // Construct response data by mapping over TempleData
+        const responseData = await Promise.all(TempleData.map(async temple => {
+            const templeDetails = await TempleGuru.findOne({ _id: temple.templeId });
+            if (!templeDetails) return null; // Return null if temple details are not found
+            return {
+                playback_id: temple.playback_id,
+                live_stream_id: temple.live_stream_id,
+                stream_key: temple.stream_key,
+                temple_id: templeDetails._id,
+                temple_name: templeDetails.temple_name,
+                temple_image_url: templeDetails.temple_image,
+                background_image_url: templeDetails.background_image,
+                title: temple.title,
+                description: temple.description,
+                location: templeDetails.location,
+                state: templeDetails.state,
+                district: templeDetails.district,
+                category: templeDetails.category,
+                published_date: new Date(),
+                views: '',
+            };
+        }));
 
-        if (!TempleData || TempleData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
+        const filteredResponseData = responseData.filter(item => item !== null);
 
-        const responseData = TempleData.map(temple => ({
-            playback_id: temple.playback_id,
-            live_stream_id: temple.live_stream_id,
-            stream_key: temple.stream_key,
-            temple_id: temple.templeId._id || null,
-            temple_name: temple.templeId.temple_name || null,
-            temple_image_url: temple.templeId.temple_image || null,
-            background_image_url: temple.templeId.background_image || null,
-            title: temple.title,
-            description: temple.description,
-            location: temple.templeId.location || null,
-            state: temple.templeId.state || null,
-            district: temple.templeId.district || null,
-            temple_id: temple._id,
-            category: temple.templeId.category || null,
-            published_date: new Date(),
-            views: '',
-            temple_id: temple.templeId._id
-        })) || [];
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
-
+        // Send response
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', filteredResponseData, req.headers.lang);
     } catch (err) {
-        console.log("err(getTempleLiveStream)....", err);
+        console.log("err(getTempleLiveStream):", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
-
 
 
 
@@ -486,9 +505,6 @@ exports.temple_suggested_videos = async (req, res) => {
         const assetsId = response.data.data.map(asset => asset.id);
 
         const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId }, guruId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
-
-        if (!videoData || videoData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.not_found', [], req.headers.lang);
 
         const matchedData = response.data.data.filter(user => {
             return videoData.some(muxData => muxData.muxData.asset_id === user.id);
@@ -548,6 +564,7 @@ exports.addBankDetailsByAdmin = async (req, res) => {
 };
 
 
+
 exports.AllBankList = async (req, res) => {
 
     try {
@@ -573,17 +590,19 @@ exports.AllBankList = async (req, res) => {
 
 
 
+
 exports.addBankDetails = async (req, res) => {
 
     try {
 
         const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
+        const { bank_id } = req.body;
 
         if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const addBank = await Bank.findOneAndUpdate({ bank_name: req.body.bank_name },
+        const addBank = await Bank.findOneAndUpdate({ _id: bank_id },
             {
                 $set:
                 {
@@ -686,6 +705,7 @@ exports.updateBankDetails = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
 
 
 exports.deleteBankDetails = async (req, res) => {
@@ -920,9 +940,15 @@ exports.generate_refresh_tokens = async (req, res, next) => {
         if (!temple)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
 
-        let newToken = await temple.generateAuthToken();
+        let newToken = await user.generateAuthToken();
+        let refresh_token = await user.generateRefreshToken();
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', newToken, req.headers.lang);
+        let data = {
+            token: newToken,
+            refresh_token: refresh_token
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', data, req.headers.lang);
 
     } catch (err) {
         console.log('err(generate_refresh_tokens)', err)

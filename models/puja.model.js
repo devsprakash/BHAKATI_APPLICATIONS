@@ -17,21 +17,8 @@ const pujaSchema = new mongoose.Schema({
     date: {
         type: String
     },
-    duration: {
-        type: Number,
-        default: null
-    },
-    price: {
-        type: Number,
-        default: null
-    },
     category: {
         type: String
-    },
-    templeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Guru',
-        default: null
     },
     status: {
         type: String,

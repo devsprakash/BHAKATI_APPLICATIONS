@@ -89,7 +89,7 @@ exports.login = async (req, res) => {
 
     try {
 
-        const { email, user_type } = req.body;
+        const { email } = req.body;
 
         let user = await User.findOne({ email, user_type: 2 });
 
@@ -97,7 +97,7 @@ exports.login = async (req, res) => {
         let text = 123456;
 
         if (!user) {
-           // await sendMail(email, text);
+            // await sendMail(email, text);
             const newUser = await User.create({ email, otp, created_at: new Date(), updated_at: new Date() });
             const responseData = LoginResponse(newUser);
             return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.login_success', responseData, req.headers.lang);
@@ -114,7 +114,7 @@ exports.login = async (req, res) => {
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.deactive_account', {}, req.headers.lang);
         }
 
-       //await sendMail(email, text);
+        //await sendMail(email, text);
         user.otp = text;
         await user.save();
 
@@ -341,8 +341,14 @@ exports.generate_refresh_tokens = async (req, res, next) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
 
         let newToken = await user.generateAuthToken();
+        let refresh_token = await user.generateRefreshToken();
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', newToken, req.headers.lang);
+        let data = {
+            token: newToken,
+            refresh_token: refresh_token
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.get_user_auth_token', data, req.headers.lang);
 
     } catch (err) {
         console.log('err(generate_refresh_tokens)', err)

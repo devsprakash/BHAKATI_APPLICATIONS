@@ -17,7 +17,7 @@ exports.TempleReponse = (temple) => {
         description: temple.description,
         mobile_number: temple.mobile_number,
         email: temple.email,
-        feature_image_url: data.background_image,
+        feature_image_url: temple.background_image,
         created_at: temple.created_at,
         updated_at: temple.updated_at,
         __v: 0

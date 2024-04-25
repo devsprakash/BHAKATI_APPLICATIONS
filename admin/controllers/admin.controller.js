@@ -15,7 +15,7 @@ const bcrypt = require('bcryptjs')
 
 exports.login = async (req, res) => {
 
-    const { email, password } = req.body;
+    const { email } = req.body;
 
     try {
 
@@ -23,7 +23,7 @@ exports.login = async (req, res) => {
 
         if (!user) 
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_username_password', {}, req.headers.lang);
-
+        
         if (user.user_type !== constants.USER_TYPE.ADMIN) 
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
@@ -39,6 +39,8 @@ exports.login = async (req, res) => {
     }
 }
 
+
+
 exports.logout = async (req, res) => {
 
     try {
@@ -52,11 +54,14 @@ exports.logout = async (req, res) => {
         await UserData.save()
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'USER.logout_success', {}, req.headers.lang);
+
     } catch (err) {
         console.log("err(admin_logout)........", err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
+
 
 
 // this api access only admin and integrate this api in the admin panel
@@ -114,6 +119,7 @@ exports.getAllUser = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
 
 
 

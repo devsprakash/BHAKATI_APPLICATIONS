@@ -141,7 +141,7 @@ templeGuruSchema.statics.findByCredentials = async function (email, password) {
     });
 
     if (!templeGuru) {
-        return null; 
+        return null;
     }
 
     return templeGuru;
@@ -150,7 +150,7 @@ templeGuruSchema.statics.findByCredentials = async function (email, password) {
 
 templeGuruSchema.methods.generateAuthToken = async function () {
     const templeGuru = this;
-    const token = jwt.sign({ _id: templeGuru._id.toString() }, JWT_SECRET, { expiresIn: '48h' });
+    const token = jwt.sign({ _id: templeGuru._id.toString() }, JWT_SECRET, { expiresIn: 60 * 60 * 24 * 2 });
     templeGuru.tokens = token;
     templeGuru.updated_at = await dateFormat.set_current_timestamp();
     await templeGuru.save();
@@ -160,7 +160,7 @@ templeGuruSchema.methods.generateAuthToken = async function () {
 
 templeGuruSchema.methods.generateRefreshToken = async function () {
     const templeGuru = this;
-    const refreshToken = jwt.sign({ _id: templeGuru._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+    const refreshToken = jwt.sign({ _id: templeGuru._id.toString() }, JWT_SECRET, { expiresIn: 7 * 24 * 60 * 60 });
     templeGuru.refresh_tokens = refreshToken;
     templeGuru.updated_at = await dateFormat.set_current_timestamp();
     await templeGuru.save();

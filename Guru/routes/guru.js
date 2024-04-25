@@ -4,7 +4,8 @@ const router = express.Router();
 const { verifyAccessToken } = require('../../middleware/admin.middleware');
 const { addNewGuru, SearchAllGuru, getGuruProfile, GuruCreateNewLiveStream, 
     getLiveStreamByGuru, guru_suggested_videos , getGuruProfileByAdmin , guruDelete, 
-    updateGuruProfile} = require('../controller/guru.controller');
+    updateGuruProfile,
+    Webhook} = require('../controller/guru.controller');
 const upload = require('../../middleware/multer')
 const TempleAuth = require('../../middleware/guru.auth');
 
@@ -18,7 +19,8 @@ router.get('/SearchAllGuru', SearchAllGuru);
 router.get('/guruSuggestedVideos' , guru_suggested_videos);
 router.post('/getGuruProfileByAdmin' , getGuruProfileByAdmin);
 router.put('/updateGuruProfile' , TempleAuth , updateGuruProfile)
-router.delete('/deleteguru', verifyAccessToken , guruDelete)
+router.delete('/deleteguru', verifyAccessToken , guruDelete);
+router.post('/webhook' , Webhook)
 
 
 

@@ -9,15 +9,14 @@ const { addNewRithuals, getAllRithuals, getRithualsByTemples, deleteRithuals } =
 
 
 router.post('/addNewPuja', upload.array('pujaImage'), authenticate, addNewPuja);
-router.get('/pujaList', ListOfPuja)
 router.get('/getAllpuja', getAllPuja);
-router.post('/addpuja/:pujaId', TempleAuth, addPuja);
+router.post('/addpuja', TempleAuth, addPuja);
 router.get('/TempleUnderAllpujaList', pujs_by_temple)
 router.post('/addNewRithuals', TempleAuth, addNewRithuals);
 router.get('/getAllRithuals', getAllRithuals);
 router.get('/getRithualsByTemples', getRithualsByTemples);
 router.delete('/deleteRihuals/:rithualId', TempleAuth, deleteRithuals)
-router.delete('/deletePuja/:pujaId', TempleAuth, deletePuja)
+router.delete('/deletePuja/:puja_id', TempleAuth, deletePuja)
 router.delete('/deletePujaByAdmin/:pujaId', authenticate, deletePujaByAdmin)
 
 

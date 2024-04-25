@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const constants = require('../config/constants');
 const dateFormat = require('../helper/dateformat.helper');
-const { JWT_SECRET} = require('../keys/keys')
+const { JWT_SECRET } = require('../keys/keys')
 const Schema = mongoose.Schema;
 
 
@@ -39,7 +39,7 @@ const userSchema = new Schema({
     },
 
     user_type: {
-        type: Number, 
+        type: Number,
         default: 2
     },
     verify: {
@@ -56,7 +56,7 @@ const userSchema = new Schema({
     },
     signup_status: {
         type: Number,
-        default: 1 
+        default: 1
     },
     reset_password_token: {
         type: String,
@@ -70,9 +70,9 @@ const userSchema = new Schema({
         type: String,
         default: null
     },
-    password:{
-        type:String,
-        default:null
+    password: {
+        type: String,
+        default: null
     },
     otp: {
         type: String,
@@ -109,7 +109,7 @@ userSchema.methods.validPassword = function (password) {
 
 userSchema.methods.toJSON = function () {
     const user = this.toObject();
-    delete user.password; 
+    delete user.password;
     return user;
 };
 
@@ -128,9 +128,8 @@ userSchema.statics.findByCredentials = async function (email, password, user_typ
 }
 
 
-
 userSchema.methods.generateAuthToken = async function () {
-    const token = jwt.sign({ _id: this._id.toString() }, JWT_SECRET, { expiresIn: '48h' });
+    const token = jwt.sign({ _id: this._id.toString() }, JWT_SECRET, { expiresIn: 60 * 60 * 24 * 2 });
     this.tokens = token;
     this.updated_at = await dateFormat.set_current_timestamp();
     await this.save();
@@ -139,7 +138,7 @@ userSchema.methods.generateAuthToken = async function () {
 
 
 userSchema.methods.generateRefreshToken = async function () {
-    const refresh_token = jwt.sign({ _id: this._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+    const refresh_token = jwt.sign({ _id: this._id.toString() }, JWT_SECRET, { expiresIn: 7 * 24 * 60 * 60 });
     this.refresh_tokens = refresh_token;
     this.updated_at = await dateFormat.set_current_timestamp();
     await this.save();

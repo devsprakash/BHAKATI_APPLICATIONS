@@ -8,14 +8,22 @@ const dateFormat = require('../../helper/dateformat.helper');
 const TempleGuru = require('../../models/guru.model');
 const bcrypt = require('bcryptjs')
 const { isValid } = require("../../services/blackListMail");
-const { MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUXURL } = require('../../keys/development.keys')
+const { MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUXURL, WEBHOOKSCRETKEY } = require('../../keys/development.keys')
 const axios = require('axios');
 const { guruResponseData, guruLiveStreamResponse, guruLoginResponse } = require('../../ResponseData/Guru.response')
 const Video = require('../../models/uploadVideo.model');
 const User = require('../../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 const GuruLiveStreaming = require('../../models/GuruLiveStreaming.model')
-const {minutesToSeconds} = require('../services/views.services')
+const { minutesToSeconds, verifyWebhookSignature, handleActiveLiveStream, getLiveStreamInfo } = require('../services/views.services')
+const Mux = require('@mux/mux-node');
+const mux = new Mux({
+    tokenId: MUX_TOKEN_ID,
+    tokenSecret: MUX_TOKEN_SECRET
+});
+
+
+
 
 
 
@@ -90,14 +98,7 @@ exports.getGuruProfile = async (req, res) => {
         const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
             .populate('guruId', 'guru_name guru_image _id email mobile_number gurus_id expertise created_at');
 
-        if (!GuruData || GuruData.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
-
         const guruList = await TempleGuru.find({ user_type: 4 }).sort().limit(limit)
-
-        if (!guruList || guruList.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', [], req.headers.lang);
-
 
         const responseData = {
             guru_data: {
@@ -457,7 +458,7 @@ exports.updateGuruProfile = async (req, res) => {
     try {
 
         const guruId = req.Temple._id;
-        const guru = await TempleGuru.findOne({ _id: guruId});
+        const guru = await TempleGuru.findOne({ _id: guruId });
 
         if (guru.user_type !== constants.USER_TYPE.GURU)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
@@ -466,9 +467,9 @@ exports.updateGuruProfile = async (req, res) => {
         guruData.updated_at = dateFormat.set_current_timestamp()
         await guruData.save();
 
-        if (!guruData) 
+        if (!guruData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', {}, req.headers.lang);
-        
+
 
         const responseData = {
             guru_id: guruData._id,
@@ -515,4 +516,52 @@ exports.guruDelete = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 
+}
+
+
+
+exports.Webhook = (req, res) => {
+
+    try {
+
+        const payload = {
+            type: 'video.live_stream.idle',
+            data: {
+                stream_id: '036fd35c-516a-7b58-0c95-aa3ddbb2b5f2',
+                status: 'Idle',
+                duration: 3600
+            }
+        };
+
+        const timestamp = Date.now().toString();
+        const isValidSignature = verifyWebhookSignature(payload, timestamp, WEBHOOKSCRETKEY);
+
+        if (!isValidSignature) {
+            console.log('Webhook signature is invalid');
+            return res.status(401).json({ success: false, message: 'Invalid signature' });
+        }
+
+        const eventType = payload.type;
+        let responseData;
+        switch (eventType) {
+            case 'video.live_stream.active':
+                responseData = handleActiveLiveStream(payload);
+                break;
+            case 'video.live_stream.idle':
+                responseData = handleActiveLiveStream(payload);
+                break;
+            case 'video.live_stream.disabled':
+                responseData = handleActiveLiveStream(payload);
+                break;
+            default:
+                console.log('Unknown event type:', eventType);
+                break;
+        }
+
+        res.status(200).json({ success: true, data: responseData });
+
+    } catch (error) {
+        console.error('Error handling webhook:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
 }

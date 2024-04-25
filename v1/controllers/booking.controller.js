@@ -23,7 +23,6 @@ exports.createdNewSlot = async (req, res) => {
         const reqBody = req.body;
         const templeId = req.Temple._id;
 
-        // Assuming TempleGuru is a Mongoose model
         const findAdmin = await TempleGuru.findById(templeId);
 
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY) {
@@ -33,7 +32,7 @@ exports.createdNewSlot = async (req, res) => {
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
         reqBody.templeId = templeId;
-        reqBody.slot_duration = reqBody.slotDurationInMinutes;
+        reqBody.slot_duration = reqBody.slot_duration;
         reqBody.date = moment(reqBody.date).format("DD/MM/YYYY");
         const newSlot = await Slot.create(reqBody);
         const slotData = {
