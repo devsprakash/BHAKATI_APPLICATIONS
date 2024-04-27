@@ -32,9 +32,11 @@ exports.addTemple = async (req, res) => {
         if (user.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        let files = req.files;
-        reqBody.temple_image = `${BASEURL}/uploads/${files[0].filename}`;
-        reqBody.background_image = `${BASEURL}/uploads/${files[1].filename}`;
+        if (!req.files['image'] || !req.files['background_image'])
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.upload_image', {}, req.headers.lang);
+
+        reqBody.temple_image = `${BASEURL}/uploads/${req.files['image'][0].filename}`;
+        reqBody.background_image = `${BASEURL}/uploads/${req.files['background_image'][0].filename}`;
 
         const templesEmailExist = await TempleGuru.findOne({ email: reqBody.email });
 
@@ -67,6 +69,8 @@ exports.addTemple = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
+
 
 
 exports.SearchAllTemples = async (req, res, next) => {

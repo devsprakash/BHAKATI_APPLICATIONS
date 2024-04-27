@@ -486,6 +486,8 @@ exports.getTempleLiveStream = async (req, res) => {
 
 
 
+
+
 exports.temple_suggested_videos = async (req, res) => {
 
     try {
@@ -940,8 +942,8 @@ exports.generate_refresh_tokens = async (req, res, next) => {
         if (!temple)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.token_expired', {}, req.headers.lang);
 
-        let newToken = await user.generateAuthToken();
-        let refresh_token = await user.generateRefreshToken();
+        let newToken = await temple.generateAuthToken();
+        let refresh_token = await temple.generateRefreshToken()
 
         let data = {
             token: newToken,

@@ -57,7 +57,7 @@ module.exports = {
         already_updated: 'Your account already updated',
         not_verify: 'Your not verified Please verify your account',
         update_device_token: 'successfully updated device token',
-        update_user_profile_image:'successfully update the user profile image'
+        update_user_profile_image: 'successfully update the user profile image'
 
     },
 
@@ -108,9 +108,9 @@ module.exports = {
         temple_under_pandit_data_not_found: 'this temple under pandit was not registered',
         already_added_bank_details: 'Your bank details already exist can not be added another bank details',
         update_temple_profile: 'successfully update the temple profile',
-        temple_not_found:'this temple data was not found',
+        temple_not_found: 'this temple data was not found',
         get_all_bank_details: 'successfully get all the bank details',
-        update_temple_profile_image:'successfully update the temple profile image'
+        update_temple_profile_image: 'successfully update the temple profile image'
     },
 
     'LIVESTREAM': {
@@ -152,6 +152,7 @@ module.exports = {
         get_total_views: 'successfully get all the views',
         get_all_the_suggested_videos: 'successfully get all the suggested videos',
         delete_guru: 'successfully delete the guru',
-        update_guru: 'successfully update the guru profile'
+        update_guru: 'successfully update the guru profile',
+        upload_image: "No image has uploading please upload both image first"
     }
 }

@@ -342,6 +342,7 @@ exports.generate_refresh_tokens = async (req, res, next) => {
 
         let newToken = await user.generateAuthToken();
         let refresh_token = await user.generateRefreshToken();
+        await user.save();
 
         let data = {
             token: newToken,

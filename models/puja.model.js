@@ -4,10 +4,10 @@ const mongoose = require('mongoose');
 
 const pujaSchema = new mongoose.Schema({
 
-    pujaImage: {
+    puja_image: {
         type: String
     },
-    pujaName: {
+    puja_name: {
         type: String,
         default: null
     },
