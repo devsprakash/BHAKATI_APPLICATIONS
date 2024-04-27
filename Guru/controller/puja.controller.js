@@ -172,6 +172,7 @@ exports.addPuja = async (req, res) => {
         const newPujaCreate = await TemplePuja.create(reqBody)
 
         const data = {
+            id: newPujaCreate._id,
             puja_name: newPujaCreate.puja_name,
             duration: newPujaCreate.duration,
             price: newPujaCreate.price,
@@ -230,18 +231,52 @@ exports.pujs_by_temple = async (req, res) => {
 
 
 
+exports.UpdatePuja = async (req, res) => {
+
+    try {
+        
+        const { id } = req.query;
+        const { duration, price, puja_name } = req.body;
+        const templeId = req.Temple._id;
+
+        const temple = await TempleGuru.findOne({ _id: templeId });
+
+        if (!temple || temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const existingPuja = await TemplePuja.findOne({ _id: id, templeId: templeId });
+
+        if (!existingPuja)
+            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'PUJA.not_found', {}, req.headers.lang);
+
+        if (duration) existingPuja.duration = duration;
+        if (price) existingPuja.price = price;
+        if (puja_name) existingPuja.puja_name = puja_name;
+
+        await existingPuja.save();
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.update_puja', existingPuja, req.headers.lang);
+
+    } catch (err) {
+        console.log('Error in UpdatePuja:', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
+
+
 exports.deletePuja = async (req, res) => {
 
     try {
 
-        const { puja_id } = req.body;
+        const { id } = req.query;
         const templeId = req.Temple._id;
         const temple = await TempleGuru.findOne({ _id: templeId });
 
         if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const newpuja = await TemplePuja.findOneAndDelete({ _id: puja_id, templeId: templeId })
+        const newpuja = await TemplePuja.findOneAndDelete({ _id: id, templeId: templeId })
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.delete_puja', newpuja, req.headers.lang);
 
@@ -256,7 +291,7 @@ exports.deletePujaByAdmin = async (req, res) => {
 
     try {
 
-        const { pujaId } = req.params
+        const { puja_id } = req.body;
         const userId = req.user._id;
         const user = await User.findOne({ _id: userId });
 

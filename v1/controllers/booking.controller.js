@@ -15,7 +15,6 @@ const Slot = require("../../models/slot.model");
 
 
 
-
 exports.createdNewSlot = async (req, res) => {
 
     try {
@@ -25,10 +24,9 @@ exports.createdNewSlot = async (req, res) => {
 
         const findAdmin = await TempleGuru.findById(templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY) {
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY) 
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-        }
-
+        
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
         reqBody.templeId = templeId;
@@ -94,6 +92,41 @@ exports.updateSlot = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
+exports.deleteSlot = async (req, res) => {
+
+    try {
+
+        const templeId = req.Temple._id;
+        const { slotId } = req.params;
+
+        const findAdmin = await TempleGuru.findById(templeId);
+
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const newSlot = await Slot.findByIdAndDelete(
+            { _id: slotId },
+        );
+
+        const slotData = {
+            slot_id: newSlot._id,
+            start_time: newSlot.start_time,
+            end_time: newSlot.end_time,
+            slot_duration: newSlot.slot_duration,
+            date: newSlot.date,
+            temple_id: templeId
+        } || {}
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.delete_slots', slotData, req.headers.lang);
+
+    } catch (err) {
+        console.error("Error in deleteSlot:", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
 
 
 
@@ -199,7 +232,7 @@ exports.bookedPuja = async (req, res) => {
 
 
     } catch (err) {
-        console.error("Error in updateSlot:", err);
+        console.error("Error in bookedPuja", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };

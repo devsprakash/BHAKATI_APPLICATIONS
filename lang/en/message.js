@@ -81,7 +81,9 @@ module.exports = {
         already_booked_slot: 'This slot already booked please booked another slot',
         update_slots: 'successfully update this slot',
         slot_not_found: 'slot data found',
-        booked_list: "successfully get all the booked list"
+        booked_list: "successfully get all the booked list",
+        delete_slots: 'successfully delete this slot',
+
     },
     'TEMPLE': {
         addTemple: 'successfully add a new temple',
@@ -132,7 +134,9 @@ module.exports = {
         get_all_rithuals: 'successfully get all rithuals',
         temple_under_pujaList: 'temple under all the puja list',
         delete_rihuals: 'successfully delete the rihuals',
-        delete_puja: 'successfully delete the puja'
+        delete_puja: 'successfully delete the puja',
+        update_puja: 'successfully update the puja'
+
     },
     'GURU': {
         add_new_guru: 'successfully add new guru',

@@ -70,14 +70,13 @@ exports.puja_add_by_temple_validator = [
 
 exports.delete_puja_validator = [
 
-    body('puja_id')
+    query('id')
         .not()
         .isEmpty()
         .withMessage('puja_id is required')
         .isString().withMessage('puja_id should be a string')
         .isMongoId().withMessage('please enter a valid puja_id')
         .trim(),
-
 ]
 
 exports.guru_suggested_video_validator = [
