@@ -81,6 +81,7 @@ module.exports = {
         already_booked_slot: 'This slot already booked please booked another slot',
         update_slots: 'successfully update this slot',
         slot_not_found: 'slot data found',
+        get_all_the_slot: "successfully get all the slots",
         booked_list: "successfully get all the booked list",
         delete_slots: 'successfully delete this slot',
 

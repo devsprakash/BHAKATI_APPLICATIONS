@@ -24,9 +24,9 @@ exports.createdNewSlot = async (req, res) => {
 
         const findAdmin = await TempleGuru.findById(templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY) 
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-        
+
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
         reqBody.templeId = templeId;
@@ -46,6 +46,40 @@ exports.createdNewSlot = async (req, res) => {
 
     } catch (err) {
         console.error("Error in createdNewSlot:", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
+
+exports.getAllTheSlots = async (req, res) => {
+
+    try {
+
+        const templeId = req.Temple._id;
+        const { limit } = req.query;
+
+        const findAdmin = await TempleGuru.findById(templeId);
+
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const slotList = await Slot.find({ templeId: templeId }).populate("templeId", "temple_name temple_image _id").limit(parseInt(limit)).sort()
+
+        const responseData = slotList.map(data => ({
+            temple_id: data.templeId._id,
+            temple_name: data.templeId.temple_name,
+            temple_image_url: data.templeId.temple_image,
+            slot_id: data._id,
+            start_time: data.start_time,
+            end_time: data.end_time,
+            slot_duration: data.slot_duration,
+            date: data.date,
+        })) || []
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.get_all_the_slot', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error("Error in getAllTheSlots:", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
