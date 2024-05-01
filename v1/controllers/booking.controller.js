@@ -11,6 +11,10 @@ const User = require("../../models/user.model");
 const Booking = require("../../models/Booking.model");
 const Puja = require("../../models/puja.model");
 const Slot = require("../../models/slot.model");
+const TemplePuja = require("../../models/temple.puja.model");
+
+
+
 
 
 
@@ -49,6 +53,8 @@ exports.createdNewSlot = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
 
 
 exports.getAllTheSlots = async (req, res) => {
@@ -128,6 +134,8 @@ exports.updateSlot = async (req, res) => {
 };
 
 
+
+
 exports.deleteSlot = async (req, res) => {
 
     try {
@@ -163,38 +171,54 @@ exports.deleteSlot = async (req, res) => {
 
 
 
-
-exports.temple_under_list_of_slots = async (req, res) => {
+exports.TempleUnderAllTheBookings = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
+        const templeId = req.Temple._id
+        const { limit } = req.query;
 
         const findAdmin = await TempleGuru.findById(templeId);
 
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const slotData = await Slot.find({ templeId: templeId });
+        const bookings = await Booking.find({ templeId: templeId }).populate('userId').populate('templeId').populate('TemplepujaId')
+            .sort()
+            .limit(parseInt(limit));
 
-        const responseData = slotData.map(data => ({
-            slot_duration: data.slot_duration,
-            start_time: data.start_time,
-            end_time: data.end_time,
-            date: data.date,
-            slot_id: data._id,
-            temple_id: data.templeId
-        })) || []
+        const responseData = await Promise.all(bookings.map(async (data) => {
+            return {
+                booking_id: data._id,
+                name: data.name,
+                email: data.email,
+                mobile_number: data.mobile_number,
+                available: data.available,
+                start_time: data.start_time,
+                end_time: data.end_time,
+                created_at: data.created_at,
+                date: data.date,
+                user_name: data.userId.full_name,
+                user_email: data.userId.email,
+                user_mobile_number: data.userId.mobile_number,
+                user_id: data.userId._id,
+                temple_name: data.templeId.temple_name,
+                temple_id: data.templeId._id,
+                puja_id: data.TemplepujaId.pujaId,
+                temple_puja_id: data.TemplepujaId._id,
+                puja_name: data.TemplepujaId.puja_name,
+                puja_price: data.TemplepujaId.price,
+                duration: data.TemplepujaId.duration
+            };
+        })) || [];
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.update_slots', responseData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.temple_under_booking_list', responseData, req.headers.lang);
 
     } catch (err) {
-        console.error("Error in temple_under_list_of_slots :", err);
+        console.error("Error in TempleUnderAllTheBookings:", err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
-};
-
-
+}
 
 
 exports.bookedPuja = async (req, res) => {
@@ -207,11 +231,10 @@ exports.bookedPuja = async (req, res) => {
 
         const findAdmin = await User.findById(userId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.USER) {
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.USER)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-        }
 
-        const pujaData = await Puja.findOne({ _id: puja_id, templeId: temple_id });
+        const pujaData = await TemplePuja.findOne({ pujaId: puja_id, templeId: temple_id });
 
         if (!pujaData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
@@ -223,7 +246,8 @@ exports.bookedPuja = async (req, res) => {
 
         reqBody.templeId = temple_id,
             reqBody.pujaId = puja_id,
-            reqBody.userId = userId,
+            reqBody.TemplepujaId = pujaData._id
+        reqBody.userId = userId,
             reqBody.email = email,
             reqBody.mobile_number = mobile_number,
             reqBody.name = name;
@@ -236,8 +260,10 @@ exports.bookedPuja = async (req, res) => {
         const bookings = await Booking.create(reqBody)
 
         const responseData = {
+            booking_id: bookings._id,
             puja_id: pujaData._id,
             puja_name: pujaData.pujaName,
+            temple_puja_id: bookings.TemplepujaId,
             duration: pujaData.duration,
             price: pujaData.price,
             status: pujaData.status,
@@ -258,12 +284,11 @@ exports.bookedPuja = async (req, res) => {
             name: bookings.name,
             start_time: bookings.start_time,
             end_time: bookings.end_time,
-            date: bookings.date
+            date: bookings.date,
+            user_id: userId
         } || {}
 
-
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'BOOKING.update_slots', responseData, req.headers.lang);
-
 
     } catch (err) {
         console.error("Error in bookedPuja", err);
@@ -272,37 +297,49 @@ exports.bookedPuja = async (req, res) => {
 };
 
 
+
+
 exports.bookedList = async (req, res) => {
 
     try {
 
-        const { temple_id, puja_id, date } = req.body;
+        const userId = req.user._id;
+        const { limit } = req.query;
 
-        const bookedListData = await Booking.find({ templeId: temple_id, pujaId: puja_id });
+        const user = await User.findById(userId);
 
-        const slotData = await Slot.findOne({ templeId: temple_id, date: moment(date).format('DD/MM/YYYY') });
+        if (!user || user.user_type !== constants.USER_TYPE.USER)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const pujaData = await Puja.findOne({ _id: puja_id, templeId: temple_id })
 
-        if (!pujaData)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
+        const bookings = await Booking.find({ userId: userId }).populate('userId').populate('templeId')
+            .sort()
+            .limit(parseInt(limit));
 
-        let data = {
-            start_time: slotData.start_time,
-            end_time: slotData.end_time,
-            slot_duration: slotData.slot_duration,
-            puja_name: pujaData.pujaName,
-            puja_id: pujaData._id,
-            puja_price: pujaData.price,
-            puja_duration: pujaData.duration,
-            booked_times: bookedListData.map(data => ({
+        const responseData = await Promise.all(bookings.map(async (data) => {
+            return {
+                booking_id: data._id,
+                name: data.name,
+                email: data.email,
+                mobile_number: data.mobile_number,
+                available: data.available,
                 start_time: data.start_time,
-                end_time: data.end_time
-            })) || []
+                end_time: data.end_time,
+                created_at: data.created_at,
+                date: data.date,
+                user_name: data.userId.full_name,
+                user_email: data.userId.email,
+                user_mobile_number: data.userId.mobile_number,
+                user_id: data.userId._id,
+                temple_name: data.templeId.temple_name,
+                temple_id: data.templeId._id,
+                puja_id: data.pujaId,
+                temple_puja_id: data.TemplepujaId,
+            };
+        })) || [];
 
-        } || {}
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.booked_list', data, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.booked_list', responseData, req.headers.lang);
 
     } catch (err) {
         console.error("Error in bookedList:", err);
@@ -312,17 +349,23 @@ exports.bookedList = async (req, res) => {
 
 
 
+
 exports.bookingSlotDownloaded = async (req, res) => {
 
     try {
 
-        const { bookingId } = req.params;
+        const { booking_id } = req.params;
 
-        const booking = await Booking.findOne({ _id: bookingId }).populate('templeId')
+        const userId = req.user._id
+        const user = await User.findById(userId);
+
+        if (!user || user.user_type !== constants.USER_TYPE.USER)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const booking = await Booking.findOne({ _id: booking_id }).populate('templeId')
 
         if (!booking)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'BOOKING.not_found', {}, req.headers.lang)
-
 
         const doc = new PDFDocument();
         doc.pipe(fs.createWriteStream('booking.pdf'));
@@ -341,17 +384,17 @@ exports.bookingSlotDownloaded = async (req, res) => {
 
         doc.font('Helvetica')
             .fontSize(12)
-            .text(`Full Name: ${booking.Name}`, { bold: true })
+            .text(`Full Name: ${booking.name}`, { bold: true })
             .text(`Email: ${booking.email}`, { bold: true })
             .text(`Mobile Number: ${booking.mobile_number}`, { bold: true })
-            .text(`Temple Name: ${booking.templeId.TempleName}`, { bold: true })
-            .text(`Temple Location: ${booking.templeId.Location}`, { bold: true })
-            .text(`Temple District: ${booking.templeId.District}`, { bold: true })
-            .text(`Temple State: ${booking.templeId.State}`, { bold: true })
+            .text(`Temple Name: ${booking.templeId.temple_name}`, { bold: true })
+            .text(`Temple Location: ${booking.templeId.location}`, { bold: true })
+            .text(`Temple District: ${booking.templeId.district}`, { bold: true })
+            .text(`Temple State: ${booking.templeId.state}`, { bold: true })
             .text(`Date: ${booking.date}`, { bold: true })
             .text(`Slot: ${booking.Slot}`, { bold: true })
-            .text(`Start Time: ${booking.StartTime}`, { bold: true })
-            .text(`End Time: ${booking.EndTime}`, { bold: true })
+            .text(`Start Time: ${booking.start_time}`, { bold: true })
+            .text(`End Time: ${booking.end_time}`, { bold: true })
             .text(`Reference Number: ${booking.ref_no}`, { bold: true })
             .text(`Created At: ${booking.created_at}`, { bold: true })
             .moveDown();

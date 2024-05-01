@@ -84,6 +84,7 @@ module.exports = {
         get_all_the_slot: "successfully get all the slots",
         booked_list: "successfully get all the booked list",
         delete_slots: 'successfully delete this slot',
+        temple_under_booking_list:'successfully get all the temple under booking list'
 
     },
     'TEMPLE': {

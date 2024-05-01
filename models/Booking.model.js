@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 
+
 //Define user schema
 const bookingSchema = new Schema({
 
@@ -11,12 +12,17 @@ const bookingSchema = new Schema({
         ref: 'users',
         default: null
     },
-    pujaId: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'pujas',
+    TemplepujaId: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'templepujas',
         default: null
     },
     templeId: {
         type: mongoose.Schema.Types.ObjectId, ref: 'Guru',
+        default: null
+    },
+    pujaId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'pujas',
         default: null
     },
     name: {
@@ -32,7 +38,7 @@ const bookingSchema = new Schema({
         type: String,
         default: null
     },
-    available: { type: Boolean, default: true },
+    available: { type: Boolean, default: false },
     start_time: { type: String, default: null },
     end_time: { type: String, default: null },
     created_at: {

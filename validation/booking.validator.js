@@ -85,6 +85,75 @@ exports.delete_slot_validator = [
 ]
 
 
+exports.new_booking_validator = [
+
+
+    body('start_time')
+        .not()
+        .isEmpty()
+        .withMessage('start_time is required')
+        .isString().withMessage('start_time should be a string')
+        .trim(),
+
+    body('end_time')
+        .not()
+        .isEmpty()
+        .withMessage('end_time is required')
+        .isString().withMessage('end_time should be a string')
+        .trim(),
+
+    body('date')
+        .not()
+        .isEmpty()
+        .withMessage('date is required')
+        .isString().withMessage('date should be a string')
+        .trim(),
+
+    body('temple_id')
+        .not()
+        .isEmpty()
+        .withMessage('temple_id is required')
+        .isString().withMessage('temple_id should be a string')
+        .isMongoId().withMessage('please enter a valid temple id')
+        .isLength({ min: 24, max: 24 }).withMessage('temple_id length must be 24 characters')
+        .trim(),
+
+    body('name')
+        .not()
+        .isEmpty()
+        .withMessage('name is required')
+        .isString().withMessage('name should be a string')
+        .trim(),
+
+    body('email')
+        .not()
+        .isEmpty()
+        .withMessage('email is required')
+        .isString().withMessage('email should be a string')
+        .isEmail().withMessage('please enter a valid email')
+        .trim(),
+
+    body('mobile_number')
+        .not()
+        .isEmpty()
+        .withMessage('mobile_number is required')
+        .isString().withMessage('mobile_number should be a string')
+        .isMobilePhone().withMessage('please enter a valid mobile_number')
+        .trim(),
+
+    body('puja_id')
+        .not()
+        .isEmpty()
+        .withMessage('puja_id is required')
+        .isString().withMessage('puja_id should be a string')
+        .isMongoId().withMessage('please enter a valid puja id')
+        .isLength({ min: 24, max: 24 }).withMessage('puja id length must be 24 characters')
+        .trim(),
+
+
+]
+
+
 
 exports.ValidatorResult = (req, res, next) => {
 
