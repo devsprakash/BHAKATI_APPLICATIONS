@@ -74,6 +74,7 @@ exports.update_slot_validator = [
 
 ];
 
+
 exports.delete_slot_validator = [
 
     param('slotId')
@@ -85,8 +86,18 @@ exports.delete_slot_validator = [
 ]
 
 
-exports.new_booking_validator = [
 
+exports.download_booking_validator = [
+
+    param('booking_id')
+        .notEmpty().withMessage('booking_id is required')
+        .isString().withMessage('booking_id should be a string')
+        .isMongoId().withMessage('please enter a valid booking id')
+        .isLength({ min: 24, max: 24 }).withMessage('booking id length must be 24 characters')
+        .trim(),
+]
+
+exports.new_booking_validator = [
 
     body('start_time')
         .not()
@@ -149,8 +160,6 @@ exports.new_booking_validator = [
         .isMongoId().withMessage('please enter a valid puja id')
         .isLength({ min: 24, max: 24 }).withMessage('puja id length must be 24 characters')
         .trim(),
-
-
 ]
 
 

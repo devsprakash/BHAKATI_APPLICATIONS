@@ -4,12 +4,13 @@ const { createdNewSlot, bookingSlotDownloaded, updateSlot, bookedPuja, temple_un
 const router = express.Router();
 const authenticate = require('../../middleware/authenticate');
 const TempleAuth = require('../../middleware/guru.auth');
-const { create_new_slot_validator, ValidatorResult, update_slot_validator, delete_slot_validator, new_booking_validator } = require('../../validation/booking.validator')
+const { create_new_slot_validator, ValidatorResult, update_slot_validator, delete_slot_validator, new_booking_validator, download_booking_validator } = require('../../validation/booking.validator')
+
 
 
 
 router.post('/createNewSlots', create_new_slot_validator, ValidatorResult, TempleAuth, createdNewSlot)
-router.get('/bookingSlotDownload/:booking_id', authenticate, bookingSlotDownloaded);
+router.get('/bookingSlotDownload/:booking_id', download_booking_validator, ValidatorResult, authenticate, bookingSlotDownloaded);
 router.get('/getAlltheSlots', TempleAuth, getAllTheSlots)
 router.put('/updateSlot/:slotId', update_slot_validator, ValidatorResult, TempleAuth, updateSlot);
 router.delete('/deleteSlot/:slotId', delete_slot_validator, ValidatorResult, TempleAuth, deleteSlot)

@@ -244,18 +244,18 @@ exports.bookedPuja = async (req, res) => {
         if (!templeData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', {}, req.headers.lang);
 
-        reqBody.templeId = temple_id,
+            reqBody.templeId = temple_id,
             reqBody.pujaId = puja_id,
             reqBody.TemplepujaId = pujaData._id
-        reqBody.userId = userId,
+            reqBody.userId = userId,
             reqBody.email = email,
             reqBody.mobile_number = mobile_number,
             reqBody.name = name;
-        reqBody.start_time = start_time,
+            reqBody.start_time = start_time,
             reqBody.end_time = end_time,
             reqBody.date = moment(date).format('DD/MM/YYYY');
-        reqBody.created_at = dateFormat.set_current_timestamp()
-        reqBody.updated_at = dateFormat.set_current_timestamp()
+            reqBody.created_at = dateFormat.set_current_timestamp()
+            reqBody.updated_at = dateFormat.set_current_timestamp()
 
         const bookings = await Booking.create(reqBody)
 

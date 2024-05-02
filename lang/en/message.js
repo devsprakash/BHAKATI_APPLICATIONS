@@ -57,7 +57,7 @@ module.exports = {
         already_updated: 'Your account already updated',
         not_verify: 'Your not verified Please verify your account',
         update_device_token: 'successfully updated device token',
-        update_user_profile_image: 'successfully update the user profile image'
+        update_user_profile_image: 'successfully update the user profile image',
 
     },
 

@@ -25,8 +25,10 @@ exports.signUp = async (req, res, next) => {
 
         const reqBody = req.body
 
-        let existingUser = await getUser(reqBody.email, 'email');
+        const checkMail = await isValid(reqBody.email)
+        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
 
+        let existingUser = await getUser(reqBody.email, 'email');
         if (existingUser)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.email_already_exist', {}, req.headers.lang);
 
@@ -44,7 +46,6 @@ exports.signUp = async (req, res, next) => {
         const user = await Usersave(reqBody);
 
         let users = userResponse(user);
-
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'USER.signUp_success', users, req.headers.lang);
 
     } catch (err) {
@@ -60,15 +61,13 @@ exports.logout = async (req, res) => {
 
     try {
 
-
         const user = req.user;
 
         const userData = await User.findById(user._id);
 
-        if (userData.user_type !== constants.USER_TYPE.USER) {
+        if (userData.user_type !== constants.USER_TYPE.USER)
             return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
-        }
-        // Clear tokens and refresh tokens
+
         userData.tokens = null;
         userData.refresh_tokens = null;
 
@@ -143,8 +142,6 @@ exports.verifyOtp = async (req, res) => {
 
         const user = await User.findOne({ _id: userId })
 
-        console.log(user)
-
         if (!user) {
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
         }
@@ -185,18 +182,13 @@ exports.getUser = async (req, res) => {
         const userId = req.user._id;
 
         const user = await User.findOne({ _id: userId });
-
-        if (!user) {
+        if (!user)
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
-        }
 
-        if (user.user_type !== constants.USER_TYPE.USER && user.user_type !== constants.USER_TYPE.ADMIN) {
+        if (user.user_type !== constants.USER_TYPE.USER && user.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
-        }
-
 
         const responseData = userResponse(user);
-
         return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.profile_fetch_success', responseData, req.headers.lang);
 
     } catch (err) {
@@ -215,39 +207,28 @@ exports.updateProfile = async (req, res) => {
         const reqBody = req.body;
 
         const userData = await User.findById(userId);
-
-        if (!userData) {
+        if (!userData)
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
-        }
 
-        if (userData.isUpdated === true) {
+        if (userData.isUpdated === true)
             return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.already_updated', userData, req.headers.lang);
-        }
 
-        if (userData.user_type !== constants.USER_TYPE.USER) {
+        if (userData.user_type !== constants.USER_TYPE.USER)
             return sendResponse(res, WEB_STATUS_CODE.UNAUTHORIZED, STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
-        }
 
+        const updated_at = dateFormat.set_current_timestamp();
         const updatedUser = await User.findByIdAndUpdate(userId,
             {
-                $set: {
-                    full_name: reqBody.full_name,
-                    gender: reqBody.gender,
-                    mobile_number: reqBody.mobile_number,
-                    dob: reqBody.dob,
-                    isUpdated: true,
-                    status: constants.STATUS.ACTIVE
-                }
+                ...reqBody,
+                updated_at
             },
             { new: true }
         );
 
-        if (!updatedUser) {
+        if (!updatedUser)
             return sendResponse(res, WEB_STATUS_CODE.BAD_REQUEST, STATUS_CODE.FAIL, 'USER.not_found', {}, req.headers.lang);
-        }
 
         const responseData = userResponse(updatedUser);
-
         return sendResponse(res, WEB_STATUS_CODE.OK, STATUS_CODE.SUCCESS, 'USER.profile_update_success', responseData, req.headers.lang);
 
     } catch (err) {
@@ -266,6 +247,9 @@ exports.updateProfileImage = async (req, res) => {
 
         if (!temple || (temple.user_type !== constants.USER_TYPE.USER))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        if (!req.file)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.no_image_upload', {}, req.headers.lang);
 
         let files = req.file;
         const profile_image_url = `${BASEURL}/uploads/${files.filename}`;
@@ -305,9 +289,6 @@ exports.updateDeviceToken = async (req, res) => {
 
         if (!users)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.user_details_not_found', {}, req.headers.lang);
-
-        // if (users.user_typ !== constants.USER_TYPE.USER)
-        //     return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
         users.device_token = device_token;
         users.device_type = device_type;
