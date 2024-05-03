@@ -11,6 +11,9 @@ const TemplePuja = require('../../models/temple.puja.model')
 
 
 
+
+
+
 exports.addNewPuja = async (req, res) => {
 
     try {
@@ -291,14 +294,14 @@ exports.deletePujaByAdmin = async (req, res) => {
 
     try {
 
-        const { puja_id } = req.body;
+        const { puja_id } = req.param;
         const userId = req.user._id;
         const user = await User.findOne({ _id: userId });
 
         if (!user || (user.user_type !== constants.USER_TYPE.ADMIN))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const newpuja = await Puja.findOneAndDelete({ _id: pujaId })
+        const newpuja = await Puja.findOneAndDelete({ _id: puja_id })
 
         if (!newpuja)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
