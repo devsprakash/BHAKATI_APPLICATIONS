@@ -20,9 +20,9 @@ const bookingSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId, ref: 'Guru',
         default: null
     },
-    pujaId:{
+    slotId:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'pujas',
+        ref: 'slots',
         default: null
     },
     name: {
@@ -38,7 +38,7 @@ const bookingSchema = new Schema({
         type: String,
         default: null
     },
-    available: { type: Boolean, default: false },
+    is_reserved: { type: Boolean, default: false },
     start_time: { type: String, default: null },
     end_time: { type: String, default: null },
     created_at: {

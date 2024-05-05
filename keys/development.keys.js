@@ -7,7 +7,7 @@ module.exports = {
     'PASSWORD_FORM': 'ezTruck@3579',
     'EMAIL_SERVICE': 'gmail',
     'MSG91AUTHKEY':'420181Av6QZCzj4K662068bdP1',
-    'WEBHOOKSCRETKEY':'2oj1cq7ls0i22gqgt77uchgoe03qim8m',
+    'WEBHOOKSCRETKEY':'dhk0a52fdo38apoeej7asadlns2d7csj',
     'MONGODB_URI': 'mongodb+srv://root:akki909@cluster0.sm3rshd.mongodb.net/Bhakati',
     'BASEURL': 'https://13.126.177.227:8001',
     'APPID': '064f804292cf437d8d949e9e1ed01d3e',

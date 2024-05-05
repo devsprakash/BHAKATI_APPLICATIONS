@@ -48,14 +48,6 @@ exports.login_validator = [
         .withMessage('email is required')
         .isString().withMessage('email should be a string')
         .isEmail().withMessage('please enter a valid email')
-        .trim(),
-
-    body('password')
-        .not()
-        .isEmpty()
-        .withMessage('password is required')
-        .isString().withMessage('password should be a string')
-        .isLength({ max: 8 }).withMessage('password length must be 8 characters')
         .trim()
 ];
 

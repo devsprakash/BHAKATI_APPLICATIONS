@@ -1,6 +1,6 @@
 
 const { sendResponse } = require('../../services/common.service')
-const { BASEURL, MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET } = require('../../keys/development.keys')
+const { BASEURL, MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET, WEBHOOKSCRETKEY } = require('../../keys/development.keys')
 const { isValid } = require("../../services/blackListMail");
 const constants = require("../../config/constants");
 const bcrypt = require('bcryptjs')
@@ -18,6 +18,14 @@ const { getData, minutesToSeconds } = require('../services/views.services')
 const TempleLiveStreaming = require('../../models/templeLiveStream.model')
 const User = require('../../models/user.model');
 const { sendOTP, resendOTP, verifyOTP } = require('../../services/otp.service')
+const Mux = require('@mux/mux-node');
+const mux = new Mux({
+    tokenId: MUX_TOKEN_ID,
+    tokenSecret: MUX_TOKEN_SECRET,
+    webhookSecret: WEBHOOKSCRETKEY,
+});
+
+
 
 
 
@@ -957,4 +965,6 @@ exports.generate_refresh_tokens = async (req, res, next) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
+
 

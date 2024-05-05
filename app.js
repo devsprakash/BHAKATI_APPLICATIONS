@@ -21,6 +21,16 @@ const GuruRouter = require('./Guru/routes/guru');
 const videoRouter = require('./Guru/routes/video')
 const ejs = require('ejs');
 const app = express();
+const bodyParser = require('body-parser')
+const fs = require("fs")
+const { BASEURL, MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET, WEBHOOKSCRETKEY } = require('./keys/development.keys')
+const Mux = require('@mux/mux-node');
+const mux = new Mux({
+    tokenId: MUX_TOKEN_ID,
+    tokenSecret: MUX_TOKEN_SECRET,
+    webhookSecret: WEBHOOKSCRETKEY,
+});
+const demo = require('./models/demo.model')
 
 
 
@@ -71,6 +81,20 @@ app.use(cors());
 // }));
 
 
+app.post('/webhooks',  async(req, res) => {
+  //console.log("1111", req.body)
+  try {
+    //const isValidSignature = mux.webhooks.verifySignature(req.body, req.headers, "hc8kc3uuon5dtse4sekae7e0a0dg2dd3");
+    //console.log('Success:', isValidSignature);
+   // const jsonFormattedBody = JSON.parse(req.body);
+   const data = await demo.insertMany(req.body)
+    res.json({ received: true});
+
+  } catch (err) {
+    console.log("webhooks err" , err)
+    return res.status(400).send("err");
+  }
+});
 
 
 app.use('/v1/', indexRouter);

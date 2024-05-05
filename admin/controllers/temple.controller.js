@@ -20,55 +20,6 @@ const axios = require('axios');
 
 
 
-exports.addTemple = async (req, res) => {
-
-    const reqBody = req.body;
-    const userId = req.user._id;
-
-    try {
-
-        const user = await checkAdmin(userId);
-
-        if (user.user_type !== constants.USER_TYPE.ADMIN)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-
-        if (!req.files['image'] || !req.files['background_image'])
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.upload_image', {}, req.headers.lang);
-
-        reqBody.temple_image = `${BASEURL}/uploads/${req.files['image'][0].filename}`;
-        reqBody.background_image = `${BASEURL}/uploads/${req.files['background_image'][0].filename}`;
-
-        const templesEmailExist = await TempleGuru.findOne({ email: reqBody.email });
-
-        if (templesEmailExist)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.email_already_exist', {}, req.headers.lang);
-
-        reqBody.temples_id = uuidv4();
-        if (reqBody.password)
-            reqBody.password = await bcrypt.hash(reqBody.password, 10)
-        else {
-            reqBody.password = null;
-        }
-
-        reqBody.tempTokens = await jwt.sign({
-            email: reqBody.email.toString()
-        }, JWT_SECRET, { expiresIn: '24h' })
-
-        reqBody.created_at = dateFormat.set_current_timestamp();
-        reqBody.updated_at = dateFormat.set_current_timestamp();
-        reqBody.user_type = 3;
-        const templeData = await templeSave(reqBody);
-
-        const responseData = TempleReponse(templeData)
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'TEMPLE.addTemple', responseData, req.headers.lang);
-
-    } catch (err) {
-
-        console.log("err(addTemple)........", err)
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
-    }
-}
 
 
 

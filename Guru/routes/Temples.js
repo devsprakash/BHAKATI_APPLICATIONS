@@ -6,11 +6,14 @@ const { templeLogin, logout, getTempleProfile,
     getAllpanditList,
     updateTempleProfile,
     addBankDetailsByAdmin, 
-    AllBankList , updateProfileImage} = require('../controller/Temple.controller');
+    AllBankList , updateProfileImage,
+    webhooks} = require('../controller/Temple.controller');
 const router = express.Router();
 const TempleAuth = require('../../middleware/guru.auth');
 const authenticate = require('../../middleware/authenticate')
 const upload = require('../../middleware/multer')
+
+
 
 
 
@@ -35,7 +38,6 @@ router.put('/updateTempleProfile', TempleAuth, updateTempleProfile)
 router.post('/addBankDetailsByAdmin', upload.single('logo'), authenticate, addBankDetailsByAdmin);
 router.get('/BankList' , AllBankList);
 router.post('/updateProfileImage', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'background_image', maxCount: 1 }]), TempleAuth,  updateProfileImage);
-
 
 
 

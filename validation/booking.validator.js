@@ -152,12 +152,21 @@ exports.new_booking_validator = [
         .isMobilePhone().withMessage('please enter a valid mobile_number')
         .trim(),
 
-    body('puja_id')
+    body('temple_puja_id')
         .not()
         .isEmpty()
-        .withMessage('puja_id is required')
-        .isString().withMessage('puja_id should be a string')
+        .withMessage('temple_puja_id is required')
+        .isString().withMessage('temple_puja_id should be a string')
         .isMongoId().withMessage('please enter a valid puja id')
+        .isLength({ min: 24, max: 24 }).withMessage('puja id length must be 24 characters')
+        .trim(),
+
+    body('slot_id')
+        .not()
+        .isEmpty()
+        .withMessage('slot_id is required')
+        .isString().withMessage('slot_id should be a string')
+        .isMongoId().withMessage('please enter a valid slot id')
         .isLength({ min: 24, max: 24 }).withMessage('puja id length must be 24 characters')
         .trim(),
 ]
