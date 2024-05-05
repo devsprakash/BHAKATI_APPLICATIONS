@@ -5,7 +5,7 @@ const TempleAuth = require('../../middleware/guru.auth')
 const upload = require('../../middleware/multer');
 const authenticate = require('../../middleware/authenticate');
 const { addNewRithuals, getAllRithuals, getRithualsByTemples, deleteRithuals } = require('../controller/rituals.controller');
-const { add_puja_validator, Validator_Result, puja_add_by_temple_validator, delete_puja_validator } = require('../../validation/puja.validator');
+const { add_puja_validator, Validator_Result, puja_add_by_temple_validator, delete_puja_validator, delete_puja_by_admin_validator } = require('../../validation/puja.validator');
 
 
 
@@ -21,8 +21,7 @@ router.get('/getRithualsByTemples', getRithualsByTemples);
 router.delete('/deleteRihuals/:rithualId', TempleAuth, deleteRithuals)
 router.delete('/deletePuja', delete_puja_validator, Validator_Result, TempleAuth, deletePuja);
 router.put('/updatePuja', delete_puja_validator, Validator_Result, TempleAuth, UpdatePuja)
-router.delete('/deletePujaByAdmin', authenticate, deletePujaByAdmin)
-
+router.delete('/deletePujaByAdmin', delete_puja_by_admin_validator, Validator_Result, authenticate, deletePujaByAdmin)
 
 
 

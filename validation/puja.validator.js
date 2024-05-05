@@ -79,40 +79,18 @@ exports.delete_puja_validator = [
         .trim(),
 ]
 
-exports.guru_suggested_video_validator = [
+exports.delete_puja_by_admin_validator = [
 
-    query('guruId')
+    param('puja_id')
         .not()
         .isEmpty()
-        .withMessage('guruId is required')
-        .isString().withMessage('guruId should be a string')
-        .isMongoId().withMessage('please enter a valid guruId')
-        .isLength({ min: 24 }).withMessage('guruId length must be 24')
+        .withMessage('puj id is required')
+        .isString().withMessage('puja id should be a string')
+        .isMongoId().withMessage('please enter a valid puja id')
+        .isLength({ min: 24 }).withMessage('puja id length must be 24')
         .trim(),
 
 ]
-
-
-
-
-exports.create_live_validator = [
-
-    body('title')
-        .not()
-        .isEmpty()
-        .withMessage('title is required')
-        .isString().withMessage('title should be a string')
-        .trim(),
-
-    body('description')
-        .not()
-        .isEmpty()
-        .withMessage('description is required')
-        .isString().withMessage('description should be a string')
-        .trim()
-]
-
-
 
 
 
