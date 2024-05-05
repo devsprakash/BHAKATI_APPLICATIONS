@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { admin_login_validator, ValidatorResult } = require('../../validation/user.validator')
 const {
   login,
   logout,
