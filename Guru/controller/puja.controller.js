@@ -168,7 +168,8 @@ exports.addPuja = async (req, res) => {
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
         reqBody.templeId = templeId;
-        reqBody.pujaId = puja_id
+        reqBody.pujaId = puja_id;
+        reqBody.date = dateFormat.current_date()
         const newPujaCreate = await TemplePuja.create(reqBody)
 
         const data = {
@@ -225,6 +226,48 @@ exports.pujs_by_temple = async (req, res) => {
 
     } catch (err) {
         console.log('err(pujs_by_temple).....', err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
+
+
+exports.temple_under_puja_list = async (req, res) => {
+
+    try {
+
+        const { limit } = req.query;
+        const { temple_id } = req.params;
+
+        const userId = req.user._id;
+        const user = await User.findById(userId)
+
+        if (!user || (user.user_type !== constants.USER_TYPE.USER))
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const templeData = await TempleGuru.findById(temple_id);
+        const pujsList = await TemplePuja.find({ templeId: temple_id }).populate('pujaId').sort({ created_at: -1 }).limit(parseInt(limit));
+
+        const responseData = {
+            temple_name: templeData.temple_name || null,
+            temple_id: templeData._id || null,
+            puja: pujsList.map(puja => ({
+                id: puja._id,
+                puja_id: puja.pujaId._id,
+                puja_name: puja.puja_name,
+                duration: puja.duration,
+                cost: puja.price,
+                description: puja.pujaId.description,
+                category: puja.pujaId.category,
+                puja_image_url: puja.pujaId.pujaImage,
+                created_at: puja.created_at
+            })) || []
+
+        } || {}
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.temple_under_pujaList', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.log('err(temple_under_puja_list).....', err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }

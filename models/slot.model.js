@@ -21,6 +21,7 @@ const slotSchema = new Schema({
         default: null
     },
     available: { type: Boolean, default: true },
+    is_reserved: { type: Boolean, default: false },
     date: String,
     created_at: {
         type: String,

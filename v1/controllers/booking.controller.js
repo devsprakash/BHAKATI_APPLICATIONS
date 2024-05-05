@@ -17,8 +17,6 @@ const TemplePuja = require("../../models/temple.puja.model");
 
 
 
-
-
 exports.createdNewSlot = async (req, res) => {
 
     try {
@@ -304,17 +302,20 @@ exports.bookedList = async (req, res) => {
     try {
 
         const userId = req.user._id;
-        const { limit } = req.query;
+        const { limit, temple_id, date } = req.query;
 
         const user = await User.findById(userId);
 
         if (!user || user.user_type !== constants.USER_TYPE.USER)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-
-        const bookings = await Booking.find({ userId: userId }).populate('userId').populate('templeId')
+        const bookings = await Booking.find({ userId: userId }).populate('userId')
             .sort()
             .limit(parseInt(limit));
+
+        const templeData = await TemplePuja.find({ templeId: temple_id , date: date })
+            .populate('templeId', "temple_name _id temple_image")
+            .select('templeId puja_name duration price _id pujaId date');
 
         const responseData = await Promise.all(bookings.map(async (data) => {
             return {
@@ -331,13 +332,19 @@ exports.bookedList = async (req, res) => {
                 user_email: data.userId.email,
                 user_mobile_number: data.userId.mobile_number,
                 user_id: data.userId._id,
-                temple_name: data.templeId.temple_name,
-                temple_id: data.templeId._id,
-                puja_id: data.pujaId,
-                temple_puja_id: data.TemplepujaId,
+                templeData: templeData.map(data => ({
+                    temple_name: data.templeId.temple_name,
+                    temple_id: data.templeId._id,
+                    temple_image_url: data.templeId.templeId,
+                    puja_name: data.puja_name,
+                    duration: data.duration,
+                    price: data.price,
+                    date:data.date,
+                    temple_puja_id: data._id,
+                    master_puja_id: data.pujaId
+                })) || []
             };
         })) || [];
-
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.booked_list', responseData, req.headers.lang);
 

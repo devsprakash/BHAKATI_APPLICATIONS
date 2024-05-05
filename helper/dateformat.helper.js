@@ -6,6 +6,10 @@ exports.set_current_timestamp = function(){
     return moment().format("MM/DD/YYYY HH:MM:SS");
 }
 
+exports.current_date = function(){
+    return moment().format("DD/MM/YYYY");
+}
+
 //convert date to timestamp
 exports.getDateFormatFromTimeStamp = function(dt){
     return moment.unix(dt).format("MM/DD/YYYY")    

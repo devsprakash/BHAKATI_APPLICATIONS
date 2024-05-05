@@ -16,12 +16,15 @@ const TemplePujaSchema = new mongoose.Schema({
         type: Number,
         default: null
     },
+    date: {
+        type: String
+    },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Guru',
         default: null
     },
-    pujaId:{
+    pujaId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'pujas',
         default: null
