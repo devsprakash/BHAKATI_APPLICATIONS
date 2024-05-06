@@ -84,12 +84,12 @@ module.exports = {
         get_all_the_slot: "successfully get all the slots",
         booked_list: "successfully get all the booked list",
         delete_slots: 'successfully delete this slot',
-        temple_under_booking_list:'successfully get all the temple under booking list',
+        temple_under_booking_list: 'successfully get all the temple under booking list',
         all_the_slots_booked: "Today there is no slot are available all the slots are booked"
 
     },
     'TEMPLE': {
-        addTemple: 'successfully add a new temple',
+        signUp_success: 'temple successfully signUp',
         not_found: 'temples or guru are not found',
         get_all_temples: 'successfully get all temples',
         delete_temples: 'successfully delete this temple',
@@ -115,7 +115,10 @@ module.exports = {
         update_temple_profile: 'successfully update the temple profile',
         temple_not_found: 'this temple data was not found',
         get_all_bank_details: 'successfully get all the bank details',
-        update_temple_profile_image: 'successfully update the temple profile image'
+        update_temple_profile_image: 'successfully update the temple profile image',
+        no_image: "no image uploaded",
+        upload_success: 'temple image uploaded successfully',
+        account_verify: 'temple account verify successfully'
     },
 
     'LIVESTREAM': {

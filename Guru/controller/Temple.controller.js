@@ -4,7 +4,7 @@ const { BASEURL, MUXURL, MUX_TOKEN_ID, MUX_TOKEN_SECRET, WEBHOOKSCRETKEY } = req
 const { isValid } = require("../../services/blackListMail");
 const constants = require("../../config/constants");
 const bcrypt = require('bcryptjs')
-const TempleGuru = require('../../models/guru.model');
+const Temple = require('../../models/temple.model');
 const { TempleLoginReponse, TempleReponse, TempleLiveStreamingReponse } = require('../../ResponseData/Temple.reponse')
 const { guruLoginResponse } = require('../../ResponseData/Guru.response')
 const dateFormat = require('../../helper/dateformat.helper')
@@ -18,16 +18,106 @@ const { getData, minutesToSeconds } = require('../services/views.services')
 const TempleLiveStreaming = require('../../models/templeLiveStream.model')
 const User = require('../../models/user.model');
 const { sendOTP, resendOTP, verifyOTP } = require('../../services/otp.service')
-const Mux = require('@mux/mux-node');
-const mux = new Mux({
-    tokenId: MUX_TOKEN_ID,
-    tokenSecret: MUX_TOKEN_SECRET,
-    webhookSecret: WEBHOOKSCRETKEY,
-});
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../../keys/development.keys')
 
 
 
 
+
+
+
+exports.signUp = async (req, res) => {
+
+    const reqBody = req.body;
+
+    try {
+
+        const checkMail = await isValid(reqBody.email)
+        if (checkMail == false) return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
+
+        const templesEmailExist = await Temple.findOne({ email: reqBody.email });
+
+        if (templesEmailExist)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.email_already_exist', {}, req.headers.lang);
+
+        reqBody.password = await bcrypt.hash(reqBody.password, 10)
+        reqBody.tempTokens = await jwt.sign({
+            email: reqBody.email.toString()
+        }, JWT_SECRET, { expiresIn: '24h' })
+
+        reqBody.created_at = dateFormat.set_current_timestamp();
+        reqBody.updated_at = dateFormat.set_current_timestamp();
+        const templeData = await Temple.create(reqBody);
+
+        const responseData = {
+            temple_id: templeData._id,
+            temple_name: templeData.temple_name,
+            mobile_number: templeData.mobile_number,
+            email: templeData.email,
+            user_type: templeData.user_type,
+            location: templeData.location,
+            state: templeData.state,
+            district: templeData.district,
+            contact_person_name: templeData.contact_person_name,
+            contact_person_designation: templeData.contact_person_designation,
+            created_at: templeData.created_at,
+            updated_at: templeData.updated_at,
+            __v: 0
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'TEMPLE.signUp_success', responseData, req.headers.lang);
+
+    } catch (err) {
+
+        console.log("err(signUp)........", err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+}
+
+
+
+exports.uploadTempleImage = async (req, res) => {
+
+    try {
+
+        const { templeId } = req.params;
+        const temple = await Temple.findOne({ _id: templeId });
+
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        if (!req.files['temple_image'])
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.no_image', {}, req.headers.lang);
+
+        const temple_image_url = `${BASEURL}/uploads/${req.files['temple_image'][0].filename}`;
+        temple.temple_image = temple_image_url;
+        await temple.save()
+
+        const responseData = {
+            temple_id: temple._id,
+            temple_name: temple.temple_name,
+            temple_image_url: temple.temple_image,
+            mobile_number: temple.mobile_number,
+            email: temple.email,
+            user_type: temple.user_type,
+            location: temple.location,
+            state: temple.state,
+            district: temple.district,
+            contact_person_name: temple.contact_person_name,
+            contact_person_designation: temple.contact_person_designation,
+            created_at: temple.created_at,
+            updated_at: temple.updated_at,
+            __v: 0
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.upload_success', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error('Error(uploadTempleImage)........:', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
 
 
 
@@ -38,7 +128,7 @@ exports.templeLogin = async (req, res) => {
         const reqBody = req.body;
         const { email, password } = reqBody;
 
-        const user = await TempleGuru.findOne({ email });
+        const user = await Temple.findOne({ email });
 
         if (!user)
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
@@ -46,6 +136,8 @@ exports.templeLogin = async (req, res) => {
         const matchPassword = await bcrypt.compare(password, user.password);
         if (!matchPassword)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
+        
+        if(user)
 
         if (user.status === 0 || user.status === 2 || user.deleted_at !== null) {
             let errorMsg;
@@ -297,6 +389,8 @@ exports.updateTempleProfile = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
 
 exports.updateProfileImage = async (req, res) => {
 
