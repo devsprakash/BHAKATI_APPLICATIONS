@@ -68,19 +68,19 @@ const templeSchema = new mongoose.Schema({
     state: {
         type: String
     },
-    title: {
-        type: String,
-        default: null
-    },
-    description: {
-        type: String,
-        default: null
-    },
     contact_person_name: {
         type: String
     },
     contact_person_designation: {
         type: String
+    },
+    opening_time:{
+        type:String,
+        default:null
+    },
+    closing_time:{
+        type:String,
+        default:null
     },
     created_at: {
         type: String

@@ -6,7 +6,7 @@ const LiveStreamSchema = new mongoose.Schema({
 
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Guru',
+        ref: 'temple',
         default: null
     },
     title: {

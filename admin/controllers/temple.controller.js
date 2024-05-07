@@ -24,7 +24,7 @@ exports.SearchAllTemples = async (req, res, next) => {
 
     try {
 
-        const { sort, state, templename, location, district, email, is_verify } = req.query;
+        const { sort, state, templename, location, district, is_verify } = req.query;
 
         let query = {};
 
@@ -33,19 +33,19 @@ exports.SearchAllTemples = async (req, res, next) => {
             query.temple_name = templeRegex;
         }
         if (state) {
-            query.state = state;
+            const stateRegex = new RegExp(state.split(' ').join('|'), 'i');
+            query.state = stateRegex;
         }
         if (is_verify) {
             query.is_verify = is_verify;
         }
         if (location) {
-            query.location = location;
+            const locationRegex = new RegExp(location.split(' ').join('|'), 'i');
+            query.location = locationRegex;
         }
         if (district) {
-            query.district = district;
-        }
-        if (email) {
-            query.email = email;
+            const districtRegex = new RegExp(district.split(' ').join('|'), 'i');
+            query.district = districtRegex;
         }
 
         const sortOptions = {};
@@ -101,14 +101,14 @@ exports.templeAccountVerify = async (req, res) => {
 
     try {
 
-        const { templeId } = req.query;
+        const { temple_id } = req.query;
         const userId = req.user._id;
         const user = await checkAdmin(userId);
 
         if (user.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const templeData = await Temple.findOneAndUpdate({ _id: templeId },{ $set: { is_verify: true } }, { new: true });
+        const templeData = await Temple.findOneAndUpdate({ _id: temple_id }, { $set: { is_verify: true } }, { new: true });
 
         const responseData = {
             temple_id: templeData._id,
@@ -117,7 +117,7 @@ exports.templeAccountVerify = async (req, res) => {
             mobile_number: templeData.mobile_number,
             email: templeData.email,
             user_type: templeData.user_type,
-            is_verify:templeData.is_verify,
+            is_verify: templeData.is_verify,
             location: templeData.location,
             state: templeData.state,
             district: templeData.district,
@@ -137,22 +137,36 @@ exports.templeAccountVerify = async (req, res) => {
 
 
 
+
 exports.templeDelete = async (req, res) => {
 
 
     try {
 
-        const { templeId } = req.query;
+        const { temple_id } = req.query;
         const userId = req.user._id;
+
         const user = await checkAdmin(userId);
         if (user.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const templeData = await TempleGuru.findOneAndDelete({ _id: templeId });
-        if (!templeData)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.temple_not_found', {}, req.headers.lang);
+        const templeData = await TempleGuru.findOneAndDelete({ _id: temple_id });
 
-        const responseData = TempleReponse(templeData)
+        const responseData = {
+            temple_id: templeData._id,
+            temple_name: templeData.temple_name,
+            temple_image_url: templeData.temple_image,
+            mobile_number: templeData.mobile_number,
+            email: templeData.email,
+            user_type: templeData.user_type,
+            is_verify: templeData.is_verify,
+            location: templeData.location,
+            state: templeData.state,
+            district: templeData.district,
+            contact_person_name: templeData.contact_person_name,
+            contact_person_designation: templeData.contact_person_designation,
+
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.delete_temples', responseData, req.headers.lang);
 
