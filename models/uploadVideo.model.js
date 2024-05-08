@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 
 const videoSchema = new mongoose.Schema({
 
-    guruId: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'Guru'
+    templeId: {
+        type: mongoose.Schema.Types.ObjectId, ref: 'temple'
     },
     description: {
         type: String

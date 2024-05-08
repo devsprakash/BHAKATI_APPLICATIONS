@@ -19,7 +19,9 @@ const TempleLiveStreaming = require('../../models/templeLiveStream.model')
 const User = require('../../models/user.model');
 const { sendOTP, resendOTP, verifyOTP } = require('../../services/otp.service')
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../../keys/development.keys')
+const { JWT_SECRET } = require('../../keys/development.keys');
+const TempleBankDetails = require('../../models/templeBankDetail.model')
+
 
 
 
@@ -59,6 +61,9 @@ exports.signUp = async (req, res) => {
             location: templeData.location,
             state: templeData.state,
             district: templeData.district,
+            category: templeData.category,
+            darsan: templeData.darsan,
+            puja: templeData.puja,
             contact_person_name: templeData.contact_person_name,
             contact_person_designation: templeData.contact_person_designation,
             created_at: templeData.created_at,
@@ -87,11 +92,13 @@ exports.uploadTempleImage = async (req, res) => {
         if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        if (!req.files['temple_image'])
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.no_image', {}, req.headers.lang);
+        if (!req.files || (!req.files['image'] && !req.files['background_image']))
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'Image file or background image file is required', {}, req.headers.lang);
 
-        const temple_image_url = `${BASEURL}/uploads/${req.files['temple_image'][0].filename}`;
+        const temple_image_url = `${BASEURL}/uploads/${req.files['profile_image'][0].filename}`;
         temple.temple_image = temple_image_url;
+        const background_image_url = `${BASEURL}/uploads/${req.files['background_image'][0].filename}`;
+        temple.background_image = background_image_url;
         await temple.save()
 
         const responseData = {
@@ -104,6 +111,8 @@ exports.uploadTempleImage = async (req, res) => {
             location: temple.location,
             state: temple.state,
             district: temple.district,
+            category: temple.category,
+            feature_image_url: temple.background_image,
             contact_person_name: temple.contact_person_name,
             contact_person_designation: temple.contact_person_designation,
             created_at: temple.created_at,
@@ -188,22 +197,19 @@ exports.logout = async (req, res, next) => {
     try {
 
         const templeId = req.temple._id;
+        let userData = await Temple.findById(templeId);
 
-        let userData = await TempleGuru.findById(templeId);
-
-        if (!userData) {
+        if (!userData || (userData.user_type !== constants.USER_TYPE.TEMPLE))
             return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
-        }
 
         userData.tokens = null;
         userData.refresh_tokens = null;
-
         await userData.save();
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, `TEMPLE.logout_success`, {}, req.headers.lang);
 
     } catch (err) {
-        console.log(`err(TempleLoginOrGuruLogin)....`, err);
+        console.log(`err(TempleLogin)....`, err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 }
@@ -232,7 +238,7 @@ exports.getTempleProfile = async (req, res) => {
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
         const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
-            .populate('templeId', 'temple_name temple_image _id state district location mobile_number email contact_person_name contact_person_designation');
+            .populate('templeId', 'temple_name temple_image _id state district location mobile_number email contact_person_name category darsan puja contact_person_designation');
 
         const templeList = await Temple.find({ user_type: 3 }).sort().limit(limit)
 
@@ -241,10 +247,14 @@ exports.getTempleProfile = async (req, res) => {
                 temple_id: templeData._id,
                 temple_name: templeData.temple_name,
                 temple_image_url: templeData.temple_image,
+                feature_image_url: templeData.background_image,
                 mobile_number: templeData.mobile_number,
                 email: templeData.email,
                 user_type: templeData.user_type,
                 location: templeData.location,
+                category: templeData.category,
+                darsan: templeData.darsan,
+                puja: templeData.puja,
                 state: templeData.state,
                 district: templeData.district,
                 contact_person_name: templeData.contact_person_name,
@@ -272,11 +282,14 @@ exports.getTempleProfile = async (req, res) => {
             suggested_temples: templeList.map(temple => ({
                 temple_id: temple._id,
                 temple_name: temple.temple_name,
+                category: temple.category,
                 temple_image_url: temple.temple_image,
+                feature_image_url: temple.background_image
             })) || []
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
+
     } catch (err) {
         console.error('Error(getTempleProfile)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
@@ -291,7 +304,6 @@ exports.getTempleProfileByAdmin = async (req, res) => {
 
         const userId = req.user._id;
         const userData = await User.findById(userId);
-
         const { templeId } = req.body;
         const { limit } = req.query;
         const templeData = await Temple.findOne({ _id: templeId });
@@ -309,7 +321,7 @@ exports.getTempleProfileByAdmin = async (req, res) => {
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
         const TempleData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, templeId: templeId }).limit(limit)
-            .populate('templeId', 'temple_name temple_image _id state district location mobile_number email contact_person_name contact_person_designation');
+            .populate('templeId', 'temple_name temple_image _id state district location mobile_number category puja darsan email contact_person_name contact_person_designation');
 
         const templeList = await Temple.find({ user_type: 3 }).sort().limit(limit)
 
@@ -318,10 +330,14 @@ exports.getTempleProfileByAdmin = async (req, res) => {
                 temple_id: templeData._id,
                 temple_name: templeData.temple_name,
                 temple_image_url: templeData.temple_image,
+                feature_image_url: templeData.background_image,
                 mobile_number: templeData.mobile_number,
                 email: templeData.email,
                 user_type: templeData.user_type,
                 location: templeData.location,
+                category: templeData.category,
+                darsan: templeData.darsan,
+                puja: templeData.puja,
                 state: templeData.state,
                 district: templeData.district,
                 contact_person_name: templeData.contact_person_name,
@@ -349,11 +365,14 @@ exports.getTempleProfileByAdmin = async (req, res) => {
             suggested_temples: templeList.map(temple => ({
                 temple_id: temple._id,
                 temple_name: temple.temple_name,
+                category: temple.category,
                 temple_image_url: temple.temple_image,
+                feature_image_url: temple.background_image,
             })) || []
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_temple_profile', responseData, req.headers.lang);
+
     } catch (err) {
         console.error('Error(getTempleProfileByAdmin)....', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
@@ -368,9 +387,9 @@ exports.updateTempleProfile = async (req, res) => {
 
         const reqBody = req.body;
         const templeId = req.temple._id;
-        const templeData = await Temple.findOne({ _id: templeId });
+        const temple = await Temple.findOne({ _id: templeId });
 
-        if (templeData.user_type !== constants.USER_TYPE.TEMPLE)
+        if (temple.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         temple_name = reqBody.temple_name
@@ -383,8 +402,9 @@ exports.updateTempleProfile = async (req, res) => {
             contact_person_designation = reqBody.contact_person_designation,
             opening_time = reqBody.opening_time
         closing_time = reqBody.closing_time
-        templeData.updated_at = dateFormat.set_current_timestamp()
-        await templeData.save()
+        category = reqBody.category
+
+        const templeData = await Temple.findOneAndUpdate({ _id: templeId }, reqBody, { new: true })
 
         const responseData = {
             temple_id: templeData._id,
@@ -396,6 +416,7 @@ exports.updateTempleProfile = async (req, res) => {
             location: templeData.location,
             state: templeData.state,
             district: templeData.district,
+            category: templeData.category,
             contact_person_name: templeData.contact_person_name,
             contact_person_designation: templeData.contact_person_designation,
             opening_time: templeData.opening_time,
@@ -430,8 +451,8 @@ exports.updateProfileImage = async (req, res) => {
 
         let updateData = {};
 
-        if (req.files['image']) {
-            const temple_image_url = `${BASEURL}/uploads/${req.files['image'][0].filename}`;
+        if (req.files['profile_image']) {
+            const temple_image_url = `${BASEURL}/uploads/${req.files['profile_image'][0].filename}`;
             updateData.temple_image = temple_image_url;
         }
 
@@ -462,7 +483,6 @@ exports.updateProfileImage = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
-
 
 
 
@@ -560,7 +580,7 @@ exports.getTempleLiveStream = async (req, res) => {
             .populate('templeId', 'temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
 
         const responseData = await Promise.all(liveStreamData.map(async livestream => {
-            const templeDetails = await Temple.findOne({ _id: temple.templeId });
+            const templeDetails = await Temple.findOne({ _id: livestream.templeId });
             if (!templeDetails) return null;
             return {
                 playback_id: livestream.playback_id,
@@ -569,7 +589,7 @@ exports.getTempleLiveStream = async (req, res) => {
                 temple_id: templeDetails._id,
                 temple_name: templeDetails.temple_name,
                 temple_image_url: templeDetails.temple_image,
-                background_image_url: templeDetails.background_image,
+                feature_image_url: templeDetails.background_image,
                 title: livestream.title,
                 description: livestream.description,
                 location: templeDetails.location,
@@ -595,8 +615,12 @@ exports.temple_suggested_videos = async (req, res) => {
 
     try {
 
-        const templeId = req.temple._id
+        const templeId = req.temple._id;
         const { limit } = req.query;
+
+        if (temple.user_type !== constants.USER_TYPE.TEMPLE)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+
         const response = await axios.get(
             `${MUXURL}/video/v1/assets`,
             {
@@ -608,7 +632,7 @@ exports.temple_suggested_videos = async (req, res) => {
         );
 
         const assetsId = response.data.data.map(asset => asset.id);
-        const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId }, guruId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
+        const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId }, templeId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
         const matchedData = response.data.data.filter(user => {
             return videoData.some(muxData => muxData.muxData.asset_id === user.id);
         });
@@ -672,16 +696,28 @@ exports.AllBankList = async (req, res) => {
 
     try {
 
+        let query = {};
+
+        if (req.body.userId) {
+            query = { _id: req.body.userId, user_type: constants.USER_TYPE.ADMIN };
+        } else if (req.body.templeId) {
+            query = { _id: req.body.templeId, user_type: constants.USER_TYPE.TEMPLE };
+        } else {
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_request_body', {}, req.headers.lang);
+        }
+
+        const userOrTemple = await (req.body.userId ? User : Temple).findOne(query);
+
+        if (!userOrTemple)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
         const addBank = await Bank.find();
 
-        if (!addBank || addBank.length === 0)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.bank_details_not_found', [], req.headers.lang);
-
-        let data = addBank.map(data => ({
+        const data = addBank.map(data => ({
             bank_id: data._id,
             bank_name: data.bank_name,
             bank_logo: data.bank_logo
-        }))
+        })) || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_all_bank_details', data, req.headers.lang);
 
@@ -693,36 +729,34 @@ exports.AllBankList = async (req, res) => {
 
 
 
-
 exports.addBankDetails = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
-        const temple = await TempleGuru.findOne({ _id: templeId });
-        const { bank_id } = req.body;
+        const templeId = req.temple._id;
+        const reqBody = req.body;
+        const temple = await Temple.findOne({ _id: templeId });
+        const { bank_id } = reqBody;
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const addBank = await Bank.findOneAndUpdate({ _id: bank_id },
-            {
-                $set:
-                {
-                    bank_name: req.body.bank_name,
-                    account_number: req.body.account_number,
-                    ifsc_code: req.body.ifsc_code,
-                    templeId: templeId
-                }
-            })
+        const addBank = await Bank.findOne({ _id: bank_id });
+         if(addBank.bank_name !== reqBody.bank_name)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.valid_bank_name', {}, req.headers.lang);
+          
+         reqBody.bank_name = addBank.bank_name;
+         reqBody.bank_logo = addBank.bank_logo;
+         reqBody.templeId = templeId;
+         const bank = await TempleBankDetails.create(reqBody)
 
         let data = {
-            bank_id: addBank._id,
-            bank_name: addBank.bank_name,
-            account_number: addBank.account_number,
-            bank_logo: addBank.bank_logo,
-            ifsc_code: addBank.ifsc_code,
-            temple_id: addBank.templeId
+            bank_id: bank._id,
+            bank_name: bank.bank_name,
+            account_number: bank.account_number,
+            bank_logo: bank.bank_logo,
+            ifsc_code: bank.ifsc_code,
+            temple_id: bank.templeId
         }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'TEMPLE.add_bank_details', data, req.headers.lang);

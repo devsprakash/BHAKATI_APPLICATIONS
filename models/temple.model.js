@@ -82,6 +82,17 @@ const templeSchema = new mongoose.Schema({
         type:String,
         default:null
     },
+    category:{
+        type:String
+    },
+    darsan:{
+        type:Boolean,
+        default:false
+    },
+    puja:{
+        type:Boolean,
+        default:false
+    },
     created_at: {
         type: String
     },

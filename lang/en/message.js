@@ -88,6 +88,7 @@ module.exports = {
         all_the_slots_booked: "Today there is no slot are available all the slots are booked"
 
     },
+    
     'TEMPLE': {
         signUp_success: 'temple successfully signUp',
         not_found: 'temples or guru are not found',
@@ -118,7 +119,8 @@ module.exports = {
         update_temple_profile_image: 'successfully update the temple profile image',
         no_image: "no image uploaded",
         upload_success: 'temple image uploaded successfully',
-        account_verify: 'temple account verify successfully'
+        account_verify: 'temple account verify successfully',
+        valid_bank_name:'please enter valid bank name'
     },
 
     'LIVESTREAM': {

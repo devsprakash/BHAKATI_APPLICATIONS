@@ -224,6 +224,13 @@ exports.update_temple_profile_validator = [
             .withMessage('closing_time is required')
             .isString().withMessage('closing_time should be a string')
             .trim(),
+
+        body('category')
+            .not()
+            .isEmpty()
+            .withMessage('category is required')
+            .isString().withMessage('category should be a string')
+            .trim(),
     ],
         {
             message: 'please update whole key or single ',
@@ -246,8 +253,60 @@ exports.create_live_streaming_validator = [
         .withMessage('description is required')
         .isString().withMessage('description should be a string')
         .trim(),
+];
+
+exports.create_bank_by_admin_validator = [
+
+    body('bank_name')
+        .not()
+        .isEmpty()
+        .withMessage('bank_name is required')
+        .isString().withMessage('bank_name should be a string')
+        .trim(),
 ]
 
+exports.get_all_bank_list_validator = [
+
+    oneOf([
+        body('userId')
+            .not()
+            .isEmpty()
+            .withMessage('userId is required')
+            .isString().withMessage('userId should be a string')
+            .isMongoId().withMessage('please enter a valid userId')
+            .trim(),
+
+        body('templeId')
+            .not()
+            .isEmpty()
+            .withMessage('templeId is required')
+            .isString().withMessage('templeId should be a string')
+            .isMongoId().withMessage('please enter a valid templeId')
+            .trim(),
+    ],
+        {
+            message: 'please enter userId or templeId',
+        }),
+]
+
+
+exports.add_bank_validator = [
+
+
+    body('account_number')
+    .not()
+    .isEmpty()
+    .withMessage('account_number is required')
+    .isNumeric().withMessage('account_number should be a number')
+    .trim(),
+
+    body('ifsc_code')
+    .not()
+    .isEmpty()
+    .withMessage('ifsc_code is required')
+    .isString().withMessage('ifsc_code should be a string')
+    .trim(),
+]
 
 exports.ValidatorResult = (req, res, next) => {
 
