@@ -4,18 +4,18 @@ const mongoose = require('mongoose');
 
 const ritualSchema = new mongoose.Schema({
 
-    ritualName: {
+    ritual_name: {
         type: String
     },
-    StartTime: {
+    start_time: {
         type: String
     },
-    EndTime: {
+    end_time: {
         type: String
     },
     templeId:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Guru'
+        ref:'temple'
     },
     created_at: {
         type: String

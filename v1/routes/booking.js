@@ -3,7 +3,7 @@ const express = require('express');
 const { createdNewSlot, bookingSlotDownloaded, updateSlot, bookedPuja, temple_under_list_of_slots, bookedList, deleteSlot, getAllTheSlots, TempleUnderAllTheBookings } = require('../controllers/booking.controller');
 const router = express.Router();
 const authenticate = require('../../middleware/authenticate');
-const TempleAuth = require('../../middleware/guru.auth');
+const TempleAuth = require('../../middleware/temple.auth');
 const { create_new_slot_validator, ValidatorResult, update_slot_validator, delete_slot_validator, new_booking_validator, download_booking_validator } = require('../../validation/booking.validator')
 
 

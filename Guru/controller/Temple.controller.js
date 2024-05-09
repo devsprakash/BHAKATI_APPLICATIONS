@@ -25,10 +25,6 @@ const TempleBankDetails = require('../../models/templeBankDetail.model')
 
 
 
-
-
-
-
 exports.signUp = async (req, res) => {
 
     const reqBody = req.body;
@@ -69,12 +65,11 @@ exports.signUp = async (req, res) => {
             created_at: templeData.created_at,
             updated_at: templeData.updated_at,
             __v: 0
-        }
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'TEMPLE.signUp_success', responseData, req.headers.lang);
 
     } catch (err) {
-
         console.log("err(signUp)........", err)
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
@@ -392,8 +387,8 @@ exports.updateTempleProfile = async (req, res) => {
         if (temple.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        temple_name = reqBody.temple_name
-        mobile_number = reqBody.mobile_number,
+           temple_name = reqBody.temple_name
+            mobile_number = reqBody.mobile_number,
             email = reqBody.email,
             location = reqBody.location,
             state = reqBody.state,
@@ -401,10 +396,13 @@ exports.updateTempleProfile = async (req, res) => {
             contact_person_name = reqBody.contact_person_name,
             contact_person_designation = reqBody.contact_person_designation,
             opening_time = reqBody.opening_time
-        closing_time = reqBody.closing_time
-        category = reqBody.category
-
+           closing_time = reqBody.closing_time
+           category = reqBody.category
+   
         const templeData = await Temple.findOneAndUpdate({ _id: templeId }, reqBody, { new: true })
+
+        if(!templeData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', {}, req.headers.lang);
 
         const responseData = {
             temple_id: templeData._id,
@@ -422,7 +420,7 @@ exports.updateTempleProfile = async (req, res) => {
             opening_time: templeData.opening_time,
             closing_time: templeData.closing_time,
             updated_at: templeData.updated_at
-        }
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.update_temple_profile', responseData, req.headers.lang);
 
@@ -434,57 +432,6 @@ exports.updateTempleProfile = async (req, res) => {
 
 
 
-exports.updateProfileImage = async (req, res) => {
-
-    try {
-
-        const templeId = req.temple._id;
-        const temple = await Temple.findOne({ _id: templeId });
-
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE)) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-        }
-
-        if (!req.files || (!req.files['image'] && !req.files['background_image'])) {
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'Image file or background image file is required', {}, req.headers.lang);
-        }
-
-        let updateData = {};
-
-        if (req.files['profile_image']) {
-            const temple_image_url = `${BASEURL}/uploads/${req.files['profile_image'][0].filename}`;
-            updateData.temple_image = temple_image_url;
-        }
-
-        if (req.files['background_image']) {
-            const background_image_url = `${BASEURL}/uploads/${req.files['background_image'][0].filename}`;
-            updateData.background_image = background_image_url;
-        }
-
-        const templeData = await Temple.findOneAndUpdate(
-            { _id: templeId },
-            { $set: updateData },
-            { new: true }
-        );
-
-        templeData.updated_at = dateFormat.set_current_timestamp();
-        await templeData.save();
-
-        responseData = {
-            temple_id: templeData._id,
-            temple_name: templeData.temple_name,
-            temple_image_url: templeData.temple_image,
-            feature_image_url: templeData.background_image,
-        }
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.update_temple_profile_image', responseData, req.headers.lang);
-
-    } catch (err) {
-        console.error('Error(updateProfileImage):', err);
-        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
-    }
-};
-
-
 
 exports.CreateNewLiveStreamByTemple = async (req, res) => {
 
@@ -492,7 +439,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
     const reqBody = req.body;
     const temple = await Temple.findById(templeId)
 
-    if (temple.user_type !== constants.USER_TYPE.TEMPLE)
+    if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
         return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
     const requestData = {
@@ -550,7 +497,7 @@ exports.CreateNewLiveStreamByTemple = async (req, res) => {
             live_stream_id: liveStreamingData.live_stream_id,
             created_at: liveStreamingData.created_at,
             templeId: liveStreamingData.templeId
-        }
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.guru_live_stream_created', responseData, req.headers.lang);
 
@@ -578,6 +525,10 @@ exports.getTempleLiveStream = async (req, res) => {
 
         const liveStreamData = await TempleLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData } }).limit(parseInt(limit))
             .populate('templeId', 'temple_name category temple_image background_image _id state district location mobile_number open_time closing_time created_at');
+
+        if (!liveStreamData || liveStreamData.length == 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.Live_stream_not_found', [], req.headers.lang);
+
 
         const responseData = await Promise.all(liveStreamData.map(async livestream => {
             const templeDetails = await Temple.findOne({ _id: livestream.templeId });
@@ -617,6 +568,7 @@ exports.temple_suggested_videos = async (req, res) => {
 
         const templeId = req.temple._id;
         const { limit } = req.query;
+        const temple = await Temple.findById(templeId)
 
         if (temple.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
@@ -633,6 +585,10 @@ exports.temple_suggested_videos = async (req, res) => {
 
         const assetsId = response.data.data.map(asset => asset.id);
         const videoData = await Video.find({ 'muxData.asset_id': { $in: assetsId }, templeId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
+
+        if (!videoData || videoData.length == 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.video_not_found', [], req.headers.lang);
+
         const matchedData = response.data.data.filter(user => {
             return videoData.some(muxData => muxData.muxData.asset_id === user.id);
         });
@@ -713,6 +669,9 @@ exports.AllBankList = async (req, res) => {
 
         const addBank = await Bank.find();
 
+        if (!addBank || addBank.length == 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.bank_details_not_found', [], req.headers.lang);
+
         const data = addBank.map(data => ({
             bank_id: data._id,
             bank_name: data.bank_name,
@@ -742,13 +701,17 @@ exports.addBankDetails = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const addBank = await Bank.findOne({ _id: bank_id });
-         if(addBank.bank_name !== reqBody.bank_name)
+
+        if (!addBank)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.bank_details_not_found', [], req.headers.lang);
+
+        if (addBank.bank_name !== reqBody.bank_name)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'TEMPLE.valid_bank_name', {}, req.headers.lang);
-          
-         reqBody.bank_name = addBank.bank_name;
-         reqBody.bank_logo = addBank.bank_logo;
-         reqBody.templeId = templeId;
-         const bank = await TempleBankDetails.create(reqBody)
+
+        reqBody.bank_name = addBank.bank_name;
+        reqBody.bank_logo = addBank.bank_logo;
+        reqBody.templeId = templeId;
+        const bank = await TempleBankDetails.create(reqBody)
 
         let data = {
             bank_id: bank._id,
@@ -768,32 +731,36 @@ exports.addBankDetails = async (req, res) => {
 };
 
 
-
 exports.getBankDetails = async (req, res) => {
 
     try {
 
-        const { templeId } = req.params;
+        const templeId = req.temple._id;
+        const { bankId } = req.params;
 
-        const banks = await Bank.findOne({ templeId: templeId })
-            .populate('templeId', 'temple_name temple_image _id')
+        const templeData = await Temple.findById(templeId);
 
-        if (!banks)
+        if (!templeData || templeData.user_type !== constants.USER_TYPE.TEMPLE)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const bank = await TempleBankDetails.findOne({ _id: bankId, templeId }).populate('templeId', 'temple_name temple_image _id');
+
+        if (!bank)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.bank_details_not_found', {}, req.headers.lang);
 
-        let data = {
-            bank_id: banks._id,
-            bank_name: banks.bank_name,
-            account_number: banks.account_number,
-            ifsc_code: banks.ifsc_code,
-            bank_logo: banks.bank_logo,
-            temple_id: banks.templeId
-        }
+        const data = {
+            bank_id: bank._id,
+            bank_name: bank.bank_name,
+            account_number: bank.account_number,
+            ifsc_code: bank.ifsc_code,
+            bank_logo: bank.bank_logo,
+            temple_id: bank.templeId
+        } || {}
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_bankDetils', data, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_bankDetails', data, req.headers.lang);
 
     } catch (err) {
-        console.error('Error(getBankDetails)....', err);
+        console.error('Error(getBankDetails):', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
@@ -803,45 +770,48 @@ exports.updateBankDetails = async (req, res) => {
 
     try {
 
-        const { templeId } = req.params;
+        const templeId = req.temple._id;
+        const { bankId } = req.params;
+        const reqBody = req.body;
 
-        const temple = await TempleGuru.findOne({ _id: templeId });
+        const templeData = await Temple.findById(templeId);
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+        if (!templeData || templeData.user_type !== constants.USER_TYPE.TEMPLE)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const banks = await Bank.findOneAndUpdate({ templeId: templeId }, {
-            $set:
-            {
-                bank_name: req.body.bank_name,
-                account_number: req.body.account_number,
-                ifsc_code: req.body.ifsc_code,
-                updated_at: dateFormat.set_current_timestamp()
-            }
-        },
-            { new: true },
+        const bank = await TempleBankDetails.findOne({ _id: bankId, templeId }).populate('templeId', 'temple_name temple_image _id');
 
-        ).populate('templeId', 'temple_name temple_image _id')
-
-        if (!banks)
+        if (!bank)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.bank_details_not_found', {}, req.headers.lang);
 
-        let data = {
-            bank_id: banks._id,
-            bank_name: banks.bank_name,
-            account_number: banks.account_number,
-            ifsc_code: banks.ifsc_code,
-            bank_logo: banks.bank_logo,
-            temple_id: banks.templeId
+        if (reqBody.bank_name) {
+            bank.bank_name = reqBody.bank_name;
         }
+        if (reqBody.account_number) {
+            bank.account_number = reqBody.account_number;
+        }
+        if (reqBody.ifsc_code) {
+            bank.ifsc_code = reqBody.ifsc_code;
+        }
+        await bank.save();
+
+        const data = {
+            bank_id: bank._id,
+            bank_name: bank.bank_name,
+            account_number: bank.account_number,
+            ifsc_code: bank.ifsc_code,
+            bank_logo: bank.bank_logo,
+            temple_id: bank.templeId
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.update_bank_details', data, req.headers.lang);
 
     } catch (err) {
-        console.error('Error(updateBankDetails)....', err);
+        console.error('Error(updateBankDetails):', err);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
 
 
 
@@ -849,19 +819,19 @@ exports.deleteBankDetails = async (req, res) => {
 
     try {
 
-        const { templeId } = req.params;
 
-        const temple = await TempleGuru.findOne({ _id: templeId });
+        const templeId = req.temple._id;
+        const { bankId } = req.params;
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+        const templeData = await Temple.findById(templeId);
 
-        const banks = await Bank.findOne({ templeId: templeId });
+        if (!templeData || templeData.user_type !== constants.USER_TYPE.TEMPLE)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        if (!banks)
+        const banks = await TempleBankDetails.findOneAndDelete({ _id: bankId, templeId });
+
+        if (!bank)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.bank_details_not_found', {}, req.headers.lang);
-
-        await Bank.deleteOne({ _id: banks._id })
 
         let data = {
             bank_id: banks._id,
@@ -869,7 +839,7 @@ exports.deleteBankDetails = async (req, res) => {
             account_number: banks.account_number,
             ifsc_code: banks.ifsc_code,
             temple_id: banks.templeId
-        }
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.delete_bank_details', data, req.headers.lang);
 
@@ -885,34 +855,32 @@ exports.addpanditDetails = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
+        const templeId = req.temple._id;
         const reqBody = req.body;
-        const temple = await TempleGuru.findOne({ _id: templeId });
+        const temple = await Temple.findOne({ _id: templeId });
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
 
         const existEmail = await Pandit.findOne({ email: reqBody.email });
-
         if (existEmail)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAI4, 'TEMPLE.email_already_exist', {}, req.headers.lang);
 
         reqBody.templeId = templeId;
-
         const addpandit = await Pandit.create(reqBody);
 
         let data = {
+            pandit_id: addpandit._id,
             full_name: addpandit.full_name,
             email: addpandit.email,
             mobile_number: addpandit.mobile_number,
             temple_name: addpandit.templeId.temple_name,
             temple_image: addpandit.templeId.temple_image,
             temple_id: addpandit.templeId._id,
-            pandit_id: addpandit._id,
-        }
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'TEMPLE.add_pandit_details', data, req.headers.lang);
 
@@ -924,30 +892,32 @@ exports.addpanditDetails = async (req, res) => {
 
 
 exports.getpanditDetails = async (req, res) => {
+
     try {
+
         const { panditId } = req.params;
-        const templeId = req.Temple._id;
+        const templeId = req.temple._id;
 
-        const temple = await TempleGuru.findOne({ _id: templeId });
+        const temple = await Temple.findOne({ _id: templeId });
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY))
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const pandit = await Pandit.findOne({ _id: panditId, templeId: templeId })
-            .populate('templeId', 'temple_name temple_image _id');
+            .populate('templeId', 'temple_name temple_image _id')
 
         if (!pandit)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found_pandit', {}, req.headers.lang);
 
         let data = {
+            pandit_id: pandit._id,
             full_name: pandit.full_name,
             email: pandit.email,
             mobile_number: pandit.mobile_number,
             temple_name: pandit.templeId.temple_name,
             temple_image: pandit.templeId.temple_image,
             temple_id: pandit.templeId._id,
-            pandit_id: pandit._id,
-        }
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_pandit_details', data, req.headers.lang);
 
@@ -963,7 +933,11 @@ exports.getAllpanditList = async (req, res) => {
 
     try {
 
-        const { templeId } = req.params;
+        const templeId = req.temple._id;
+        const temple = await Temple.findOne({ _id: templeId });
+
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const pandit = await Pandit.find({ templeId: templeId })
             .populate('templeId', 'temple_name temple_image _id')
@@ -979,7 +953,8 @@ exports.getAllpanditList = async (req, res) => {
             temple_image: data.templeId.temple_image,
             temple_id: data.templeId._id,
             pandit_id: data._id,
-        }))
+
+        })) || []
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.get_pandit_details', responseData, req.headers.lang);
 
@@ -995,38 +970,36 @@ exports.UpdatepanditDetails = async (req, res) => {
     try {
 
         const { panditId } = req.params;
-        const templeId = req.Temple._id;
+        const templeId = req.temple._id;
         const reqBody = req.body;
-        const temple = await TempleGuru.findOne({ _id: templeId });
+        const temple = await Temple.findOne({ _id: templeId });
 
-        if (!temple)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
-
-        if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
-        const pandit = await Pandit.findOneAndUpdate({ _id: panditId, templeId: templeId },
-            {
-                $set: {
-                    email: reqBody.email,
-                    mobile_number: reqBody.mobile_number,
-                    full_name: reqBody.full_name,
-                    updated_at: dateFormat.set_current_timestamp()
-                }
-            },
-            { new: true }
-        )
+        const pandit = await Pandit.findOne({ _id: panditId, templeId: templeId })
 
         if (!pandit)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found_pandit', {}, req.headers.lang);
+
+        if (reqBody.full_name) {
+            pandit.full_name = reqBody.full_name;
+        }
+        if (reqBody.email) {
+            pandit.email = reqBody.email;
+        }
+        if (reqBody.mobile_number) {
+            pandit.mobile_number = reqBody.mobile_number;
+        }
+        await pandit.save();
 
         let data = {
             full_name: pandit.full_name,
             email: pandit.email,
             mobile_number: pandit.mobile_number,
             pandit_id: pandit._id,
-        }
 
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.update_pandit_details', data, req.headers.lang);
 
@@ -1043,13 +1016,10 @@ exports.deletePanditDetails = async (req, res) => {
     try {
 
         const { panditId } = req.params;
-        const templeId = req.Temple._id;
-        const temple = await TempleGuru.findOne({ _id: templeId });
+        const templeId = req.temple._id;
+        const temple = await Temple.findOne({ _id: templeId });
 
-        if (!temple)
-            return sendResponse(res, constants.WEB_STATUS_CODE.NOT_FOUND, constants.STATUS_CODE.FAIL, 'TEMPLE.not_found', {}, req.headers.lang);
-
-        if (temple.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
         const pandit = await Pandit.findOneAndDelete({ _id: panditId, templeId: templeId })
@@ -1057,7 +1027,15 @@ exports.deletePanditDetails = async (req, res) => {
         if (!pandit)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found_pandit', {}, req.headers.lang);
 
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.delete_pandit_details', pandit, req.headers.lang);
+        let data = {
+            full_name: pandit.full_name,
+            email: pandit.email,
+            mobile_number: pandit.mobile_number,
+            pandit_id: pandit._id,
+
+        } || {}
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.delete_pandit_details', data, req.headers.lang);
 
 
     } catch (err) {

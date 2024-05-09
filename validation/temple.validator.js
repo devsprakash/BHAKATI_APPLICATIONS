@@ -294,18 +294,153 @@ exports.add_bank_validator = [
 
 
     body('account_number')
-    .not()
-    .isEmpty()
-    .withMessage('account_number is required')
-    .isNumeric().withMessage('account_number should be a number')
-    .trim(),
+        .not()
+        .isEmpty()
+        .withMessage('account_number is required')
+        .isNumeric().withMessage('account_number should be a number')
+        .trim(),
 
     body('ifsc_code')
-    .not()
-    .isEmpty()
-    .withMessage('ifsc_code is required')
-    .isString().withMessage('ifsc_code should be a string')
-    .trim(),
+        .not()
+        .isEmpty()
+        .withMessage('ifsc_code is required')
+        .isString().withMessage('ifsc_code should be a string')
+        .trim(),
+]
+
+exports.get_bank_details_validator = [
+
+    param('bankId')
+        .not()
+        .isEmpty()
+        .withMessage('bankId is required')
+        .isString().withMessage('bankId should be a string')
+        .isMongoId().withMessage('please enter a valid bankId')
+        .trim(),
+]
+
+
+exports.update_bank_details_validator = [
+
+    param('bankId')
+        .not()
+        .isEmpty()
+        .withMessage('bankId is required')
+        .isString().withMessage('bankId should be a string')
+        .isMongoId().withMessage('please enter a valid bankId')
+        .trim(),
+
+    oneOf([
+
+        body('bank_name')
+            .not()
+            .isEmpty()
+            .withMessage('bank_name is required')
+            .isNumeric().withMessage('bank_name should be a number')
+            .trim(),
+
+        body('account_number')
+            .not()
+            .isEmpty()
+            .withMessage('account_number is required')
+            .isNumeric().withMessage('account_number should be a number')
+            .trim(),
+
+        body('ifsc_code')
+            .not()
+            .isEmpty()
+            .withMessage('ifsc_code is required')
+            .isString().withMessage('ifsc_code should be a string')
+            .trim(),
+    ],
+        {
+            message: 'please enter valid key',
+        }),
+]
+
+exports.add_pandit_validator = [
+
+    body('full_name')
+        .not()
+        .isEmpty()
+        .withMessage('full_name is required')
+        .isString().withMessage('full_name should be a string')
+        .isLength({ min: 2, max: 25 })
+        .trim(),
+
+    body('email')
+        .not()
+        .isEmpty()
+        .withMessage('email is required')
+        .isString().withMessage('email should be a string')
+        .isEmail().withMessage('please enter a valid email')
+        .isLowercase().withMessage('email should be lowercase')
+        .trim(),
+
+    body('mobile_number')
+        .not()
+        .isEmpty()
+        .withMessage('mobile_number is required')
+        .isString().withMessage('mobile_number should be a string')
+        .isMobilePhone().withMessage('please enter a valid mobile_number')
+        .isLength({ min: 10, max: 12 }).withMessage('mobile_number length should be 10')
+        .trim(),
+
+]
+
+exports.get_pandit_validator = [
+
+    param('panditId')
+        .not()
+        .isEmpty()
+        .withMessage('panditId is required')
+        .isString().withMessage('panditId should be a string')
+        .isMongoId().withMessage('please enter a valid panditId')
+        .trim(),
+]
+
+
+exports.update_pandit_details_validator = [
+
+    param('panditId')
+        .not()
+        .isEmpty()
+        .withMessage('panditId is required')
+        .isString().withMessage('panditId should be a string')
+        .isMongoId().withMessage('please enter a valid panditId')
+        .trim(),
+
+    oneOf([
+
+        body('full_name')
+        .not()
+        .isEmpty()
+        .withMessage('full_name is required')
+        .isString().withMessage('full_name should be a string')
+        .isLength({ min: 2, max: 25 })
+        .trim(),
+
+    body('email')
+        .not()
+        .isEmpty()
+        .withMessage('email is required')
+        .isString().withMessage('email should be a string')
+        .isEmail().withMessage('please enter a valid email')
+        .isLowercase().withMessage('email should be lowercase')
+        .trim(),
+
+    body('mobile_number')
+        .not()
+        .isEmpty()
+        .withMessage('mobile_number is required')
+        .isString().withMessage('mobile_number should be a string')
+        .isMobilePhone().withMessage('please enter a valid mobile_number')
+        .isLength({ min: 10, max: 12 }).withMessage('mobile_number length should be 10')
+        .trim(),
+    ],
+        {
+            message: 'please enter valid key',
+        }),
 ]
 
 exports.ValidatorResult = (req, res, next) => {

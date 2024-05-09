@@ -1,14 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const GuruAuth = require('../../middleware/guru.auth');
-const { uploadNewVideo, getAllVideo, getVideo, getCountTotalViews } = require('../controller/videoUpload.controller');
+const { videoAddByTemple, getAllVideo, getVideo, getCountTotalViews, videoAddByGuru } = require('../controller/videoUpload.controller');
 const upload = require('../../middleware/multer');
-const TempleAuth = require('../../middleware/guru.auth');
+const TempleAuth = require('../../middleware/temple.auth');
+const GuruAuth = require('../../middleware/guru.auth');
+const { add_new_video_validator, ValidatorResult } = require('../../validation/video.validator');
 
 
-router.post('/addNewVideo' , upload.single('video') , TempleAuth , uploadNewVideo );
-router.get('/getAllVideos' , getAllVideo);
-router.get('/totalViews' , getCountTotalViews)
+
+
+router.post('/addByTempleVideo',upload.single('video'), add_new_video_validator, ValidatorResult, TempleAuth, videoAddByTemple);
+router.post('/addByGuruVideo',upload.single('video'), add_new_video_validator, ValidatorResult, GuruAuth, videoAddByGuru);
+router.get('/getAllVideos', getAllVideo);
+router.get('/totalViews', getCountTotalViews)
 
 
 module.exports = router;

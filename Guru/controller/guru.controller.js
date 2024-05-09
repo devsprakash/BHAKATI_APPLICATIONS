@@ -5,7 +5,7 @@ const { BASEURL } = require('../../keys/development.keys')
 const constants = require("../../config/constants");
 const { checkAdmin } = require('../../v1/services/user.service')
 const dateFormat = require('../../helper/dateformat.helper');
-const TempleGuru = require('../../models/guru.model');
+const Guru = require('../../models/guru.model');
 const bcrypt = require('bcryptjs')
 const { isValid } = require("../../services/blackListMail");
 const { MUX_TOKEN_ID, MUX_TOKEN_SECRET, MUXURL, WEBHOOKSCRETKEY } = require('../../keys/development.keys')
@@ -16,59 +16,184 @@ const User = require('../../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 const GuruLiveStreaming = require('../../models/GuruLiveStreaming.model')
 const { minutesToSeconds, verifyWebhookSignature, handleActiveLiveStream, getLiveStreamInfo } = require('../services/views.services')
-const Mux = require('@mux/mux-node');
-const mux = new Mux({
-    tokenId: MUX_TOKEN_ID,
-    tokenSecret: MUX_TOKEN_SECRET
-});
 
 
 
 
 
 
-exports.addNewGuru = async (req, res) => {
+
+exports.signUp = async (req, res) => {
 
     try {
 
-        const { email, password, templeId } = req.body;
+        const reqBody = req.body;
 
-        const isBlacklisted = await isValid(email);
-
+        const isBlacklisted = await isValid(reqBody.email);
         if (!isBlacklisted)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.blackList_mail', {}, req.headers.lang);
 
-        const existingEmail = await TempleGuru.findOne({ email });
+        const existingEmail = await Guru.findOne({ email: reqBody.email });
         if (existingEmail)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.existing_email', {}, req.headers.lang);
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(reqBody.password, 10);
+        reqBody.password = hashedPassword;
+        reqBody.created_at = dateFormat.set_current_timestamp();
+        reqBody.updated_at = dateFormat.set_current_timestamp();
 
-        if (!req.files['image'] || !req.files['background_image'])
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.upload_image', {}, req.headers.lang);
+        const guru = await Guru.create(reqBody);
 
-        const newGuru = await TempleGuru.create({
-            ...req.body,
-            guru_image: `${BASEURL}/uploads/${req.files['image'][0].filename}`,
-            password: hashedPassword,
-            temple_id: templeId,
-            user_type: 4,
-            gurus_id: uuidv4(),
-            background_image: `${BASEURL}/uploads/${req.files['background_image'][0].filename}`,
-            created_at: dateFormat.set_current_timestamp(),
-            updated_at: dateFormat.set_current_timestamp()
-        });
+        const responseData = {
+            guru_id: guru._id,
+            guru_name: guru.guru_name,
+            email: guru.email,
+            mobile_number: guru.mobile_number,
+            expertise: guru.expertise,
+            adharacard: guru.adharacard,
+            description: guru.description,
+            user_type: guru.user_type,
+            status: guru.status,
+            created_at: guru.created_at,
+            updated_at: guru.updated_at
+        } || {}
 
-        const responseData = guruResponseData(newGuru)
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.add_new_guru', responseData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.signup_success', responseData, req.headers.lang);
 
     } catch (error) {
-        console.error('Error in addNewGuru:', error);
+        console.error('Error(signUp).....', error);
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', error.message, req.headers.lang);
     }
 };
 
+
+exports.uploadGuruImage = async (req, res) => {
+
+    try {
+
+        const { guruId } = req.params;
+        const guru = await Guru.findById(guruId);
+
+        if (!guru || (guru.user_type !== constants.USER_TYPE.GURU))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        if (!req.files || (!req.files['profile_image'] && !req.files['background_image']))
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.upload_image', {}, req.headers.lang);
+
+        const guru_image_url = `${BASEURL}/uploads/${req.files['profile_image'][0].filename}`;
+        guru.guru_image = guru_image_url;
+        const background_image_url = `${BASEURL}/uploads/${req.files['background_image'][0].filename}`;
+        guru.background_image = background_image_url;
+        await guru.save()
+
+        const responseData = {
+            guru_id: guru._id,
+            guru_name: guru.guru_name,
+            guru_image_url: guru.guru_image,
+            feature_image_url: guru.background_image,
+            email: guru.email,
+            mobile_number: guru.mobile_number,
+            expertise: guru.expertise,
+            adharacard: guru.adharacard,
+            description: guru.description,
+            user_type: guru.user_type,
+            status: guru.status,
+            updated_at: guru.updated_at
+        } || {}
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.upload_success', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error('Error(uploadGuruImage)........:', err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
+
+
+
+exports.login = async (req, res) => {
+
+    try {
+
+        const reqBody = req.body;
+        const { email, password } = reqBody;
+
+        const guru = await Guru.findOne({ email });
+
+        if (!guru || (guru.user_type !== constants.USER_TYPE.GURU))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const matchPassword = await bcrypt.compare(password, guru.password);
+        if (!matchPassword)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
+
+        if (guru.verify === false)
+            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.guru_was_not_verify', {}, req.headers.lang);
+
+        if (guru)
+            if (guru.status === 0 || guru.status === 2 || guru.deleted_at !== null) {
+                let errorMsg;
+                if (guru.status === 0) errorMsg = 'USER.inactive_account';
+                else if (guru.status === 2) errorMsg = 'USER.deactive_account';
+                else errorMsg = 'USER.inactive_account';
+                return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, errorMsg, {}, req.headers.lang);
+            }
+
+        const newToken = await guru.generateAuthToken();
+        const refreshToken = await guru.generateRefreshToken();
+
+        guru.refresh_tokens = refreshToken;
+        guru.tokens = newToken;
+        await guru.save();
+
+        const responseData = {
+            guru_id: guru._id,
+            guru_name: guru.guru_name,
+            email: guru.email,
+            mobile_number: guru.mobile_number,
+            expertise: guru.expertise,
+            adharacard: guru.adharacard,
+            description: guru.description,
+            user_type: guru.user_type,
+            status: guru.status,
+            tokens: guru.tokens,
+            refresh_tokens: guru.refresh_tokens,
+            created_at: guru.created_at,
+            updated_at: guru.updated_at,
+            __v: 0
+        }
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.login_success', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.log(`err(guruLogin).... `, err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+}
+
+
+
+exports.logout = async (req, res, next) => {
+
+    try {
+
+        const templeId = req.guru._id;
+        let guruData = await Guru.findById(templeId);
+
+        if (!guruData || (guruData.user_type !== constants.USER_TYPE.GURU))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GURU.guru_not_found', {}, req.headers.lang);
+
+        guruData.tokens = null;
+        guruData.refresh_tokens = null;
+        await guruData.save();
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, `GURU.guru_logout`, {}, req.headers.lang);
+
+    } catch (err) {
+        console.log(`err(logout)....`, err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+}
 
 
 
@@ -76,9 +201,9 @@ exports.getGuruProfile = async (req, res) => {
 
     try {
 
-        const guruId = req.Temple._id;
+        const guruId = req.guru._id;
         const { limit } = req.query;
-        const guruData = await TempleGuru.findOne({ _id: guruId });
+        const guruData = await Guru.findOne({ _id: guruId });
 
         if (!guruData || (guruData.user_type !== constants.USER_TYPE.GURU))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.invalid_user', {}, req.headers.lang);
@@ -95,17 +220,20 @@ exports.getGuruProfile = async (req, res) => {
         const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
             .populate('guruId', 'guru_name guru_image _id email mobile_number gurus_id expertise created_at');
 
-        const guruList = await TempleGuru.find({ user_type: 4 }).sort().limit(limit)
+        const guruList = await Guru.find({ user_type: 4 }).sort().limit(limit)
 
         const responseData = {
             guru_data: {
                 guru_id: guruData._id,
-                guru_name: guruData.guru_name,
+                guru_name: guruData.guruData_name,
+                email: guruData.email,
+                mobile_number: guruData.mobile_number,
+                expertise: guruData.expertise,
+                adharacard: guruData.adharacard,
+                description: guruData.description,
+                user_type: guruData.user_type,
                 guru_image_url: guruData.guru_image,
                 feature_image_url: guruData.background_image,
-                description: guruData.description,
-                email: guruData.email,
-                expertise: guruData.expertise,
                 date_of_joining: guruData.created_at
             } || {},
             live_aarti: GuruData.map(guru => ({
@@ -148,19 +276,15 @@ exports.getGuruProfileByAdmin = async (req, res) => {
     try {
 
         const userId = req.user._id;
-        console.log("data", userId)
         const { limit } = req.query;
-        const { guruId } = req.body;
-
-        if (!userId || !limit)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+        const { guruId } = req.params;
 
         const users = await User.findById(userId)
 
         if (!users || (users.user_type !== constants.USER_TYPE.ADMIN))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.invalid_user', {}, req.headers.lang);
 
-        const guruData = await TempleGuru.findOne({ _id: guruId });
+        const guruData = await Guru.findOne({ _id: guruId });
 
         const response = await axios.get(`${MUXURL}/video/v1/live-streams`, {
             headers: {
@@ -174,18 +298,20 @@ exports.getGuruProfileByAdmin = async (req, res) => {
         const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData }, guruId: guruId }).limit(limit)
             .populate('guruId', 'guru_name guru_image _id email mobile_number gurus_id expertise created_at');
 
-        const guruList = await TempleGuru.find({ user_type: 4 }).sort().limit(limit)
+        const guruList = await Guru.find({ user_type: 4 }).sort().limit(limit)
 
         const responseData = {
             guru_data: {
                 guru_id: guruData._id,
-                guru_name: guruData.guru_name,
+                guru_name: guruData.guruData_name,
+                email: guruData.email,
+                mobile_number: guruData.mobile_number,
+                expertise: guruData.expertise,
+                adharacard: guruData.adharacard,
+                description: guruData.description,
+                user_type: guruData.user_type,
                 guru_image_url: guruData.guru_image,
                 feature_image_url: guruData.background_image,
-                description: guruData.description,
-                email: guruData.email,
-                expertise: guruData.expertise,
-                mobile_number: guruData.mobile_number,
                 date_of_joining: guruData.created_at
             } || {},
             live_aarti: GuruData.map(guru => ({
@@ -223,13 +349,16 @@ exports.getGuruProfileByAdmin = async (req, res) => {
 
 
 
-
 exports.SearchAllGuru = async (req, res) => {
 
     try {
 
-
+        const userId = req.user._id;
         const { sort, guruname, email, expertise, mobile_number } = req.query;
+        const users = await User.findById(userId)
+
+        if (!users || (users.user_type !== constants.USER_TYPE.ADMIN))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.invalid_user', {}, req.headers.lang);
 
         const query = { user_type: 4 };
 
@@ -243,7 +372,6 @@ exports.SearchAllGuru = async (req, res) => {
             query.guru_name = gurunameRegex;
         }
 
-        // Refine keyword search for expertise
         if (expertise) {
             const expertiseRegex = new RegExp(expertise.split(' ').join('|'), 'i');
             query.expertise = expertiseRegex;
@@ -261,37 +389,39 @@ exports.SearchAllGuru = async (req, res) => {
 
         let guruData;
         let totalGurus
-        const selectFields = '_id guru_name email mobile_number expertise gurus_id guru_image background_image created_at updated_at'
+        const selectFields = '_id guru_name email adharacard description mobile_number expertise gurus_id guru_image background_image created_at updated_at'
         if (query.length === 0) {
             [guruData, totalGurus] = await Promise.all([
-                TempleGuru.find({ user_type: 4 })
+                Guru.find({ user_type: 4 })
                     .select(selectFields)
                     .populate('temple_id', 'temple_name temple_image location state district _id user_type')
                     .sort(sortOptions),
-                TempleGuru.countDocuments({ user_type: 4 })
+                Guru.countDocuments({ user_type: 4 })
             ]);
         }
 
         [guruData, totalGurus] = await Promise.all([
-            TempleGuru.find(query)
+            Guru.find(query)
                 .select(selectFields)
                 .populate('temple_id', 'temple_name temple_image location state district _id user_type')
                 .sort(sortOptions),
-            TempleGuru.countDocuments(query)
+            Guru.countDocuments(query)
         ]);
 
 
         const responseData = guruData.map(guru => ({
             total_gurus: totalGurus,
-            guru_name: guru.guru_name,
-            guru_image_url: guru.guru_image,
-            mobile_number: guru.mobile_number,
-            email: guru.email,
-            expertise: guru.expertise,
             guru_id: guru._id,
+            guru_name: guru.guru_name,
+            email: guru.email,
+            mobile_number: guru.mobile_number,
+            expertise: guru.expertise,
+            adharacard: guru.adharacard,
+            description: guru.description,
+            user_type: guru.user_type,
+            guru_image_url: guru.guru_image,
             feature_image_url: guru.background_image,
-            created_at: guru.created_at,
-            updated_at: guru.updated_at
+            created_at: guru.created_at
         })) || [];
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_all_gurus', responseData, req.headers.lang);
@@ -306,12 +436,12 @@ exports.SearchAllGuru = async (req, res) => {
 
 exports.GuruCreateNewLiveStream = async (req, res) => {
 
-    const guruId = req.Temple._id;
+    const guruId = req.guru._id;
     const reqBody = req.body;
-    const guru = await TempleGuru.findById(guruId);
+    const guru = await Guru.findById(guruId);
 
     if (!guru || (guru.user_type !== constants.USER_TYPE.GURU))
-        return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.invalid_user', {}, req.headers.lang);
 
     const requestData = {
         "playback_policy": [
@@ -359,7 +489,16 @@ exports.GuruCreateNewLiveStream = async (req, res) => {
 
         const guruData = await GuruLiveStreaming.create(liveStreamData)
 
-        const responseData = guruLiveStreamResponse(guruData)
+        const responseData = {
+            id: guruData._id,
+            stream_key: guruData.stream_key,
+            description: guruData.description,
+            title: guruData.title,
+            description: guruData.description,
+            plackback_id: guruData.plackback_id,
+            live_stream_id: guruData.live_stream_id,
+            created_at: guruData.created_at,
+        }
 
         return sendResponse(res, constants.WEB_STATUS_CODE.CREATED, constants.STATUS_CODE.SUCCESS, 'GURU.guru_live_stream_created', responseData, req.headers.lang);
 
@@ -386,8 +525,13 @@ exports.getLiveStreamByGuru = async (req, res) => {
 
         const LiveStreamingData = response.data.data.map(stream => stream.id);
 
-        const GuruData = await GuruLiveStreaming.find({ live_stream_id: { $in: LiveStreamingData } }).limit(limit)
-            .populate('guruId', '_id guru_name email mobile_number expertise gurus_id guru_image background_image created_at updated_at');
+        const GuruData = await GuruLiveStreaming.find({
+            live_stream_id: { $in: LiveStreamingData },
+            guruId: { $ne: null } // Adding logic for guruId not equal to null
+        }).limit(limit).populate('guruId', '_id guru_name email mobile_number expertise gurus_id guru_image background_image created_at updated_at');
+
+        if (!GuruData || GuruData.length == 0)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.live_stream_data_not_found', [], req.headers.lang);
 
         const responseData = GuruData.map(guru => ({
             playback_id: guru.playback_id,
@@ -398,13 +542,12 @@ exports.getLiveStreamByGuru = async (req, res) => {
             feature_image_url: guru.guruId.background_image,
             title: guru.title,
             description: guru.description,
-            guru_id: guru._id,
+            guru_id: guru.guruId._id,
             expertise: guru.guruId.expertise,
             email: guru.guruId.email,
             mobile_number: guru.guruId.mobile_number,
             published_date: new Date(),
             views: '',
-            guruId: guru.guruId._id
         })) || []
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
@@ -420,7 +563,12 @@ exports.guru_suggested_videos = async (req, res) => {
 
     try {
 
-        const { guruId, limit } = req.query;
+        const guruId = req.guru._id;
+        const { limit } = req.query;
+        const guru = await Guru.findById(guruId);
+
+        if (!guru || (guru.user_type !== constants.USER_TYPE.GURU))
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.invalid_user', {}, req.headers.lang);
 
         const response = await axios.get(
             `${MUXURL}/video/v1/assets`,
@@ -466,47 +614,39 @@ exports.updateGuruProfile = async (req, res) => {
 
     try {
 
-        const guruId = req.Temple._id;
-        const guru = await TempleGuru.findOne({ _id: guruId });
+        const guruId = req.guru._id;
+        const { guru_name, email, mobile_number, description, adharacard, expertise } = req.body;
+        const guruData = await Guru.findOne({ _id: guruId });
 
-        if (guru.user_type !== constants.USER_TYPE.GURU)
+        if (!guruData || (guruData.user_type !== constants.USER_TYPE.GURU))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const { guru_name, email, mobile_number } = req.body;
+        if (adharacard) {
+            guruData.adharacard = adharacard;
+        }
 
-
-        if (!guru_name || !email)
-            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-
-
-        const updateFields = {};
+        if (description) {
+            guruData.description = description;
+        }
 
         if (guru_name) {
-            updateFields.guru_name = guru_name;
+            guruData.guru_name = guru_name;
         }
 
         if (email) {
-            updateFields.email = email;
-        }
-
-        if (mobile_number) {
-            updateFields.mobile_number = mobile_number;
+            guruData.email = email;
         }
 
         if (expertise) {
-            updateFields.expertise = expertise;
+            guruData.expertise = expertise;
         }
 
         if (mobile_number) {
-            updateFields.mobile_number = mobile_number;
+            guruData.mobile_number = mobile_number;
         }
-
-        const guruData = await TempleGuru.findOneAndUpdate({ _id: guruId }, { $set: { updateFields } }, { new: true });
+        
         guruData.updated_at = dateFormat.set_current_timestamp()
         await guruData.save();
-
-        if (!guruData)
-            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', {}, req.headers.lang);
 
         const responseData = {
             guru_id: guruData._id,
@@ -533,20 +673,29 @@ exports.guruDelete = async (req, res) => {
 
     try {
 
-        const { guruId } = req.query;
+        const { guruId } = req.params;
         const userId = req.user._id;
         const user = await checkAdmin(userId);
 
         if (user.user_type !== constants.USER_TYPE.ADMIN)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const guruData = await TempleGuru.findOneAndDelete({ _id: guruId });
+        const guruData = await Guru.findOneAndDelete({ _id: guruId });
 
-        if (!guruData) {
+        if (!guruData) 
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', {}, req.headers.lang);
+        
+        const responseData = {
+            guru_id: guruData._id,
+            guru_name: guruData.guru_name,
+            guru_image_url: guruData.guru_image,
+            feature_image_url: guruData.background_image,
+            description: guruData.description,
+            email: guruData.email,
+            expertise: guruData.expertise,
+            mobile_number: guruData.mobile_number,
         }
-
-        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.delete_guru', guruData, req.headers.lang);
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.delete_guru', responseData, req.headers.lang);
 
     } catch (err) {
         console.log("err(guruDelete)....", err)
@@ -555,50 +704,3 @@ exports.guruDelete = async (req, res) => {
 
 }
 
-
-
-exports.Webhook = (req, res) => {
-
-    try {
-
-        const payload = {
-            type: 'video.live_stream.idle',
-            data: {
-                stream_id: '036fd35c-516a-7b58-0c95-aa3ddbb2b5f2',
-                status: 'Idle',
-                duration: 3600
-            }
-        };
-
-        const timestamp = Date.now().toString();
-        const isValidSignature = verifyWebhookSignature(payload, timestamp, WEBHOOKSCRETKEY);
-
-        if (!isValidSignature) {
-            console.log('Webhook signature is invalid');
-            return res.status(401).json({ success: false, message: 'Invalid signature' });
-        }
-
-        const eventType = payload.type;
-        let responseData;
-        switch (eventType) {
-            case 'video.live_stream.active':
-                responseData = handleActiveLiveStream(payload);
-                break;
-            case 'video.live_stream.idle':
-                responseData = handleActiveLiveStream(payload);
-                break;
-            case 'video.live_stream.disabled':
-                responseData = handleActiveLiveStream(payload);
-                break;
-            default:
-                console.log('Unknown event type:', eventType);
-                break;
-        }
-
-        res.status(200).json({ success: true, data: responseData });
-
-    } catch (error) {
-        console.error('Error handling webhook:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-}

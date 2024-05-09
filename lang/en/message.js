@@ -88,10 +88,10 @@ module.exports = {
         all_the_slots_booked: "Today there is no slot are available all the slots are booked"
 
     },
-    
+
     'TEMPLE': {
         signUp_success: 'temple successfully signUp',
-        not_found: 'temples or guru are not found',
+        not_found: 'temple data are not found',
         get_all_temples: 'successfully get all temples',
         delete_temples: 'successfully delete this temple',
         already_delete_temples: 'this temple is already deleted',
@@ -120,7 +120,8 @@ module.exports = {
         no_image: "no image uploaded",
         upload_success: 'temple image uploaded successfully',
         account_verify: 'temple account verify successfully',
-        valid_bank_name:'please enter valid bank name'
+        valid_bank_name: 'please enter valid bank name',
+        video_not_found: 'video data not found'
     },
 
     'LIVESTREAM': {
@@ -147,9 +148,9 @@ module.exports = {
 
     },
     'GURU': {
-        add_new_guru: 'successfully add new guru',
+        signup_success: 'guru successfully signup',
         existing_email: 'this email is already existing',
-        guru_login_success: 'guru login successfully',
+        login_success: 'guru login successfully',
         guru_not_found: 'guru was not found',
         guru_logout: 'guru logout successfully',
         get_all_gurus: 'successfully get all the gurus information',
@@ -165,6 +166,21 @@ module.exports = {
         get_all_the_suggested_videos: 'successfully get all the suggested videos',
         delete_guru: 'successfully delete the guru',
         update_guru: 'successfully update the guru profile',
-        upload_image: "No image has uploading please upload both image first"
+        upload_image: "No image has uploading please upload both image first",
+        guru_was_not_verify:'this guru was not verifyed after verify you have to login',
+        upload_success:'image uploading successfully',
+        live_stream_data_not_found: 'no live stream was not found'
+    },
+    "RITHUAL":{
+        add_new_rithuals:"successfully add new rithuals",
+        not_found:'rithual data not found',
+        get_all_rithuals:'successfully get all the rithuals',
+        temple_under_all_the_rithuals:"successfully get temple under all the rithuals",
+        update_rithual:'successfully update the rithuals',
+        delete_rithuals:'successfully delete the rithuals'
+    },
+    'VIDEO':{
+        add_new_video:'successfully add new video',
+        no_video_upload:'no video upload please upload any video'
     }
 }

@@ -17,7 +17,7 @@ const panditSchema = new mongoose.Schema({
     },
     templeId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Guru'
+        ref: 'temple'
     },
     created_at: {
         type: String

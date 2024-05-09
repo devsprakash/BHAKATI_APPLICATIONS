@@ -30,7 +30,8 @@ const mux = new Mux({
     tokenSecret: MUX_TOKEN_SECRET,
     webhookSecret: WEBHOOKSCRETKEY,
 });
-const demo = require('./models/demo.model')
+const demo = require('./models/demo.model');
+const rithualRouter = require('./Guru/routes/rithual')
 
 
 
@@ -82,12 +83,14 @@ app.use(cors());
 
 
 app.post('/webhooks',  async(req, res) => {
-  //console.log("1111", req.body)
+  // console.log("1111", req.body)
   try {
     //const isValidSignature = mux.webhooks.verifySignature(req.body, req.headers, "hc8kc3uuon5dtse4sekae7e0a0dg2dd3");
     //console.log('Success:', isValidSignature);
    // const jsonFormattedBody = JSON.parse(req.body);
-   const data = await demo.insertMany(req.body)
+   console.log("111")
+   const data = await demo.create(req.body)
+   console.log("data" , data)
     res.json({ received: true});
 
   } catch (err) {
@@ -108,6 +111,7 @@ app.use('/guru/temple', templeGuruRouter);
 app.use('/guru/puja', pujaRouter);
 app.use('/temple/guru', GuruRouter);
 app.use('/guru/video', videoRouter);
+app.use('/rithual' , rithualRouter)
 
 
 
