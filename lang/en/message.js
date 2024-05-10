@@ -169,7 +169,8 @@ module.exports = {
         upload_image: "No image has uploading please upload both image first",
         guru_was_not_verify:'this guru was not verifyed after verify you have to login',
         upload_success:'image uploading successfully',
-        live_stream_data_not_found: 'no live stream was not found'
+        live_stream_data_not_found: 'no live stream was not found',
+        account_verify:'guru account verify successfully'
     },
     "RITHUAL":{
         add_new_rithuals:"successfully add new rithuals",

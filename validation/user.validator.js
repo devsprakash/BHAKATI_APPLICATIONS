@@ -27,7 +27,7 @@ exports.create_new_user_validator = [
         .isEmpty()
         .withMessage('password is required')
         .isString().withMessage('password should be a string')
-        .isLength({ max: 8 }).withMessage('password length must be 8 characters')
+        .isLength({ min: 8 }).withMessage('password length must be 8 characters')
         .trim(),
 
     body('mobile_number')

@@ -106,9 +106,12 @@ exports.templeAccountVerify = async (req, res) => {
         const user = await checkAdmin(userId);
 
         if (user.user_type !== constants.USER_TYPE.ADMIN)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const templeData = await Temple.findOneAndUpdate({ _id: temple_id }, { $set: { is_verify: true } }, { new: true });
+
+        if (!templeData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', {}, req.headers.lang);
 
         const responseData = {
             temple_id: templeData._id,
@@ -148,9 +151,13 @@ exports.templeDelete = async (req, res) => {
 
         const user = await checkAdmin(userId);
         if (user.user_type !== constants.USER_TYPE.ADMIN)
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const templeData = await TempleGuru.findOneAndDelete({ _id: temple_id });
+
+        if (!templeData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', {}, req.headers.lang);
+
 
         const responseData = {
             temple_id: templeData._id,

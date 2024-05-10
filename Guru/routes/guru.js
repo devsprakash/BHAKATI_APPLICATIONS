@@ -7,7 +7,8 @@ const { addNewGuru, SearchAllGuru, getGuruProfile, GuruCreateNewLiveStream,
     signUp,
     login,
     logout,
-    uploadGuruImage } = require('../controller/guru.controller');
+    uploadGuruImage,
+    guruAccountVerify } = require('../controller/guru.controller');
 const authenticate = require('../../middleware/authenticate');
 const upload = require('../../middleware/multer')
 const GuruAuth = require('../../middleware/guru.auth');
@@ -32,7 +33,7 @@ router.put('/updateGuruProfile', update_guru_validator, ValidatorResult, GuruAut
 router.delete('/deleteGuru/:guruId', get_guru_profile_admin_validator, ValidatorResult, verifyAccessToken, guruDelete);
 router.get('/getGuruProfileByAdmin/:guruId', get_guru_profile_admin_validator, ValidatorResult, authenticate, getGuruProfileByAdmin);
 router.put('/updateGuruProfile', GuruAuth, updateGuruProfile)
-
+router.get('/accountVerify/:guruId', get_guru_profile_admin_validator, ValidatorResult, authenticate, guruAccountVerify)
 
 
 

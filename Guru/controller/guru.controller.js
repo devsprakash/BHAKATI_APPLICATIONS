@@ -15,7 +15,8 @@ const Video = require('../../models/uploadVideo.model');
 const User = require('../../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 const GuruLiveStreaming = require('../../models/GuruLiveStreaming.model')
-const { minutesToSeconds, verifyWebhookSignature, handleActiveLiveStream, getLiveStreamInfo } = require('../services/views.services')
+const { minutesToSeconds, verifyWebhookSignature, handleActiveLiveStream, getLiveStreamInfo } = require('../services/views.services');
+const { GURU } = require('../../lang/en/message');
 
 
 
@@ -54,6 +55,7 @@ exports.signUp = async (req, res) => {
             description: guru.description,
             user_type: guru.user_type,
             status: guru.status,
+            is_verify: guru.is_verify,
             created_at: guru.created_at,
             updated_at: guru.updated_at
         } || {}
@@ -98,6 +100,7 @@ exports.uploadGuruImage = async (req, res) => {
             description: guru.description,
             user_type: guru.user_type,
             status: guru.status,
+            is_verify: guru.is_verify,
             updated_at: guru.updated_at
         } || {}
 
@@ -108,6 +111,49 @@ exports.uploadGuruImage = async (req, res) => {
         return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
     }
 };
+
+
+
+exports.guruAccountVerify = async (req, res) => {
+
+    try {
+
+        const { guruId } = req.params;
+        const userId = req.user._id;
+        const user = await User.findById(userId)
+
+        if (user.user_type !== constants.USER_TYPE.ADMIN)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const guru = await Guru.findOneAndUpdate({ _id: guruId }, { $set: { is_verify: true } }, { new: true });
+
+        if (!guru)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', {}, req.headers.lang);
+
+        const responseData = {
+            guru_id: guru._id,
+            guru_name: guru.guru_name,
+            guru_image_url: guru.guru_image,
+            feature_image_url: guru.background_image,
+            email: guru.email,
+            mobile_number: guru.mobile_number,
+            expertise: guru.expertise,
+            adharacard: guru.adharacard,
+            description: guru.description,
+            user_type: guru.user_type,
+            status: guru.status,
+            is_verify: guru.is_verify,
+            updated_at: guru.updated_at
+        } || {}
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.account_verify', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.log("err(guruAccountVerify)....", err)
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
+    }
+
+}
 
 
 
@@ -128,7 +174,7 @@ exports.login = async (req, res) => {
         if (!matchPassword)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'USER.invalid_password', {}, req.headers.lang);
 
-        if (guru.verify === false)
+        if (guru.is_verify === false)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.guru_was_not_verify', {}, req.headers.lang);
 
         if (guru)
@@ -156,6 +202,7 @@ exports.login = async (req, res) => {
             adharacard: guru.adharacard,
             description: guru.description,
             user_type: guru.user_type,
+            is_verify: guru.is_verify,
             status: guru.status,
             tokens: guru.tokens,
             refresh_tokens: guru.refresh_tokens,
@@ -354,7 +401,7 @@ exports.SearchAllGuru = async (req, res) => {
     try {
 
         const userId = req.user._id;
-        const { sort, guruname, email, expertise, mobile_number } = req.query;
+        const { sort, guruname, email, expertise, mobile_number, is_verify } = req.query;
         const users = await User.findById(userId)
 
         if (!users || (users.user_type !== constants.USER_TYPE.ADMIN))
@@ -365,6 +412,10 @@ exports.SearchAllGuru = async (req, res) => {
         if (email) {
             const emailRegex = new RegExp(email.split(' ').join('|'), 'i');
             query.email = emailRegex;
+        }
+
+        if (is_verify) {
+            query.is_verify = is_verify
         }
 
         if (guruname) {
@@ -644,7 +695,7 @@ exports.updateGuruProfile = async (req, res) => {
         if (mobile_number) {
             guruData.mobile_number = mobile_number;
         }
-        
+
         guruData.updated_at = dateFormat.set_current_timestamp()
         await guruData.save();
 
@@ -682,9 +733,9 @@ exports.guruDelete = async (req, res) => {
 
         const guruData = await Guru.findOneAndDelete({ _id: guruId });
 
-        if (!guruData) 
+        if (!guruData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.guru_not_found', {}, req.headers.lang);
-        
+
         const responseData = {
             guru_id: guruData._id,
             guru_name: guruData.guru_name,

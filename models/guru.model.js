@@ -55,7 +55,7 @@ const guruSchema = new mongoose.Schema({
         type: String,
         default: 'active'
     },
-    verify: {
+    is_verify: {
         type: Boolean,
         default: false
     },
