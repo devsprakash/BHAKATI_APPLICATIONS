@@ -56,7 +56,28 @@ exports.add_guru_validator = [
         .withMessage('adharacard is required')
         .isNumeric().withMessage('adharacard should be a string')
         .isLength({ min: 12, max: 12 }).withMessage('adharacard length should be 12')
-        .trim()
+        .trim(),
+
+        body('location')
+        .not()
+        .isEmpty()
+        .withMessage('location is required')
+        .isString().withMessage('location should be a string')
+        .trim(),
+
+        body('state')
+        .not()
+        .isEmpty()
+        .withMessage('state is required')
+        .isString().withMessage('state should be a string')
+        .trim(),
+
+        body('district')
+        .not()
+        .isEmpty()
+        .withMessage('district is required')
+        .isString().withMessage('district should be a string')
+        .trim(),
 
 ];
 

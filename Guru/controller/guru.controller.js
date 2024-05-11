@@ -56,6 +56,9 @@ exports.signUp = async (req, res) => {
             user_type: guru.user_type,
             status: guru.status,
             is_verify: guru.is_verify,
+            state: guru.state,
+            district: guru.district,
+            location: guru.location,
             created_at: guru.created_at,
             updated_at: guru.updated_at
         } || {}
@@ -101,6 +104,9 @@ exports.uploadGuruImage = async (req, res) => {
             user_type: guru.user_type,
             status: guru.status,
             is_verify: guru.is_verify,
+            state: guru.state,
+            district: guru.district,
+            location: guru.location,
             updated_at: guru.updated_at
         } || {}
 
@@ -143,6 +149,9 @@ exports.guruAccountVerify = async (req, res) => {
             user_type: guru.user_type,
             status: guru.status,
             is_verify: guru.is_verify,
+            state: guru.state,
+            district: guru.district,
+            location: guru.location,
             updated_at: guru.updated_at
         } || {}
 
@@ -203,6 +212,9 @@ exports.login = async (req, res) => {
             description: guru.description,
             user_type: guru.user_type,
             is_verify: guru.is_verify,
+            state: guru.state,
+            district: guru.district,
+            location: guru.location,
             status: guru.status,
             tokens: guru.tokens,
             refresh_tokens: guru.refresh_tokens,
@@ -278,6 +290,9 @@ exports.getGuruProfile = async (req, res) => {
                 expertise: guruData.expertise,
                 adharacard: guruData.adharacard,
                 description: guruData.description,
+                state: guruData.state,
+                district: guruData.district,
+                location: guruData.location,
                 user_type: guruData.user_type,
                 guru_image_url: guruData.guru_image,
                 feature_image_url: guruData.background_image,
@@ -355,6 +370,9 @@ exports.getGuruProfileByAdmin = async (req, res) => {
                 mobile_number: guruData.mobile_number,
                 expertise: guruData.expertise,
                 adharacard: guruData.adharacard,
+                state: guruData.state,
+                district: guruData.district,
+                location: guruData.location,
                 description: guruData.description,
                 user_type: guruData.user_type,
                 guru_image_url: guruData.guru_image,
@@ -401,11 +419,12 @@ exports.SearchAllGuru = async (req, res) => {
     try {
 
         const userId = req.user._id;
-        const { sort, guruname, email, expertise, mobile_number, is_verify } = req.query;
+        const { sort, guruname, email, expertise, mobile_number, is_verify, state, location, limit } = req.query;
         const users = await User.findById(userId)
 
-        if (!users || (users.user_type !== constants.USER_TYPE.ADMIN))
+        if (!users || (users.user_type !== constants.USER_TYPE.ADMIN && users.user_type !== constants.USER_TYPE.USER))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.invalid_user', {}, req.headers.lang);
+
 
         const query = { user_type: 4 };
 
@@ -414,6 +433,15 @@ exports.SearchAllGuru = async (req, res) => {
             query.email = emailRegex;
         }
 
+        if (state) {
+            const stateRegex = new RegExp(state.split(' ').join('|'), 'i');
+            query.state = stateRegex;
+        }
+
+        if (location) {
+            const locationRegex = new RegExp(location.split(' ').join('|'), 'i');
+            query.location = locationRegex;
+        }
         if (is_verify) {
             query.is_verify = is_verify
         }
@@ -440,13 +468,14 @@ exports.SearchAllGuru = async (req, res) => {
 
         let guruData;
         let totalGurus
-        const selectFields = '_id guru_name email adharacard description mobile_number expertise gurus_id guru_image background_image created_at updated_at'
+        const selectFields = '_id guru_name email adharacard description mobile_number expertise gurus_id guru_image background_image state district location created_at updated_at'
         if (query.length === 0) {
             [guruData, totalGurus] = await Promise.all([
                 Guru.find({ user_type: 4 })
                     .select(selectFields)
                     .populate('temple_id', 'temple_name temple_image location state district _id user_type')
-                    .sort(sortOptions),
+                    .sort(sortOptions)
+                    .limit(parseInt(limit)),
                 Guru.countDocuments({ user_type: 4 })
             ]);
         }
@@ -455,7 +484,8 @@ exports.SearchAllGuru = async (req, res) => {
             Guru.find(query)
                 .select(selectFields)
                 .populate('temple_id', 'temple_name temple_image location state district _id user_type')
-                .sort(sortOptions),
+                .sort(sortOptions)
+                .limit(parseInt(limit)),
             Guru.countDocuments(query)
         ]);
 
@@ -470,6 +500,9 @@ exports.SearchAllGuru = async (req, res) => {
             adharacard: guru.adharacard,
             description: guru.description,
             user_type: guru.user_type,
+            state: guru.state,
+            district: guru.district,
+            location: guru.location,
             guru_image_url: guru.guru_image,
             feature_image_url: guru.background_image,
             created_at: guru.created_at
@@ -579,27 +612,27 @@ exports.getLiveStreamByGuru = async (req, res) => {
         const GuruData = await GuruLiveStreaming.find({
             live_stream_id: { $in: LiveStreamingData },
             guruId: { $ne: null } // Adding logic for guruId not equal to null
-        }).limit(limit).populate('guruId', '_id guru_name email mobile_number expertise gurus_id guru_image background_image created_at updated_at');
+        }).limit(limit).populate('guruId', '_id guru_name email mobile_number expertise');
 
         if (!GuruData || GuruData.length == 0)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.live_stream_data_not_found', [], req.headers.lang);
 
-        const responseData = GuruData.map(guru => ({
-            playback_id: guru.playback_id,
-            live_stream_id: guru.live_stream_id,
-            stream_key: guru.stream_key,
-            guru_name: guru.guruId.guru_name,
-            guru_image_url: guru.guruId.guru_image,
-            feature_image_url: guru.guruId.background_image,
-            title: guru.title,
-            description: guru.description,
-            guru_id: guru.guruId._id,
-            expertise: guru.guruId.expertise,
-            email: guru.guruId.email,
-            mobile_number: guru.guruId.mobile_number,
-            published_date: new Date(),
-            views: '',
-        })) || []
+        console.log("data", GuruData);
+
+        const responseData = await Promise.all(GuruData.map(async guru => {
+            const guruDetails = await Guru.findById(guru.guruId);
+            return {
+                playback_id: guru.playback_id,
+                live_stream_id: guru.live_stream_id,
+                stream_key: guru.stream_key,
+                guru_id: guru.guruId,
+                title: guru.title,
+                description: guru.description,
+                published_date: new Date(),
+                views: ''
+            };
+        })) || [];
+
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.get_Live_Stream_By_Guru', responseData, req.headers.lang);
 
@@ -696,6 +729,19 @@ exports.updateGuruProfile = async (req, res) => {
             guruData.mobile_number = mobile_number;
         }
 
+        if (state) {
+            guruData.state = state;
+        }
+
+        if (location) {
+            guruData.location = location;
+        }
+
+        if (district) {
+            guruData.district = district;
+        }
+
+
         guruData.updated_at = dateFormat.set_current_timestamp()
         await guruData.save();
 
@@ -706,9 +752,13 @@ exports.updateGuruProfile = async (req, res) => {
             feature_image_url: guruData.background_image,
             description: guruData.description,
             email: guruData.email,
+            state: guruData.state,
+            district: guruData.district,
+            location: guruData.location,
             expertise: guruData.expertise,
             mobile_number: guruData.mobile_number,
-        }
+
+        } || {}
 
         return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'GURU.update_guru', responseData, req.headers.lang);
 
@@ -743,6 +793,9 @@ exports.guruDelete = async (req, res) => {
             feature_image_url: guruData.background_image,
             description: guruData.description,
             email: guruData.email,
+            state: guruData.state,
+            district: guruData.district,
+            location: guruData.location,
             expertise: guruData.expertise,
             mobile_number: guruData.mobile_number,
         }

@@ -83,6 +83,14 @@ exports.signup_validator = [
         .withMessage('contact_person_designation is required')
         .isString().withMessage('contact_person_designation should be a string')
         .trim(),
+
+        body('category')
+        .not()
+        .isEmpty()
+        .withMessage('category is required')
+        .isString().withMessage('category should be a string')
+        .trim(),
+
 ];
 
 

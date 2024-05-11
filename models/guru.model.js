@@ -57,7 +57,16 @@ const guruSchema = new mongoose.Schema({
     },
     is_verify: {
         type: Boolean,
-        default: false
+        default: true
+    },
+    location:{
+        type:String
+    },
+    state:{
+        type:String
+    },
+    district:{
+        type:String
     },
     tokens: {
         type: String,

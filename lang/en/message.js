@@ -97,7 +97,7 @@ module.exports = {
         already_delete_temples: 'this temple is already deleted',
         temple_login: 'temple or guru login sucessfully',
         email_already_exist: 'email already exists',
-        logout_success: 'temple or guru logout succesfully',
+        logout_success: 'temple logout succesfully',
         get_temple_profile: 'successfully get the temple profile',
         add_bank_details: 'successfully add bank details',
         bank_details_not_found: 'this bank detail is not found',
