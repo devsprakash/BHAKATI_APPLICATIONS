@@ -100,12 +100,8 @@ exports.ListOfPuja = async (req, res) => {
 
     try {
 
-        const templeId = req.temple._id;
-        const temple = await Temple.findOne({ _id: templeId })
 
-        if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
-            return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-
+        
         const { page = 1, limit = 10, sortField = 'puja_name', sortOrder = 'asc', status, filter } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
