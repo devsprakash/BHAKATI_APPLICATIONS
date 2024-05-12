@@ -524,40 +524,6 @@ function convertTo12Hour(time24Hour) {
     return `${hours12}:${minutes} ${modifier}`;
 }
 
-function generateTimeSlotsOld(start, end, slotDuration, pujaDuration, bookedSlots) {
-    const slots = [];
-    let currentTime = start;
-
-    console.log(`start:${start}, end:${end}, duration:${slotDuration}`);
-
-    while (currentTime < end) {
-        let slotEndTime = new Date(currentTime);
-        slotEndTime.setMinutes(slotEndTime.getMinutes() + slotDuration);
-
-        const slot = {
-            start_time: convertTo12Hour(currentTime),
-            end_time: convertTo12Hour(slotEndTime.toTimeString().slice(0, 5)),
-            available: true
-        };
-
-        for (const bookedSlot of bookedSlots) {
-            const startTime = convertTo24Hour(bookedSlot.start_time);
-            const endTime = convertTo24Hour(bookedSlot.end_time);
-
-            if (currentTime >= startTime && currentTime < endTime) {
-                slot.available = false;
-                break;
-            }
-        }
-
-        slots.push(slot);
-
-        currentTime = slotEndTime;
-    }
-
-    return slots;
-}
-
 function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, bookedSlots, bookingDate) {
     const startTime = convertTo24Hour(slotStartTime);
     const endTime = convertTo24Hour(slotEndTime);
