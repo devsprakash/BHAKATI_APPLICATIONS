@@ -258,7 +258,6 @@ exports.bookedPuja = async (req, res) => {
 
         // Calculate the duration in minutes
         const duration = endMinutes - startMinutes;
-
             reqBody.templeId = temple_id,
             reqBody.TemplepujaId = temple_puja_id,
             reqBody.userId = userId,
