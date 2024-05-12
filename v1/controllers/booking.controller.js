@@ -488,6 +488,9 @@ const convertTo24HourFormat = (time12h) => {
     }
     return `${hours}:${minutes}`;
 };
+const convertToLocalTime = (date) => {
+    return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
 
 
 function convertTo24Hour(time12Hour) {
@@ -516,10 +519,11 @@ function convertTo12Hour(time) {
     return `${hour12}:${minute} ${period}`;
 }
 
-function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, bookedSlots, bookingDate) {
+function generateTimeSlotsOld2(slotStartTim, newBookDuration, slotDuration, bookedSlots, bookingDate) {
     const startTime = convertTo24Hour(slotStartTime);
     const endTime = convertTo24Hour(slotEndTime);
     const newBookDurationInMinutes = parseInt(newBookDuration, 10);
+    const slotDurationInMinutes = parseInt(slotDuration, 10);
     
     console.log(`start:${slotStartTime}, end:${slotEndTime}, duration:${newBookDurationInMinutes}`);
 
@@ -547,7 +551,7 @@ function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, bookedSl
 
             if (
                 (currentSlot >= bookedStart && currentSlot < bookedEnd) ||
-                (currentSlot < bookedStart && new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000) > bookedStart)
+                (currentSlot < bookedStart && new Date(currentSlot.getTime() + slotDurationInMinutes * 60000) > bookedStart)
             ) {
                 isAvailable = false;
                 break;
@@ -567,6 +571,122 @@ function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, bookedSl
             });
         }
         currentSlot = new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000);
+    }
+    
+    return slots;
+}
+
+
+function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, slotDuration, bookedSlots, bookingDate) {
+    const startTime = convertTo24Hour(slotStartTime);
+    const endTime = convertTo24Hour(slotEndTime);
+    const newBookDurationInMinutes = parseInt(newBookDuration, 10);
+    const slotDurationInMinutes = parseInt(slotDuration, 10);
+    
+    console.log(`start:${slotStartTime}, end:${slotEndTime}, newBookDuration:${newBookDurationInMinutes}, slotDuration:${slotDurationInMinutes}`);
+
+    
+    const slotStart = new Date(bookingDate + ' ' + startTime);
+    const slotEnd = new Date(bookingDate + ' ' + endTime); 
+     
+    console.log(`slotStart:${slotStart}, slotEnd:${slotEnd}`);
+
+
+    const slots = [];
+     
+    let currentSlotStart = slotStart; // Initialize current slot start time
+    
+    while (currentSlotStart < slotEnd) {
+        // Calculate current slot end time
+        let currentSlotEnd = new Date(currentSlotStart.getTime() + slotDurationInMinutes * 60000); 
+ 
+        /**
+         * Check if current slot is booked
+         * 
+         * Compares the start and end times of the current slot with the start and end times of each booked slot. It checks if any of the following conditions are true:
+         * The start time of the current slot falls within the start and end time of a booked slot.
+         * The end time of the current slot falls within the start and end time of a booked slot.
+         * The start time of the current slot is before the start time of a booked slot and the end time of the current slot is after the end time of the booked slot.
+         */
+        /* const isBooked = bookedSlots.some(slot => {
+            return (currentSlotStart >= new Date(bookingDate + ' ' + convertTo24Hour(slot.start_time)) && currentSlotStart < new Date(bookingDate + ' ' + convertTo24Hour(v.end_time))) ||
+                   (currentSlotEnd > new Date(bookingDate + ' ' + convertTo24Hour(slot.start_time)) && currentSlotEnd <= new Date(bookingDate + ' ' + convertTo24Hour(v.end_time))) ||
+                   (currentSlotStart <= new Date(bookingDate + ' ' + convertTo24Hour(slot.start_time)) && currentSlotEnd >= new Date(bookingDate + ' ' + convertTo24Hour(v.end_time)));
+        });*/
+
+        const isBooked = bookedSlots.some(slot => {
+            let bookedSlotStartTime = new Date(bookingDate + ' ' + convertTo24Hour(slot.start_time));
+            let bookedSlotEndTime = new Date(bookingDate + ' ' + convertTo24Hour(slot.end_time));
+
+            return (currentSlotStart >= bookedSlotStartTime && currentSlotStart < bookedSlotEndTime) ||
+                   (currentSlotEnd > bookedSlotStartTime && currentSlotEnd <= bookedSlotEndTime) ||
+                   (currentSlotStart <= bookedSlotStartTime && currentSlotEnd >= bookedSlotEndTime);
+        });
+
+        console.log('isBooked:', isBooked);
+        //console.log('currentSlotEnd - currentSlotStart:', (currentSlotEnd - currentSlotStart));
+        //console.log('newBookDurationInMinutes * 60000:', (newBookDurationInMinutes * 60000));
+
+        // If current slot is not booked and can accommodate event duration, add to available slots
+        /*if (!isBooked && (currentSlotEnd - currentSlotStart) >= newBookDurationInMinutes * 60000) {
+            //slots.push({ startTime: currentSlotStart, endTime: currentSlotEnd });
+
+            slots.push({
+                start_time: currentSlotStart.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                end_time: currentSlotEnd.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                available: true
+            });
+        }*/
+
+        // If current slot is not booked, find adjacent free slots until event duration is accommodated
+        if (!isBooked) {
+            let totalDuration = slotDurationInMinutes;
+            let nextSlotStart = currentSlotEnd; // Initialize start time of next slot
+            
+
+            //console.log(`totalDuration:${totalDuration}, newBookDurationInMinutes:${newBookDurationInMinutes}, nextSlotStart:${convertToLocalTime(nextSlotStart)}, nextSlotStart < slotEnd:${nextSlotStart < slotEnd}`);
+
+            // Loop until event duration is accommodated or until no more adjacent free slots are available
+            while (totalDuration < newBookDurationInMinutes && nextSlotStart < slotEnd) {
+                // Calculate end time of next slot
+                let nextSlotEnd = new Date(nextSlotStart.getTime() + slotDurationInMinutes * 60000);
+                
+                // Check if next slot is booked
+                const isNextSlotBooked = bookedSlots.some(slot => {
+                    let bookedSlotStartTime = new Date(bookingDate + ' ' + convertTo24Hour(slot.start_time));
+                    let bookedSlotEndTime = new Date(bookingDate + ' ' + convertTo24Hour(slot.end_time));
+                    return (nextSlotStart >= bookedSlotStartTime && nextSlotStart < bookedSlotEndTime) ||
+                           (nextSlotEnd > bookedSlotStartTime && nextSlotEnd <= bookedSlotEndTime) ||
+                           (nextSlotStart <= bookedSlotStartTime && nextSlotEnd >= bookedSlotEndTime);
+                });
+                
+                //console.log('isNextSlotBooked:', isNextSlotBooked);
+                // If next slot is not booked, include it in available slots
+                if (!isNextSlotBooked) {
+                    currentSlotEnd = nextSlotEnd;
+                    totalDuration += slotDurationInMinutes;
+                    //console.log('...totalDuration:', totalDuration);
+                } else {
+                    break; // Break loop if next slot is booked
+                }
+                
+                nextSlotStart = nextSlotEnd; // Move to start time of next next slot
+            }
+            
+            // If total duration is sufficient for event, add current slot to available slots
+            if (totalDuration >= newBookDurationInMinutes) {
+                //availableSlots.push({ startTime: currentSlotStart, endTime: currentSlotEnd });
+                slots.push({
+                    start_time: currentSlotStart.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    end_time: currentSlotEnd.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    available: true
+                });
+            }
+        }//end: if(!isBooked)
+        
+        // Move to next slot start time
+        currentSlotStart = currentSlotEnd;
+ 
     }
     
     return slots;
@@ -621,25 +741,13 @@ exports.getSlotsWithBookedData = async (req, res) => {
                 duration: data.TemplepujaId.duration
             };
         })) || [];
-
-        /*const slotData = slotList.map(data => ({
-            temple_id: data.templeId._id,
-            temple_name: data.templeId.temple_name,
-            temple_image_url: data.templeId.temple_image,
-            slot_id: data._id,
-            start_time: data.start_time,
-            end_time: data.end_time,
-            slot_duration: data.slot_duration,
-            date: data.date
-        })) || [];*/
-
         
         const startTime24 = convertTo24Hour(slotData.start_time); 
         const endTime24 =convertTo24Hour(slotData.end_time);
         const slotDuration = slotData.slot_duration;
         const pujaDuration = pujaData.duration;
         //const slotsWithBookingData = generateTimeSlots(startTime24, endTime24, slotDuration, pujaDuration, bookingData);
-        const slotsWithBookingData = generateTimeSlots(startTime24, endTime24, pujaDuration, bookingData, bookingDate);
+        const slotsWithBookingData = generateTimeSlots(startTime24, endTime24, pujaDuration, slotDuration, bookingData, bookingDate);
         const responseData = {
             temple_id : templeId,
             slot_id : slotData._id,
