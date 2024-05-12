@@ -19,17 +19,17 @@ const { timeToMinutes } = require('../services/booking.service')
 
 
 
-
 exports.createdNewSlot = async (req, res) => {
 
     try {
 
         const reqBody = req.body;
         const templeId = req.temple._id;
+        console.log("data..." , templeId)
 
         const findAdmin = await Temple.findById(templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         reqBody.created_at = dateFormat.set_current_timestamp();
@@ -67,7 +67,7 @@ exports.getAllTheSlots = async (req, res) => {
 
         const findAdmin = await Temple.findById(templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const slotList = await Slot.find({ templeId: templeId }).populate("templeId", "temple_name temple_image _id").limit(parseInt(limit)).sort()
@@ -103,7 +103,7 @@ exports.updateSlot = async (req, res) => {
 
         const findAdmin = await Temple.findById(templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const updated_at = dateFormat.set_current_timestamp();
@@ -146,7 +146,7 @@ exports.deleteSlot = async (req, res) => {
 
         const findAdmin = await Temple.findById(templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const newSlot = await Slot.findByIdAndDelete(
@@ -182,7 +182,7 @@ exports.TempleUnderAllTheBookings = async (req, res) => {
 
         const findAdmin = await Temple.findById(templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const bookings = await Booking.find({ templeId: templeId }).populate('userId').populate('templeId').populate('TemplepujaId')
@@ -259,7 +259,7 @@ exports.bookedPuja = async (req, res) => {
         // Calculate the duration in minutes
         const duration = endMinutes - startMinutes;
 
-        reqBody.templeId = temple_id,
+            reqBody.templeId = temple_id,
             reqBody.TemplepujaId = temple_puja_id,
             reqBody.userId = userId,
             reqBody.slotId = slot_id,
