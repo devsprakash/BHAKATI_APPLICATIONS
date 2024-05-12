@@ -101,7 +101,6 @@ exports.ListOfPuja = async (req, res) => {
     try {
 
 
-        
         const { page = 1, limit = 10, sortField = 'puja_name', sortOrder = 'asc', status, filter } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
 

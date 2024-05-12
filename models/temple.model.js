@@ -68,30 +68,42 @@ const templeSchema = new mongoose.Schema({
     state: {
         type: String
     },
+    puja_list: [{
+        _id: String,
+        status: String,
+        description: String,
+        date: String,
+        category: String,
+        created_at: String,
+        updated_at: String,
+        __v: Number,
+        puja_image: String,
+        puja_name: String
+    }],
     contact_person_name: {
         type: String
     },
     contact_person_designation: {
         type: String
     },
-    opening_time:{
-        type:String,
-        default:null
+    opening_time: {
+        type: String,
+        default: null
     },
-    closing_time:{
-        type:String,
-        default:null
+    closing_time: {
+        type: String,
+        default: null
     },
-    category:{
-        type:String
+    category: {
+        type: String
     },
-    darsan:{
-        type:Boolean,
-        default:false
+    darsan: {
+        type: Boolean,
+        default: false
     },
-    puja:{
-        type:Boolean,
-        default:false
+    puja: {
+        type: Boolean,
+        default: false
     },
     created_at: {
         type: String

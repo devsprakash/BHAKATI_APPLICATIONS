@@ -62,6 +62,7 @@ exports.signUp = async (req, res) => {
             category: templeData.category,
             opening_time:templeData.opening_time,
             closing_time:templeData.closing_time,
+            puja_list:templeData.puja_list,
             contact_person_name: templeData.contact_person_name,
             contact_person_designation: templeData.contact_person_designation,
             created_at: templeData.created_at,
