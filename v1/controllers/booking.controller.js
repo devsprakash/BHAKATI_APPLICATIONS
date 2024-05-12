@@ -476,4 +476,163 @@ exports.bookingSlotDownloaded = async (req, res) => {
 
 
 
+// Function to convert time to 24-hour format
+const convertTo24HourFormat = (time12h) => {
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (hours === '12') {
+        hours = '00';
+    }
+    if (modifier === 'PM') {
+        hours = parseInt(hours, 10) + 12;
+    }
+    return `${hours}:${minutes}`;
+};
+
+
+function convertTo24Hour(time12Hour) {
+    const [time, modifier] = time12Hour.split(' ');
+  
+    let [hours, minutes] = time.split(':');
+  
+    if (hours === '12') {
+      hours = '00';
+    }
+  
+    if (modifier === 'PM') {
+      hours = parseInt(hours, 10) + 12;
+    }
+  
+    return `${hours}:${minutes}`;
+}
+
+function convertTo12Hour(time24Hour) {
+    const [hours, minutes] = time24Hour.split(':');
+
+    let modifier = 'AM';
+    let hours12 = parseInt(hours, 10);
+
+    if (hours12 >= 12) {
+        modifier = 'PM';
+    }
+
+    if (hours12 > 12) {
+        hours12 -= 12;
+    } else if (hours12 === 0) {
+        hours12 = 12;
+    }
+
+    return `${hours12}:${minutes} ${modifier}`;
+}
+
+function generateTimeSlots(start, end, duration, bookedSlots) {
+    const slots = [];
+    let currentTime = start;
+
+    while (currentTime < end) {
+        let slotEndTime = new Date(currentTime);
+        slotEndTime.setMinutes(slotEndTime.getMinutes() + duration);
+
+        const slot = {
+            start_time: convertTo12Hour(currentTime),
+            end_time: convertTo12Hour(slotEndTime.toTimeString().slice(0, 5)),
+            available: true
+        };
+
+        for (const bookedSlot of bookedSlots) {
+            const startTime = convertTo24Hour(bookedSlot.start_time);
+            const endTime = convertTo24Hour(bookedSlot.end_time);
+
+            if (currentTime >= startTime && currentTime < endTime) {
+                slot.available = false;
+                break;
+            }
+        }
+
+        slots.push(slot);
+
+        currentTime = slotEndTime;
+    }
+
+    return slots;
+}
+
+exports.getSlotsWithBookedData = async (req, res) => {
+
+    try {
+
+        const reqBody = req.body;
+        const { temple_id, date, email, temple_puja_id } = reqBody;
+ 
+        const findAdmin = await TempleGuru.findById(templeId);
+
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+            return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
+
+        const bookingDate = moment(reqBody.date, "DD/MM/YYYY").format("DD/MM/YYYY");
+        console.log('bookingDate:', bookingDate);
+
+        //const bookings = await Booking.find({ templeId: templeId }).populate('templeId', 'start_time', 'end_time')
+        const bookings = await Booking.find({ templeId: templeId, date: bookingDate }).populate('templeId')
+            .sort()
+            //.limit(parseInt(limit));
+
+        const slotData = await Slot.findOne({ templeId: templeId, date: bookingDate  }).populate("templeId", "temple_name temple_image _id")
+        //.limit(parseInt(limit))
+        .sort();
+
+        if (!slotData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.slots_not_found', {}, req.headers.lang);
+         
+
+        const bookingData = await Promise.all(bookings.map(async (data) => {
+            return {
+                booking_id: data._id,
+                available: data.available,
+                start_time: data.start_time,
+                end_time: data.end_time,
+                date: data.date,
+                temple_name: data.templeId.temple_name,
+                temple_id: data.templeId._id,
+                puja_id: data.TemplepujaId.pujaId,
+                temple_puja_id: data.TemplepujaId._id,
+                duration: data.TemplepujaId.duration
+            };
+        })) || [];
+
+        /*const slotData = slotList.map(data => ({
+            temple_id: data.templeId._id,
+            temple_name: data.templeId.temple_name,
+            temple_image_url: data.templeId.temple_image,
+            slot_id: data._id,
+            start_time: data.start_time,
+            end_time: data.end_time,
+            slot_duration: data.slot_duration,
+            date: data.date
+        })) || [];*/
+
+        
+        const startTime24 = convertTo24Hour(slotData.start_time); 
+        const endTime24 =convertTo24Hour(slotData.end_time);
+        const duration =slotData.duration;
+        const slotsWithBookingData = generateTimeSlots(startTime24, endTime24, duration, bookingData);
+        const responseData = {
+            temple_id : slotData.temple_id,
+            slot_id : slotData.slot_id,
+            slots: slotsWithBookingData
+        };
+
+        return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.get_all_the_slot', responseData, req.headers.lang);
+
+    } catch (err) {
+        console.error("Error in getAllTheSlots:", err);
+        return sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang);
+    }
+};
+
+
+
+
+
+
 
