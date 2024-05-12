@@ -83,7 +83,7 @@ app.use(cors());
 
 
 app.post('/webhooks',  async(req, res) => {
-  // console.log("1111", req.body)
+  console.log("1111", req.body)
   try {
     //const isValidSignature = mux.webhooks.verifySignature(req.body, req.headers, "hc8kc3uuon5dtse4sekae7e0a0dg2dd3");
     //console.log('Success:', isValidSignature);

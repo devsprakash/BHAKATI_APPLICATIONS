@@ -25,9 +25,9 @@ exports.createdNewSlot = async (req, res) => {
     try {
 
         const reqBody = req.body;
-        const templeId = req.Temple._id;
+        const templeId = req.temple._id;
 
-        const findAdmin = await TempleGuru.findById(templeId);
+        const findAdmin = await Temple.findById(templeId);
 
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
@@ -62,10 +62,10 @@ exports.getAllTheSlots = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
+        const templeId = req.temple._id;
         const { limit } = req.query;
 
-        const findAdmin = await TempleGuru.findById(templeId);
+        const findAdmin = await Temple.findById(templeId);
 
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
@@ -98,10 +98,10 @@ exports.updateSlot = async (req, res) => {
     try {
 
         const reqBody = req.body;
-        const templeId = req.Temple._id;
+        const templeId = req.temple._id;
         const { slotId } = req.params;
 
-        const findAdmin = await TempleGuru.findById(templeId);
+        const findAdmin = await Temple.findById(templeId);
 
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
@@ -141,10 +141,10 @@ exports.deleteSlot = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id;
+        const templeId = req.temple._id;
         const { slotId } = req.params;
 
-        const findAdmin = await TempleGuru.findById(templeId);
+        const findAdmin = await Temple.findById(templeId);
 
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
@@ -177,10 +177,10 @@ exports.TempleUnderAllTheBookings = async (req, res) => {
 
     try {
 
-        const templeId = req.Temple._id
+        const templeId = req.temple._id
         const { limit } = req.query;
 
-        const findAdmin = await TempleGuru.findById(templeId);
+        const findAdmin = await Temple.findById(templeId);
 
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
