@@ -476,6 +476,7 @@ exports.bookingSlotDownloaded = async (req, res) => {
 
 
 // Function to convert time to 24-hour format
+//Not in use
 const convertTo24HourFormat = (time12h) => {
     const [time, modifier] = time12h.split(' ');
     let [hours, minutes] = time.split(':');
@@ -505,23 +506,14 @@ function convertTo24Hour(time12Hour) {
     return `${hours}:${minutes}`;
 }
 
-function convertTo12Hour(time24Hour) {
-    const [hours, minutes] = time24Hour.split(':');
-
-    let modifier = 'AM';
-    let hours12 = parseInt(hours, 10);
-
-    if (hours12 >= 12) {
-        modifier = 'PM';
-    }
-
-    if (hours12 > 12) {
-        hours12 -= 12;
-    } else if (hours12 === 0) {
-        hours12 = 12;
-    }
-
-    return `${hours12}:${minutes} ${modifier}`;
+//Not in use
+function convertTo12Hour(time) {
+    console.log('time:', time);
+    const [hour, minute] = time.split(':');
+    const hourInt = parseInt(hour, 10);
+    const period = hourInt >= 12 ? 'PM' : 'AM';
+    const hour12 = hourInt === 0 ? 12 : hourInt > 12 ? hourInt - 12 : hourInt;
+    return `${hour12}:${minute} ${period}`;
 }
 
 function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, bookedSlots, bookingDate) {
@@ -562,9 +554,15 @@ function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, bookedSl
             }
         }
         if (isAvailable) {
-            slots.push({
+            /*slots.push({
                 start_time: convertTo12Hour(currentSlot.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
                 end_time: convertTo12Hour(new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
+                available: true
+            });*/
+
+            slots.push({
+                start_time: currentSlot.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                end_time: new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                 available: true
             });
         }
