@@ -17,8 +17,7 @@ router.delete('/deleteSlot/:slotId', delete_slot_validator, ValidatorResult, Tem
 router.post('/bookedPuja', new_booking_validator, ValidatorResult, authenticate, bookedPuja)
 router.get('/bookedList', authenticate, bookedList);
 router.get('/templeUnderAlltheBookingList', TempleAuth, TempleUnderAllTheBookings)
-//router.get('/templeSlots', TempleAuth, getSlotsWithBookedData)
-router.get('/templeSlots', getSlotsWithBookedData)
+router.post('/templeSlots', TempleAuth, getSlotsWithBookedData)
 
 
 

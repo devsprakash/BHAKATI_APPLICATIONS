@@ -525,13 +525,15 @@ function convertTo12Hour(time24Hour) {
     return `${hours12}:${minutes} ${modifier}`;
 }
 
-function generateTimeSlots(start, end, duration, bookedSlots) {
+function generateTimeSlotsOld(start, end, slotDuration, pujaDuration, bookedSlots) {
     const slots = [];
     let currentTime = start;
 
+    console.log(`start:${start}, end:${end}, duration:${slotDuration}`);
+
     while (currentTime < end) {
         let slotEndTime = new Date(currentTime);
-        slotEndTime.setMinutes(slotEndTime.getMinutes() + duration);
+        slotEndTime.setMinutes(slotEndTime.getMinutes() + slotDuration);
 
         const slot = {
             start_time: convertTo12Hour(currentTime),
@@ -557,19 +559,70 @@ function generateTimeSlots(start, end, duration, bookedSlots) {
     return slots;
 }
 
+function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, bookedSlots, bookingDate) {
+    const startTime = convertTo24Hour(slotStartTime);
+    const endTime = convertTo24Hour(slotEndTime);
+    const newBookDurationInMinutes = parseInt(newBookDuration, 10);
+    
+    console.log(`start:${slotStartTime}, end:${slotEndTime}, duration:${newBookDurationInMinutes}`);
+
+    
+    const slotStart = new Date(bookingDate + ' ' + startTime);
+    const slotEnd = new Date(bookingDate + ' ' + endTime);
+    //const slotDuration = newBookDurationInMinutes * 60000; // convert duration to milliseconds
+     
+    console.log(`slotStart:${slotStart}, slotEnd:${slotEnd}`);
+
+
+    const slots = [];
+    
+    let currentSlot = slotStart;
+    
+    while (currentSlot < slotEnd) {
+        let isAvailable = true;
+        for (const bookedSlot of bookedSlots) {
+            //const bookedStart = new Date(`2024-05-12T${convertTo24Hour(bookedSlot.start_time)}:00`);
+            //const bookedEnd = new Date(`2024-05-12T${convertTo24Hour(bookedSlot.end_time)}:00`);
+            const bookedStart = new Date(bookingDate + ' ' + convertTo24Hour(bookedSlot.start_time));
+            const bookedEnd = new Date(bookingDate + ' ' + convertTo24Hour(bookedSlot.end_time));
+
+            console.log(`bookedStart:${bookedStart}, bookedEnd:${bookedEnd}`);
+
+            if (
+                (currentSlot >= bookedStart && currentSlot < bookedEnd) ||
+                (currentSlot < bookedStart && new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000) > bookedStart)
+            ) {
+                isAvailable = false;
+                break;
+            }
+        }
+        if (isAvailable) {
+            slots.push({
+                start_time: convertTo12Hour(currentSlot.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
+                end_time: convertTo12Hour(new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
+                available: true
+            });
+        }
+        currentSlot = new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000);
+    }
+    
+    return slots;
+}
+
 exports.getSlotsWithBookedData = async (req, res) => {
 
     try {
 
         const reqBody = req.body;
-        const { temple_id, date, email, temple_puja_id } = reqBody;
- 
-        const findAdmin = await TempleGuru.findById(templeId);
+        const { templeId, date, temple_puja_id } = reqBody; 
+        console.log('templeId:', templeId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLEAUTHORITY)
+        const findAdmin = await Temple.findById(templeId);
+
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const bookingDate = moment(reqBody.date, "DD/MM/YYYY").format("DD/MM/YYYY");
+        const bookingDate = moment(reqBody.date, "DD/MM/YYYY").format("MM/DD/YYYY");
         console.log('bookingDate:', bookingDate);
 
         //const bookings = await Booking.find({ templeId: templeId }).populate('templeId', 'start_time', 'end_time')
@@ -577,13 +630,19 @@ exports.getSlotsWithBookedData = async (req, res) => {
             .sort()
             //.limit(parseInt(limit));
 
-        const slotData = await Slot.findOne({ templeId: templeId, date: bookingDate  }).populate("templeId", "temple_name temple_image _id")
+        const slotData = await Slot.findOne({ templeId: templeId, date: bookingDate  }).populate("templeId");
         //.limit(parseInt(limit))
-        .sort();
+        //.sort();
+        console.log('slotData', slotData);
 
         if (!slotData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.slots_not_found', {}, req.headers.lang);
-         
+        
+        const pujaData = await TemplePuja.findOne({ _id: temple_puja_id, templeId: templeId })
+            .populate('templeId', "_id temple_name temple_image")
+
+        if (!pujaData)
+            return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
 
         const bookingData = await Promise.all(bookings.map(async (data) => {
             return {
@@ -614,11 +673,13 @@ exports.getSlotsWithBookedData = async (req, res) => {
         
         const startTime24 = convertTo24Hour(slotData.start_time); 
         const endTime24 =convertTo24Hour(slotData.end_time);
-        const duration =slotData.duration;
-        const slotsWithBookingData = generateTimeSlots(startTime24, endTime24, duration, bookingData);
+        const slotDuration = slotData.slot_duration;
+        const pujaDuration = pujaData.duration;
+        //const slotsWithBookingData = generateTimeSlots(startTime24, endTime24, slotDuration, pujaDuration, bookingData);
+        const slotsWithBookingData = generateTimeSlots(startTime24, endTime24, pujaDuration, bookingData, bookingDate);
         const responseData = {
-            temple_id : slotData.temple_id,
-            slot_id : slotData.slot_id,
+            temple_id : templeId,
+            slot_id : slotData._id,
             slots: slotsWithBookingData
         };
 
