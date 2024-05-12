@@ -1,6 +1,6 @@
 
 const express = require('express');
-const { createdNewSlot, bookingSlotDownloaded, updateSlot, bookedPuja, temple_under_list_of_slots, bookedList, deleteSlot, getAllTheSlots, TempleUnderAllTheBookings } = require('../controllers/booking.controller');
+const { createdNewSlot, bookingSlotDownloaded, updateSlot, bookedPuja, temple_under_list_of_slots, bookedList, deleteSlot, getAllTheSlots, TempleUnderAllTheBookings, getSlotsWithBookedData } = require('../controllers/booking.controller');
 const router = express.Router();
 const authenticate = require('../../middleware/authenticate');
 const TempleAuth = require('../../middleware/temple.auth');
@@ -17,6 +17,8 @@ router.delete('/deleteSlot/:slotId', delete_slot_validator, ValidatorResult, Tem
 router.post('/bookedPuja', new_booking_validator, ValidatorResult, authenticate, bookedPuja)
 router.get('/bookedList', authenticate, bookedList);
 router.get('/templeUnderAlltheBookingList', TempleAuth, TempleUnderAllTheBookings)
+//router.get('/templeSlots', TempleAuth, getSlotsWithBookedData)
+router.get('/templeSlots', getSlotsWithBookedData)
 
 
 
