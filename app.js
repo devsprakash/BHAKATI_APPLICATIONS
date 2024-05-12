@@ -125,7 +125,7 @@ const options = {
     },
     servers: [
       {
-        url: "https://13.126.177.227",
+        url: "https://bhakti.alphainfy.com",
       },
     ],
   },
@@ -143,6 +143,7 @@ app.use('/admin-panel', express.static('admin-panel'))
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
+  console.log("Url not found:", req.url);
   next(createError(404));
 });
 
