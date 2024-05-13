@@ -12,8 +12,7 @@ const Booking = require("../../models/Booking.model");
 const Puja = require("../../models/puja.model");
 const Slot = require("../../models/slot.model");
 const TemplePuja = require("../../models/temple.puja.model");
-const { timeToMinutes } = require('../services/booking.service')
-
+const { timeToMinutes , convertTo24Hour , convertTo24HourFormat , generateTimeSlots , convertTo12Hour } = require('../services/booking.service')
 
 
 
@@ -70,7 +69,7 @@ exports.getAllTheSlots = async (req, res) => {
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const slotList = await Slot.find({ templeId: templeId }).populate("templeId", "temple_name temple_image _id").limit(parseInt(limit)).sort()
+        const slotList = await Slot.find({ templeId: templeId }).limit(parseInt(limit)).sort()
 
         const responseData = slotList.map(data => ({
             temple_id: data.templeId._id,
@@ -185,7 +184,7 @@ exports.TempleUnderAllTheBookings = async (req, res) => {
         if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const bookings = await Booking.find({ templeId: templeId }).populate('userId').populate('templeId').populate('TemplepujaId')
+        const bookings = await Booking.find({ templeId: templeId })
             .sort()
             .limit(parseInt(limit));
 
@@ -475,128 +474,27 @@ exports.bookingSlotDownloaded = async (req, res) => {
 
 
 
-// Function to convert time to 24-hour format
-//Not in use
-const convertTo24HourFormat = (time12h) => {
-    const [time, modifier] = time12h.split(' ');
-    let [hours, minutes] = time.split(':');
-    if (hours === '12') {
-        hours = '00';
-    }
-    if (modifier === 'PM') {
-        hours = parseInt(hours, 10) + 12;
-    }
-    return `${hours}:${minutes}`;
-};
-
-
-function convertTo24Hour(time12Hour) {
-    const [time, modifier] = time12Hour.split(' ');
-  
-    let [hours, minutes] = time.split(':');
-  
-    if (hours === '12') {
-      hours = '00';
-    }
-  
-    if (modifier === 'PM') {
-      hours = parseInt(hours, 10) + 12;
-    }
-  
-    return `${hours}:${minutes}`;
-}
-
-//Not in use
-function convertTo12Hour(time) {
-    console.log('time:', time);
-    const [hour, minute] = time.split(':');
-    const hourInt = parseInt(hour, 10);
-    const period = hourInt >= 12 ? 'PM' : 'AM';
-    const hour12 = hourInt === 0 ? 12 : hourInt > 12 ? hourInt - 12 : hourInt;
-    return `${hour12}:${minute} ${period}`;
-}
-
-function generateTimeSlots(slotStartTime, slotEndTime, newBookDuration, bookedSlots, bookingDate) {
-    const startTime = convertTo24Hour(slotStartTime);
-    const endTime = convertTo24Hour(slotEndTime);
-    const newBookDurationInMinutes = parseInt(newBookDuration, 10);
-    
-    console.log(`start:${slotStartTime}, end:${slotEndTime}, duration:${newBookDurationInMinutes}`);
-
-    
-    const slotStart = new Date(bookingDate + ' ' + startTime);
-    const slotEnd = new Date(bookingDate + ' ' + endTime);
-    //const slotDuration = newBookDurationInMinutes * 60000; // convert duration to milliseconds
-     
-    console.log(`slotStart:${slotStart}, slotEnd:${slotEnd}`);
-
-
-    const slots = [];
-    
-    let currentSlot = slotStart;
-    
-    while (currentSlot < slotEnd) {
-        let isAvailable = true;
-        for (const bookedSlot of bookedSlots) {
-            //const bookedStart = new Date(`2024-05-12T${convertTo24Hour(bookedSlot.start_time)}:00`);
-            //const bookedEnd = new Date(`2024-05-12T${convertTo24Hour(bookedSlot.end_time)}:00`);
-            const bookedStart = new Date(bookingDate + ' ' + convertTo24Hour(bookedSlot.start_time));
-            const bookedEnd = new Date(bookingDate + ' ' + convertTo24Hour(bookedSlot.end_time));
-
-            console.log(`bookedStart:${bookedStart}, bookedEnd:${bookedEnd}`);
-
-            if (
-                (currentSlot >= bookedStart && currentSlot < bookedEnd) ||
-                (currentSlot < bookedStart && new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000) > bookedStart)
-            ) {
-                isAvailable = false;
-                break;
-            }
-        }
-        if (isAvailable) {
-            /*slots.push({
-                start_time: convertTo12Hour(currentSlot.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
-                end_time: convertTo12Hour(new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
-                available: true
-            });*/
-
-            slots.push({
-                start_time: currentSlot.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                end_time: new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                available: true
-            });
-        }
-        currentSlot = new Date(currentSlot.getTime() + newBookDurationInMinutes * 60000);
-    }
-    
-    return slots;
-}
 
 exports.getSlotsWithBookedData = async (req, res) => {
 
     try {
 
         const reqBody = req.body;
+        const userId = req.user._id;
         const { templeId, date, temple_puja_id } = reqBody; 
-        console.log('templeId:', templeId);
 
-        const findAdmin = await Temple.findById(templeId);
+        const findAdmin = await User.findById(userId);
 
-        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.TEMPLE)
+        if (!findAdmin || findAdmin.user_type !== constants.USER_TYPE.USER)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const bookingDate = moment(reqBody.date, "DD/MM/YYYY").format("MM/DD/YYYY");
-        console.log('bookingDate:', bookingDate);
+        const bookingDate = moment(date, "DD/MM/YYYY").format("MM/DD/YYYY");
 
-        //const bookings = await Booking.find({ templeId: templeId }).populate('templeId', 'start_time', 'end_time')
-        const bookings = await Booking.find({ templeId: templeId, date: bookingDate }).populate('templeId')
-            .sort()
-            //.limit(parseInt(limit));
+        const bookings = await Booking.find({ templeId: templeId, date: bookingDate }).populate('templeId').sort();
+        console.log("data..." , bookings)
 
         const slotData = await Slot.findOne({ templeId: templeId, date: bookingDate  }).populate("templeId");
-        //.limit(parseInt(limit))
-        //.sort();
-        console.log('slotData', slotData);
+        console.log("data1...." , slotData)
 
         if (!slotData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'BOOKING.slots_not_found', {}, req.headers.lang);

@@ -60,9 +60,10 @@ exports.signUp = async (req, res) => {
             darsan: templeData.darsan,
             puja: templeData.puja,
             category: templeData.category,
-            opening_time:templeData.opening_time,
-            closing_time:templeData.closing_time,
-            puja_list:templeData.puja_list,
+            opening_time: templeData.opening_time,
+            closing_time: templeData.closing_time,
+            puja_list: templeData.puja_list,
+            live_streaming: templeData.live_streaming,
             contact_person_name: templeData.contact_person_name,
             contact_person_designation: templeData.contact_person_designation,
             created_at: templeData.created_at,
@@ -110,8 +111,9 @@ exports.uploadTempleImage = async (req, res) => {
             state: temple.state,
             district: temple.district,
             category: temple.category,
-            opening_time:temple.opening_time,
-            closing_time:temple.closing_time,
+            opening_time: temple.opening_time,
+            closing_time: temple.closing_time,
+            live_streaming: temple.live_streaming,
             feature_image_url: temple.background_image,
             contact_person_name: temple.contact_person_name,
             contact_person_designation: temple.contact_person_designation,
@@ -174,10 +176,11 @@ exports.templeLogin = async (req, res) => {
             state: temple.state,
             district: temple.district,
             category: temple.category,
-            opening_time:temple.opening_time,
-            closing_time:temple.closing_time,
+            opening_time: temple.opening_time,
+            closing_time: temple.closing_time,
             contact_person_name: temple.contact_person_name,
             contact_person_designation: temple.contact_person_designation,
+            live_streaming: temple.live_streaming,
             tokens: temple.tokens,
             refresh_tokens: temple.refresh_tokens,
             created_at: temple.created_at,
@@ -256,8 +259,8 @@ exports.getTempleProfile = async (req, res) => {
                 user_type: templeData.user_type,
                 location: templeData.location,
                 category: templeData.category,
-                opening_time:templeData.opening_time,
-                closing_time:templeData.closing_time,
+                opening_time: templeData.opening_time,
+                closing_time: templeData.closing_time,
                 darsan: templeData.darsan,
                 puja: templeData.puja,
                 state: templeData.state,
@@ -341,8 +344,8 @@ exports.getTempleProfileByAdmin = async (req, res) => {
                 user_type: templeData.user_type,
                 location: templeData.location,
                 category: templeData.category,
-                opening_time:templeData.opening_time,
-                closing_time:templeData.closing_time,
+                opening_time: templeData.opening_time,
+                closing_time: templeData.closing_time,
                 darsan: templeData.darsan,
                 puja: templeData.puja,
                 state: templeData.state,
@@ -399,8 +402,8 @@ exports.updateTempleProfile = async (req, res) => {
         if (temple.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-           temple_name = reqBody.temple_name
-            mobile_number = reqBody.mobile_number,
+        temple_name = reqBody.temple_name
+        mobile_number = reqBody.mobile_number,
             email = reqBody.email,
             location = reqBody.location,
             state = reqBody.state,
@@ -408,12 +411,12 @@ exports.updateTempleProfile = async (req, res) => {
             contact_person_name = reqBody.contact_person_name,
             contact_person_designation = reqBody.contact_person_designation,
             opening_time = reqBody.opening_time
-           closing_time = reqBody.closing_time
-           category = reqBody.category
-   
+        closing_time = reqBody.closing_time
+        category = reqBody.category
+
         const templeData = await Temple.findOneAndUpdate({ _id: templeId }, reqBody, { new: true })
 
-        if(!templeData)
+        if (!templeData)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'TEMPLE.not_found', {}, req.headers.lang);
 
         const responseData = {

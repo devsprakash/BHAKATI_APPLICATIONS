@@ -70,12 +70,12 @@ exports.puja_add_by_temple_validator = [
 
 exports.delete_puja_validator = [
 
-    query('id')
+    query('temple_puja_id')
         .not()
         .isEmpty()
-        .withMessage('puja_id is required')
-        .isString().withMessage('puja_id should be a string')
-        .isMongoId().withMessage('please enter a valid puja_id')
+        .withMessage('temple_puja_id is required')
+        .isString().withMessage('temple_puja_id should be a string')
+        .isMongoId().withMessage('please enter a valid temple_puja_id')
         .trim(),
 ]
 

@@ -26,13 +26,14 @@ exports.addNewPuja = async (req, res) => {
         if (!users || (users.user_type !== constants.USER_TYPE.ADMIN))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        if (!req.files)
+        if (!req.file)
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GURU.upload_image', {}, req.headers.lang);
 
-        const file = req.files
-        let pujaImageUrls = `${BASEURL}/uploads/${file[0].filename}`
+        const file = req.file
+        console.log("file" , file)
+        let pujaImageUrls = `${BASEURL}/uploads/${file.filename}`
 
-        reqBody.pujaImage = pujaImageUrls;
+        reqBody.puja_image = pujaImageUrls;
 
         reqBody.created_at = dateFormat.set_current_timestamp();
         reqBody.updated_at = dateFormat.set_current_timestamp();
@@ -192,26 +193,27 @@ exports.pujs_by_temple = async (req, res) => {
 
         const { limit } = req.query;
         const templeId = req.temple._id;
+        console.log("data" , templeId)
 
         const templeData = await Temple.findById(templeId);
 
         if (!templeData || (templeData.user_type !== constants.USER_TYPE.TEMPLE))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const pujsList = await TemplePuja.find({ templeId: templeId }).populate('pujaId').sort({ created_at: -1 }).limit(parseInt(limit));
+        const pujsList = await TemplePuja.find({ templeId: templeId }).sort({ created_at: -1 }).limit(parseInt(limit));
+        console.log("data" , pujsList)
 
         const responseData = {
             temple_name: templeData.temple_name || null,
             temple_id: templeData._id || null,
             puja: pujsList.map(puja => ({
-                id: puja._id,
-                puja_id: puja.pujaId._id,
+                temple_puja_id: puja._id,
                 puja_name: puja.puja_name,
                 duration: puja.duration,
                 cost: puja.price,
-                description: puja.pujaId.description,
-                category: puja.pujaId.category,
-                puja_image_url: puja.pujaId.pujaImage,
+                date:puja.date,
+                temple_id:puja.templeId,
+                puja_id:puja.pujaId,
                 created_at: puja.created_at
             })) || []
 
@@ -240,7 +242,7 @@ exports.temple_under_puja_list = async (req, res) => {
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
         const templeData = await Temple.findById(temple_id);
-        const pujsList = await TemplePuja.find({ templeId: temple_id }).populate('pujaId').sort({ created_at: -1 }).limit(parseInt(limit));
+        const pujsList = await TemplePuja.find({ templeId: temple_id }).sort({ created_at: -1 }).limit(parseInt(limit));
 
         const responseData = {
             temple_name: templeData.temple_name || null,
@@ -273,7 +275,7 @@ exports.UpdatePuja = async (req, res) => {
 
     try {
 
-        const { id } = req.query;
+        const { temple_puja_id } = req.query;
         const { duration, price, puja_name } = req.body;
         const templeId = req.temple._id;
 
@@ -282,7 +284,7 @@ exports.UpdatePuja = async (req, res) => {
         if (!temple || temple.user_type !== constants.USER_TYPE.TEMPLE)
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const existingPuja = await TemplePuja.findOne({ _id: id, templeId: templeId });
+        const existingPuja = await TemplePuja.findOne({ _id: temple_puja_id, templeId: templeId });
 
         if (!existingPuja)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
@@ -317,14 +319,14 @@ exports.deletePuja = async (req, res) => {
 
     try {
 
-        const { id } = req.query;
+        const { temple_puja_id } = req.query;
         const templeId = req.temple._id;
         const temple = await Temple.findOne({ _id: templeId });
 
         if (!temple || (temple.user_type !== constants.USER_TYPE.TEMPLE))
             return sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const newpuja = await TemplePuja.findOneAndDelete({ _id: id, templeId: templeId })
+        const newpuja = await TemplePuja.findOneAndDelete({ _id: temple_puja_id, templeId: templeId })
 
         if (!newpuja)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);
@@ -352,14 +354,14 @@ exports.deletePujaByAdmin = async (req, res) => {
 
     try {
 
-        const { puja_id } = req.param;
+        const { puja_id } = req.params;
         const userId = req.user._id;
         const user = await User.findOne({ _id: userId });
 
         if (!user || (user.user_type !== constants.USER_TYPE.ADMIN))
             return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
 
-        const newpuja = await Puja.findOneAndDelete({ _id: puja_id });
+        const newpuja = await Puja.findByIdAndDelete( puja_id );
 
         if (!newpuja)
             return sendResponse(res, constants.WEB_STATUS_CODE.OK, constants.STATUS_CODE.SUCCESS, 'PUJA.not_found', {}, req.headers.lang);

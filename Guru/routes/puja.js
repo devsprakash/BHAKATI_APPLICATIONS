@@ -17,7 +17,7 @@ router.get('/TempleUnderAllpujaList', TempleAuth, pujs_by_temple)
 router.get('/templeUnderAllpujaList/:temple_id', authenticate, temple_under_puja_list)
 router.delete('/deletePuja', delete_puja_validator, Validator_Result, TempleAuth, deletePuja);
 router.put('/updatePuja', delete_puja_validator, Validator_Result, TempleAuth, UpdatePuja)
-router.delete('/deletePujaByAdmin', delete_puja_by_admin_validator, Validator_Result, authenticate, deletePujaByAdmin)
+router.delete('/deletePujaByAdmin/:puja_id', delete_puja_by_admin_validator, Validator_Result, authenticate, deletePujaByAdmin)
 
 
 

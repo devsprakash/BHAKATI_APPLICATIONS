@@ -1,7 +1,5 @@
 
-
 const mongoose = require('mongoose');
-
 
 const demoSchema = new mongoose.Schema({
 
@@ -35,7 +33,6 @@ const demoSchema = new mongoose.Schema({
      attempts: [{ type: Object }],
      accessor_source: { type: String },
      accessor: { type: String }
-
 })
 
 

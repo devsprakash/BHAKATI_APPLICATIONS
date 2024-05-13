@@ -9,9 +9,6 @@ const User = require('../../models/user.model')
 
 
 
-
-
-
 exports.addNewRithuals = async (req, res) => {
 
     try {

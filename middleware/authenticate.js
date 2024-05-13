@@ -15,12 +15,8 @@ let authenticate = async (req, res, next) => {
     try {
 
         if (!req.header('Authorization')) return sendResponse(res, constants.WEB_STATUS_CODE.UNAUTHORIZED, constants.STATUS_CODE.UNAUTHENTICATED, 'GENERAL.unauthorized_user', {}, req.headers.lang);
-
         const token = req.header('Authorization').replace('Bearer ', '');
-
         if (!token) sendResponse(res, constants.WEB_STATUS_CODE.BAD_REQUEST, constants.STATUS_CODE.FAIL, 'GENERAL.not_token', {}, req.headers.lang)
-        console.log("token", token)
-
         let decoded;
         try {
             decoded = await jwt.verify(token, JWT_SECRET);
@@ -44,5 +40,6 @@ let authenticate = async (req, res, next) => {
         sendResponse(res, constants.WEB_STATUS_CODE.SERVER_ERROR, constants.STATUS_CODE.FAIL, 'GENERAL.general_error_content', err.message, req.headers.lang)
     }
 }
+
 
 module.exports = authenticate;
