@@ -194,7 +194,7 @@ exports.deleteRithuals = async (req, res) => {
 
     try {
 
-        const { rithualId } = req.params
+        const { rithualId } = req.params;
         const templeId  = req.temple._id;
         const temples = await Temple.findById(templeId)
 

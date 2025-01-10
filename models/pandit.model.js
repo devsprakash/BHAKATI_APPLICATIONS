@@ -2,10 +2,7 @@
 
 const mongoose = require('mongoose');
 
-
-
 const panditSchema = new mongoose.Schema({
-
     full_name: {
         type: String,
     },
